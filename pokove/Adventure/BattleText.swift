@@ -103,10 +103,14 @@ nonisolated enum RecapText {
         korean ? "\(name.subjectParticle) \(move.objectParticle) 배웠어요" : "\(name) learned \(move)"
     }
     static func learnedMore(_ count: Int) -> String { korean ? "기술 \(count)개를 더 배웠어요" : "\(count) more moves learned" }
-    static func wins(_ count: Int, upTo station: String?) -> String {
-        let wins = korean ? "\(count)번 이겼어요" : count == 1 ? "Won 1 battle" : "Won \(count) battles"
-        guard let station else { return wins }
-        return korean ? "\(wins) (\(station)까지)" : "\(wins), up to \(station)"
+    /// "4-3에서 4-10까지 갔어요", "4-3을 지났어요", or, for recaps from before `start`, "4-10까지 갔어요".
+    static func moved(from start: String?, to end: String) -> String {
+        guard let start else { return korean ? "\(end)까지 갔어요" : "Made it to \(end)" }
+        if start == end { return korean ? "\(end.objectParticle) 지났어요" : "Passed \(end)" }
+        return korean ? "\(start)에서 \(end)까지 갔어요" : "Went from \(start) to \(end)"
+    }
+    static func trained(_ count: Int) -> String {
+        korean ? "\(count)번 수련했어요" : count == 1 ? "Trained once" : "Trained \(count) times"
     }
     static var stardust: String { korean ? "별의모래" : "Stardust" }
     static var shinyLabel: String { korean ? "이로치" : "Shiny" }

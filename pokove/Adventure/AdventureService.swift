@@ -76,8 +76,11 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     /// When the page opened and the recap moved to the history.
     var until: Date?
     var clears = 0
-    /// The furthest station cleared.
+    /// The first and furthest frontier stations cleared.
+    var start: StationPoint?
     var reached: StationPoint?
+    /// Station wins that didn't move the line: training and repeats.
+    var training = 0
     var stardust = 0
     var ultraBalls = 0
     var growth: [Growth] = []
@@ -116,7 +119,9 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         since = try container.decodeIfPresent(Date.self, forKey: .since)
         until = try container.decodeIfPresent(Date.self, forKey: .until)
         clears = try container.decodeIfPresent(Int.self, forKey: .clears) ?? 0
+        start = try container.decodeIfPresent(StationPoint.self, forKey: .start)
         reached = try container.decodeIfPresent(StationPoint.self, forKey: .reached)
+        training = try container.decodeIfPresent(Int.self, forKey: .training) ?? 0
         stardust = try container.decodeIfPresent(Int.self, forKey: .stardust) ?? legacy.decodeIfPresent(Int.self, forKey: .coins) ?? 0
         ultraBalls = try container.decodeIfPresent(Int.self, forKey: .ultraBalls) ?? 0
         growth = try container.decodeIfPresent([Growth].self, forKey: .growth) ?? []
@@ -747,11 +752,18 @@ final class AdventureService {
 
         switch target {
         case .station(let point):
+            // Only the frontier counts as progress; repeats and training don't move the line.
+            let frontier = point == StationPoint(chapter: progress.chapter, station: progress.station) && progress.repeating == nil
             progress.recordStation(point, cleared: cleared, chapters: data.chapters)
             if cleared {
                 note { recap in
-                    if let reached = recap.reached, (reached.chapter, reached.station) >= (point.chapter, point.station) { return }
-                    recap.reached = point
+                    if frontier {
+                        if recap.start == nil { recap.start = point }
+                        if let reached = recap.reached, (reached.chapter, reached.station) >= (point.chapter, point.station) { return }
+                        recap.reached = point
+                    } else {
+                        recap.training += 1
+                    }
                 }
             }
         case .boss:
