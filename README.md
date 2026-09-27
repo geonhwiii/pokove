@@ -161,7 +161,7 @@ MediaRemoteAdapter/
 
 ## Website
 
-`site/` is the landing page, built with [Astro](https://astro.build) and served from Vercel at https://pokove.vercel.app (English at `/`, Korean at `/ko/`).
+`site/` is the landing page, built with [Astro](https://astro.build) and served from Vercel at https://pokove.vercel.app (Korean at `/`, English at `/en/`).
 
 ```bash
 cd site && pnpm install && pnpm dev   # http://localhost:4321

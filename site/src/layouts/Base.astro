@@ -9,10 +9,10 @@ interface Props {
 }
 const { lang } = Astro.props;
 const t = strings[lang];
-const canonical = new URL(url(lang === 'en' ? '' : 'ko/'), Astro.site);
+const canonical = new URL(url(lang === 'ko' ? '' : 'en/'), Astro.site);
 const alternates = [
-  { hreflang: 'en', href: new URL(url(''), Astro.site) },
-  { hreflang: 'ko', href: new URL(url('ko/'), Astro.site) },
+  { hreflang: 'ko', href: new URL(url(''), Astro.site) },
+  { hreflang: 'en', href: new URL(url('en/'), Astro.site) },
 ];
 const image = new URL(url('icon-512.png'), Astro.site);
 ---

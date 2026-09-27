@@ -17,7 +17,7 @@ const en = {
     'pokove is a notch app for Mac. While Claude Code or Codex works, your Pokémon travel through Kanto in the notch. It also shows what your agents are doing and lets you answer them from there.',
   skip: 'Skip to content',
   menu: { adventure: 'Adventure', agents: 'Agents', notch: 'Notch', download: 'Download', github: 'GitHub' },
-  otherLang: { label: '한국어', path: 'ko/' },
+  otherLang: { label: '한국어', path: '' },
 
   hero: {
     title: 'While Claude codes, your Pokémon train.',
@@ -166,7 +166,7 @@ const ko: Strings = {
     'pokove는 Mac 노치 앱이에요. Claude Code나 Codex가 일하는 동안 노치 속 포켓몬이 관동 지방을 여행해요. 에이전트가 뭘 하는지 보여 주고, 요청에도 노치에서 바로 답할 수 있어요.',
   skip: '본문으로 건너뛰기',
   menu: { adventure: '모험', agents: '에이전트', notch: '노치', download: '다운로드', github: 'GitHub' },
-  otherLang: { label: 'English', path: '' },
+  otherLang: { label: 'English', path: 'en/' },
 
   hero: {
     title: 'Claude가 일하면 포켓몬이 자라요.',
