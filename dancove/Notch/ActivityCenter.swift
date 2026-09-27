@@ -55,8 +55,10 @@ struct NotchBanner: Identifiable, Equatable {
     var permissionID: UUID?
     /// Who turned up at the end of the agent's turn, shown beside the message.
     var encounter: PokeEncounter?
-    /// A Pokémon to show on adventure banners (evolutions, boss clears).
+    /// A Pokémon to show on adventure banners (evolutions, legendaries).
     var pokemonID: Int?
+    /// A gym badge (1–8) to show on adventure banners.
+    var badge: Int?
     /// Which coding agent the banner is about, for its mark and label.
     var agent: AgentKind = .claude
     /// `nil` keeps the banner until it is dismissed explicitly.

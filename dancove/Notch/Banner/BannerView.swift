@@ -49,7 +49,8 @@ struct BannerView: View {
 
     private var standardBody: some View {
         HStack(spacing: 12) {
-            BannerIcon(style: banner.style, agent: banner.agent, size: 34, filled: true, pokemonID: banner.pokemonID)
+            BannerIcon(style: banner.style, agent: banner.agent, size: 34, filled: true, pokemonID: banner.pokemonID,
+                       badgeNumber: banner.badge)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(banner.title)
@@ -297,8 +298,9 @@ struct BannerIcon: View {
     var agent: AgentKind = .claude
     var size: CGFloat
     var filled = false
-    /// Adventure banners show the Pokémon they're about.
+    /// Adventure banners show the Pokémon they're about, or a badge.
     var pokemonID: Int?
+    var badgeNumber: Int?
 
     var body: some View {
         Group {
@@ -312,13 +314,23 @@ struct BannerIcon: View {
             case .claudeError:
                 badge(AgentMark(agent: agent, color: .red.opacity(0.9)), accessory: "exclamationmark", accessoryColor: .red)
             case .adventure:
-                if let pokemonID, size >= 24 {
+                if let badgeNumber, size >= 24 {
+                    ZStack {
+                        Circle().fill(Color.adventure.opacity(0.16))
+                        BadgeImageView(number: badgeNumber, size: size * 0.7)
+                    }
+                } else if let pokemonID, size >= 24 {
                     ZStack {
                         Circle().fill(Color.adventure.opacity(0.16))
                         PokeIconView(id: pokemonID)
                     }
+                } else if filled {
+                    PokeBallGlyph(size: size * 0.46)
+                        .foregroundStyle(Color.adventure)
+                        .frame(width: size, height: size)
+                        .background(Color.adventure.opacity(0.16), in: Circle())
                 } else {
-                    symbol("pawprint.fill", color: .adventure)
+                    PokeBallGlyph(size: size * 0.8).foregroundStyle(Color.adventure)
                 }
             case .batteryLow:
                 symbol("battery.25percent", color: .red)

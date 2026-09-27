@@ -10,17 +10,22 @@ nonisolated enum PokeSpriteKind: String, Sendable {
     case animated
     /// 96×96 still (Black & White), the fallback when the animation can't be read.
     case still
+    /// The party's side of a battle: seen from behind.
+    case animatedBack
+    case stillBack
 
     func url(for id: Int) -> URL {
         let path = switch self {
         case .icon: "versions/generation-vii/icons/\(id).png"
         case .animated: "versions/generation-v/black-white/animated/\(id).gif"
         case .still: "versions/generation-v/black-white/\(id).png"
+        case .animatedBack: "versions/generation-v/black-white/animated/back/\(id).gif"
+        case .stillBack: "versions/generation-v/black-white/back/\(id).png"
         }
         return URL(string: "\(PokeAPI.spriteBase)/\(path)")!
     }
 
-    var fileExtension: String { self == .animated ? "gif" : "png" }
+    var fileExtension: String { self == .animated || self == .animatedBack ? "gif" : "png" }
 }
 
 /// Decoded frames of a sprite, cropped to what's drawn.
@@ -102,11 +107,33 @@ final class PokeSpriteCache {
     func cached(_ kind: PokeSpriteKind, _ id: Int) -> PokeImage? { images[key(kind, id)] }
 
     func image(_ kind: PokeSpriteKind, _ id: Int) async -> PokeImage? {
-        let key = key(kind, id)
+        // Icons keep their 40×30 canvas so the grid lines up; battle sprites are cropped.
+        await image(url: kind.url(for: id), key: key(kind, id), fileExtension: kind.fileExtension, crop: kind != .icon)
+    }
+
+    /// A gym leader or League trainer, from Showdown's FireRed/LeafGreen-style sprites.
+    func trainer(_ slug: String) async -> PokeImage? {
+        guard let url = URL(string: "\(PokeAPI.trainerBase)/\(slug).png") else { return nil }
+        return await image(url: url, key: "trainer-\(slug)", fileExtension: "png", crop: true)
+    }
+
+    /// A bag item, such as a Poké Ball.
+    func item(_ slug: String) async -> PokeImage? {
+        guard let url = URL(string: "\(PokeAPI.itemBase)/\(slug).png") else { return nil }
+        return await image(url: url, key: "item-\(slug)", fileExtension: "png", crop: true)
+    }
+
+    func badge(_ number: Int) async -> PokeImage? {
+        guard let url = URL(string: "\(PokeAPI.badgeBase)/\(number).png") else { return nil }
+        return await image(url: url, key: "badge-\(number)", fileExtension: "png", crop: false)
+    }
+
+    func cached(key: String) -> PokeImage? { images[key] }
+
+    private func image(url: URL, key: String, fileExtension: String, crop: Bool) async -> PokeImage? {
         if let image = images[key] { return image }
         if let task = inflight[key] { return await task.value }
-        let file = directory.appendingPathComponent(key).appendingPathExtension(kind.fileExtension)
-        let url = kind.url(for: id)
+        let file = directory.appendingPathComponent(key).appendingPathExtension(fileExtension)
         let directory = directory
         let task = Task<PokeImage?, Never> {
             let data: Data? = await Task.detached(priority: .utility) {
@@ -118,8 +145,7 @@ final class PokeSpriteCache {
                 return data
             }.value
             guard let data else { return nil }
-            // Icons keep their 40×30 canvas so the grid lines up; battle sprites are cropped.
-            return PokeImage(data: data, crop: kind != .icon)
+            return PokeImage(data: data, crop: crop)
         }
         inflight[key] = task
         let image = await task.value
@@ -173,19 +199,22 @@ struct PokeIconView: View {
     }
 }
 
-/// An animated battle sprite, facing left as in the games unless `flipped`.
+/// An animated battle sprite, facing left as in the games unless `flipped`, or seen from behind.
 struct PokeSpriteView: View {
     let id: Int
     var pixelSize: CGFloat = 0.5
     var flipped = false
     var silhouette = false
+    var back = false
+    /// Big Pokémon shrink to fit this height, in quarter-point steps.
+    var fitHeight: CGFloat?
 
     @State private var image: PokeImage?
-    @State private var failed = false
 
     var body: some View {
         Group {
             if let image {
+                let scale = Self.scale(for: image, pixelSize: pixelSize, fitHeight: fitHeight)
                 TimelineView(.animation(minimumInterval: 1.0 / 30, paused: image.frames.count < 2)) { context in
                     let frame = Image(decorative: image.frame(at: context.date.timeIntervalSinceReferenceDate), scale: 1)
                         .interpolation(.none)
@@ -197,22 +226,103 @@ struct PokeSpriteView: View {
                             frame
                         }
                     }
-                    .frame(width: image.size.width * pixelSize, height: image.size.height * pixelSize)
+                    .frame(width: image.size.width * scale, height: image.size.height * scale)
                     .scaleEffect(x: flipped ? -1 : 1, y: 1)
                 }
             } else {
                 Color.clear.frame(width: 40 * pixelSize * 2, height: 40 * pixelSize * 2)
             }
         }
-        .task(id: id) {
-            image = PokeSpriteCache.shared.cached(.animated, id) ?? PokeSpriteCache.shared.cached(.still, id)
+        .task(id: "\(id)-\(back)") {
+            let (animated, still): (PokeSpriteKind, PokeSpriteKind) = back ? (.animatedBack, .stillBack) : (.animated, .still)
+            image = PokeSpriteCache.shared.cached(animated, id) ?? PokeSpriteCache.shared.cached(still, id)
             guard image == nil else { return }
-            if let animated = await PokeSpriteCache.shared.image(.animated, id) {
-                image = animated
+            if let loaded = await PokeSpriteCache.shared.image(animated, id) {
+                image = loaded
             } else {
-                image = await PokeSpriteCache.shared.image(.still, id)
+                image = await PokeSpriteCache.shared.image(still, id)
             }
         }
+    }
+
+    static func scale(for image: PokeImage, pixelSize: CGFloat, fitHeight: CGFloat?) -> CGFloat {
+        guard let fitHeight, image.size.height * pixelSize > fitHeight else { return pixelSize }
+        return max(0.5, (fitHeight / image.size.height * 4).rounded(.down) / 4)
+    }
+}
+
+/// A trainer's sprite at whole-pixel scale.
+struct TrainerSpriteView: View {
+    let slug: String
+    var pixelSize: CGFloat = 0.5
+
+    @State private var image: PokeImage?
+
+    var body: some View {
+        let shown = image ?? PokeSpriteCache.shared.cached(key: "trainer-\(slug)")
+        Group {
+            if let shown {
+                Image(decorative: shown.frames[0], scale: 1)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: shown.size.width * pixelSize, height: shown.size.height * pixelSize)
+            } else {
+                Color.clear.frame(width: 60 * pixelSize, height: 70 * pixelSize)
+            }
+        }
+        .task(id: slug) { image = await PokeSpriteCache.shared.trainer(slug) }
+    }
+}
+
+/// A bag item's sprite at whole-pixel scale.
+struct ItemSpriteView: View {
+    let slug: String
+    var pixelSize: CGFloat = 1
+
+    @State private var image: PokeImage?
+
+    var body: some View {
+        let shown = image ?? PokeSpriteCache.shared.cached(key: "item-\(slug)")
+        Group {
+            if let shown {
+                Image(decorative: shown.frames[0], scale: 1)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: shown.size.width * pixelSize, height: shown.size.height * pixelSize)
+            } else {
+                Circle().fill(.white.opacity(0.08)).frame(width: 22 * pixelSize, height: 22 * pixelSize)
+            }
+        }
+        .task(id: slug) { image = await PokeSpriteCache.shared.item(slug) }
+    }
+}
+
+/// A Kanto gym badge, smoothly scaled (the art isn't pixel art). Unearned badges show as a
+/// dim silhouette.
+struct BadgeImageView: View {
+    let number: Int
+    var size: CGFloat = 16
+    var earned = true
+    var unearnedColor: Color = .white.opacity(0.14)
+
+    @State private var image: PokeImage?
+
+    var body: some View {
+        let shown = image ?? PokeSpriteCache.shared.cached(key: "badge-\(number)")
+        Group {
+            if let shown {
+                let picture = Image(decorative: shown.frames[0], scale: 1).resizable().interpolation(.high)
+                if earned {
+                    picture.aspectRatio(contentMode: .fit)
+                } else {
+                    picture.renderingMode(.template).aspectRatio(contentMode: .fit).foregroundStyle(unearnedColor)
+                }
+            } else {
+                Circle().fill(.white.opacity(0.08))
+            }
+        }
+        .frame(width: size, height: size)
+        .task(id: number) { image = await PokeSpriteCache.shared.badge(number) }
     }
 }
 

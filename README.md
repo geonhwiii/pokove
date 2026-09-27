@@ -48,23 +48,33 @@ There is one activity at a time, like Alcove. Swipe down or click the page icons
 
 ## Pokémon adventure
 
-While Claude or Codex works, your party of up to three Pokémon battles through stages on its own. It's an idle stage game in the notch, in the spirit of MapleStory Idle or Cookie Run.
+While Claude or Codex works, your party of up to three Pokémon travels Kanto on its own: an idle stage game in the notch, in the spirit of MapleStory Idle or Cookie Run, on a journey through FireRed/LeafGreen's routes and gyms.
 
-- **Starting out:** choose Bulbasaur, Charmander or Squirtle as your partner (Lv 5).
-- **Battles** play one action every 1.5 s, but only while an agent is working. When nothing is running, the party rests.
-  - Damage uses the main-series formula with base stats, the 18-type chart, same-type bonus and critical hits.
-  - HP carries across a stage's three waves. The whole party earns experience and evolves along its real evolution line.
-- **Stages** go `1-1 … 1-10` and on, with no end.
-  - Every tenth stage is a boss (+4 levels, 2.5× HP). The first time you beat a boss, it may join you.
-  - A party that's wiped out trains on the previous stage for three clears, then tries again.
-- **Wild Pokémon:** a finished turn of 20 s or more can bring one along, chosen at random from the whole Gen 1 dex.
-  - Common ones are more likely than evolved forms, and legendaries are rare.
-  - A newcomer joins about 85% of your party's level. A second of the same species makes the first one stronger instead.
-- **The Pokédex** is on the right of the page. Species you haven't seen are dim silhouettes, species you've seen are brighter, and caught ones are in color. Click one for details. From there you can add it to the party, remove it, or make it the leader.
-- **Banners:** the "finished" banner shows who joined (**NEW** for a first). Legendary and mythical Pokémon take over the banner, and evolutions and boss clears get their own. **Settings → Adventure** has progress and a reset.
-- **Data:** Pokémon data comes from one [PokéAPI](https://pokeapi.co) GraphQL request, and sprites come from the PokéAPI sprite repository (Gen VII box icons, Black/White animated sprites).
-  - Both are downloaded at runtime and cached in `~/Library/Application Support/dancove/pokemon/`. **No Pokémon assets are in this repository or the app.**
-  - The save file is `adventure.json` (`adventure-debug.json` in Debug builds).
+- **Starting out:** choose Bulbasaur, Charmander or Squirtle (Lv 5). You also start with one free gacha pull.
+- **The journey** follows the real map: Route 1, Viridian Forest, Pewter Gym (Brock), Mt. Moon, … the eight gyms, Victory Road, the Elite Four and the Champion, then Cerulean Cave.
+  - Each stretch holds two to four stages of wild Pokémon from its actual FRLG encounter table.
+  - Gyms and the League are the walls: leaders bring the last three of their original team.
+  - **Badges raise the level cap.** Experience past the cap is banked and flows back in at the next badge.
+  - Optional legendaries sit on the map: Snorlax, Zapdos, Articuno, Moltres, and Mewtwo after the Champion.
+- **Battles are a 1:1 relay**, shown like the games: the foe at the top right, your Pokémon from behind, info plates and a text box.
+  - One action plays every 1.5 s, only while an agent works.
+  - Pokémon use their real level-up moves with Gen 3 power, accuracy and type, and pick the best one for the matchup.
+  - Strong moves rest for a turn or three, so movesets rotate. There are crits, multi-hits, drain and recoil, and pixel effects for each type.
+  - When one faints, the next in the party comes out. All three share the experience.
+- **AUTO** (on by default) takes on a gym once a forecast (24 simulated battles) puts the win chance at 50% or more. Until then the party trains on the last route. **Challenge** takes it on now. A loss costs nothing.
+- **Getting Pokémon never fails:**
+  - **Discovery:** about every 20 minutes of agent work, someone from the current area joins on the spot. A species you already have gives its line experience instead.
+  - **Gacha:** coins from cleared stages buy three Poké Balls. The kind of ball hints at rarity. Open one and the Pokémon inside joins; a duplicate gives experience instead.
+    - The pool is everything met on the journey, plus gacha-only Pokémon: the other starters, Eevee, fossils, Lapras and more. Mew appears after the Champion.
+- **The page:**
+  - The battle and your party are on the left, with a wand button for the best team against what's next.
+  - The right side switches between the **Map** (tap a place for its Pokémon, trainer or legendary; stay on a route you've reached), the **Pokédex** and the **Gacha**.
+  - "While you were away" sums up what happened since you last looked.
+- **Banners** only come for new species, evolutions, badges and legendaries. Mute them in one click with the bell on the page or **Adventure Banners** in the menu bar menu, say before sharing your screen.
+- **Data:** species, FireRed/LeafGreen moves and wild encounters come from three [PokéAPI](https://pokeapi.co) GraphQL requests.
+  - Sprites come from the PokéAPI sprite repository: Gen VII box icons, Black/White animated sprites (front and back), items and badges. Gym leader sprites come from [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/trainers/).
+  - Everything is downloaded at runtime and cached in `~/Library/Application Support/dancove/pokemon/`. **No Pokémon assets are in this repository or the app.**
+  - The save file is `adventure-v2.json` (`adventure-v2-debug.json` in Debug builds). The v1 `adventure.json` is left untouched.
 
 `scripts/adventure-sim.swift` plays the rules for hundreds of simulated hours, to tune the pacing (see `docs/pokemon-handoff.md`).
 
@@ -165,7 +175,12 @@ Debug builds listen for `com.geonhwiii.dancove.debug` distributed notifications,
 - **To-dos:** `todo add <text>`, `todo type <text>`, `todo toggle`, `todo clear`, `keytest` (checks that key focus is lent and returned).
 - **Clipboard:** `clip seed` (sample history), `clip clear`.
 - **Windows:** `rebuild` (recreates the notch windows).
-- **Adventure:** `poke starter <id>`, `poke catch [id]` (with a finished banner), `poke xp <n>`, `poke stage <world> <n>`, `poke tick <n>` (battle actions without an agent), `poke reset`, `select <dex number>`.
+- **Adventure:**
+  - Setup: `poke starter <id>`, `poke reset`.
+  - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke coins <n>`, `poke jump <node> <stage> <badges>`, `poke tick <n>` (battle actions without an agent).
+  - Gacha: `poke pull`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
+  - Battles: `poke challenge`, `poke legend <id>`, `poke auto on|off`.
+  - Page: `poke pane map|dex|gacha|recap`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/dancove-state.txt`), `select <dex number>`.
 - **Settings:** `settings claude|adventure|…`.
 
 `defaults write com.geonhwiii.dancove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.

@@ -16,14 +16,14 @@ struct AdventureSettingsPane: View {
                         if let leader = adventure.leader {
                             PokeIconView(id: leader.speciesID)
                         } else {
-                            Image(systemName: "pawprint.fill").foregroundStyle(.white)
+                            PokeBallGlyph(size: 18).foregroundStyle(.white)
                         }
                     }
                     .frame(width: 44, height: 40)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Pokémon adventure")
                             .font(.headline)
-                        Text("While Claude or Codex works, your party of up to three battles through stages on its own. Finished turns can bring a wild Pokémon along. Bosses every ten stages decide how far you get.")
+                        Text("While Claude or Codex works, your party of up to three travels Kanto on its own, battling wild Pokémon and gym leaders. New Pokémon turn up along the way, and coins from cleared stages buy gacha pulls. Badges raise the level cap.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
@@ -33,7 +33,9 @@ struct AdventureSettingsPane: View {
                     .onChange(of: preferences.adventureEnabled) { _, enabled in
                         if !enabled { adventure.endAllTurns() }
                     }
-                Toggle("Banners for catches, evolutions and bosses", isOn: $preferences.adventureAnnounceCatches)
+                Toggle("Banners for new Pokémon, evolutions and badges", isOn: $preferences.adventureAnnounceCatches)
+                    .disabled(!preferences.adventureEnabled)
+                Toggle("Challenge gyms automatically (AUTO)", isOn: Bindable(adventure).autoChallenge)
                     .disabled(!preferences.adventureEnabled)
                 Toggle("Play a sound for new Pokémon", isOn: $preferences.adventureSound)
                     .disabled(!preferences.adventureEnabled)
@@ -43,11 +45,19 @@ struct AdventureSettingsPane: View {
                 LabeledContent("Pokédex") {
                     Text("\(adventure.caught.count) caught · \(adventure.seen.count) seen / \(PokeDexStore.maxID)").monospacedDigit()
                 }
-                LabeledContent("Furthest stage") {
-                    Text(adventure.progress.frontier.label).monospacedDigit()
+                LabeledContent("Journey") {
+                    Text(journey(adventure))
+                }
+                LabeledContent("Badges") {
+                    HStack(spacing: 3) {
+                        ForEach(1...8, id: \.self) { BadgeImageView(number: $0, size: 16, earned: adventure.progress.badges >= $0) }
+                    }
                 }
                 LabeledContent("Stages cleared") {
                     Text("\(adventure.clears)").monospacedDigit()
+                }
+                LabeledContent("Coins") {
+                    Text("\(adventure.coins)").monospacedDigit()
                 }
                 LabeledContent("Party") {
                     Text(adventure.party.compactMap { member in
@@ -73,7 +83,16 @@ struct AdventureSettingsPane: View {
         .confirmationDialog("Start the adventure over?", isPresented: $confirmsReset) {
             Button("Start Over", role: .destructive) { adventure.resetAdventure() }
         } message: {
-            Text("Your Pokémon, Pokédex and stage progress will be cleared. This can't be undone.")
+            Text("Your Pokémon, Pokédex and journey will be cleared. This can't be undone.")
         }
+    }
+
+    private func journey(_ adventure: AdventureService) -> String {
+        let nodes = adventure.nodes
+        if adventure.progress.isComplete(nodes) { return String(localized: "Journey complete") }
+        let point = adventure.progress.frontier
+        guard nodes.indices.contains(point.node) else { return "" }
+        let node = nodes[point.node]
+        return "\(node.name) \(point.stage + 1)/\(node.stageCount)"
     }
 }

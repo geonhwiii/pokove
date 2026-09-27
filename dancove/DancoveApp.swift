@@ -28,6 +28,8 @@ private struct MenuBarContent: View {
         Button("Claude Code Settings…") { SettingsWindowController.shared.show(app: app, pane: .claude) }
         if app.preferences.adventureEnabled {
             Button("Open Pokédex") { NotificationCenter.default.post(name: .dancoveOpenAdventure, object: nil) }
+            // Quick to reach before sharing a screen.
+            Toggle("Adventure Banners", isOn: Bindable(app.preferences).adventureAnnounceCatches)
         }
         Divider()
         Button("Preview Claude Notification") { claude.simulateDemo() }

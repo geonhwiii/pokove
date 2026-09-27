@@ -27,6 +27,32 @@
         }
       }
     },
+    "%@ EXP +%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ EXP +%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 경험치 +%2$lld"
+          }
+        }
+      }
+    },
+    "%@ earned!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 획득!"
+          }
+        }
+      }
+    },
     "%@ evolved!": {
       "localizations": {
         "ko": {
@@ -43,16 +69,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 합류!"
-          }
-        }
-      }
-    },
-    "%@ joined your team.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "새 동료: %@"
           }
         }
       }
@@ -125,6 +141,22 @@
         }
       }
     },
+    "%lld / %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld / %2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / %lld"
+          }
+        }
+      }
+    },
     "%lld caught · %lld seen / %lld": {
       "localizations": {
         "en": {
@@ -147,6 +179,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개 완료"
+          }
+        }
+      }
+    },
+    "%lld evolved": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld마리 진화"
           }
         }
       }
@@ -175,6 +217,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개"
+          }
+        }
+      }
+    },
+    "%lld moves": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기술 %lld개"
+          }
+        }
+      }
+    },
+    "%lld new": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 포켓몬 %lld"
           }
         }
       }
@@ -251,6 +313,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld%% 남음"
+          }
+        }
+      }
+    },
+    "%lld%% to win": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "승률 %lld%%"
           }
         }
       }
@@ -343,6 +415,16 @@
         }
       }
     },
+    "+%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
+          }
+        }
+      }
+    },
     "+%lld more": {
       "localizations": {
         "ko": {
@@ -389,6 +471,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "API 과부하"
+          }
+        }
+      }
+    },
+    "AUTO": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO"
+          }
+        }
+      }
+    },
+    "AUTO is off: tap Challenge to take on gyms": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO 꺼짐: 도전을 눌러야 체육관에 도전해요"
+          }
+        }
+      }
+    },
+    "AUTO: gyms are challenged once the party is likely to win": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO: 이길 만하면 알아서 체육관에 도전해요"
           }
         }
       }
@@ -469,6 +581,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "모험"
+          }
+        }
+      }
+    },
+    "Adventure Banners": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 알림"
+          }
+        }
+      }
+    },
+    "Adventure banners are muted. Click to turn them back on.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 알림이 꺼져 있어요. 누르면 다시 켜져요."
+          }
+        }
+      }
+    },
+    "Adventure banners are on. Click to mute them, say before sharing your screen.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 알림이 켜져 있어요. 화면 공유 전에 눌러서 끌 수 있어요."
           }
         }
       }
@@ -673,26 +815,6 @@
         }
       }
     },
-    "BOSS": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보스"
-          }
-        }
-      }
-    },
-    "BOSS · Lv%lld": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보스 · Lv%lld"
-          }
-        }
-      }
-    },
     "Background agent finished": {
       "localizations": {
         "ko": {
@@ -703,12 +825,22 @@
         }
       }
     },
-    "Banners for catches, evolutions and bosses": {
+    "Badges": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포획·진화·보스 알림 보기"
+            "value": "배지"
+          }
+        }
+      }
+    },
+    "Banners for new Pokémon, evolutions and badges": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 포켓몬·진화·배지 알림 보기"
           }
         }
       }
@@ -753,12 +885,22 @@
         }
       }
     },
-    "Beaten at %@, so training here first.": {
+    "Best team for this trainer": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@에서 져서 여기서 먼저 훈련 중이에요."
+            "value": "이 트레이너에게 맞는 파티로 바꾸기"
+          }
+        }
+      }
+    },
+    "Best team for what's next": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 상대에 맞는 추천 파티"
           }
         }
       }
@@ -779,16 +921,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bluetooth"
-          }
-        }
-      }
-    },
-    "Boss %@ cleared!": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보스 %@ 클리어!"
           }
         }
       }
@@ -819,6 +951,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "캘린더 및 할 일"
+          }
+        }
+      }
+    },
+    "Challenge": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도전"
+          }
+        }
+      }
+    },
+    "Challenge gyms automatically (AUTO)": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "체육관 자동 도전 (AUTO)"
           }
         }
       }
@@ -983,6 +1135,16 @@
         }
       }
     },
+    "Clear stages to earn coins.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스테이지를 깨면 코인이 모여요."
+          }
+        }
+      }
+    },
     "Click again to clear. Pinned items stay.": {
       "localizations": {
         "ko": {
@@ -1059,6 +1221,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Codex가 멈췄어요"
+          }
+        }
+      }
+    },
+    "Coins": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "코인"
+          }
+        }
+      }
+    },
+    "Coins, from clearing stages. %lld buy a gacha pull.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스테이지를 깨면 모이는 코인. %lld개로 뽑기 1번."
           }
         }
       }
@@ -1169,16 +1351,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "PokéAPI에 연결할 수 없어요"
-          }
-        }
-      }
-    },
-    "Critical hit!": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "급소!"
           }
         }
       }
@@ -1483,12 +1655,12 @@
         }
       }
     },
-    "Furthest stage": {
+    "Gacha": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "최고 스테이지"
+            "value": "뽑기"
           }
         }
       }
@@ -1503,6 +1675,16 @@
         }
       }
     },
+    "Get 3 Poké Balls": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "몬스터볼 3개 받기"
+          }
+        }
+      }
+    },
     "Getting Pokédex data…": {
       "localizations": {
         "ko": {
@@ -1513,12 +1695,38 @@
         }
       }
     },
+    "Getting ready for %@ · %lld%% to win": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Getting ready for %1$@ · %2$lld%% to win"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@에게 도전 준비 중 · 승률 %2$lld%%"
+          }
+        }
+      }
+    },
     "Ghost": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "고스트"
+          }
+        }
+      }
+    },
+    "Go First": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선봉으로"
           }
         }
       }
@@ -1743,12 +1951,42 @@
         }
       }
     },
+    "Joined": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "합류함"
+          }
+        }
+      }
+    },
     "Jot things down without leaving what you're doing.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "하던 일을 멈추지 않고 바로 적어 두세요."
+          }
+        }
+      }
+    },
+    "Journey": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여정"
+          }
+        }
+      }
+    },
+    "Journey complete": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여정 완료"
           }
         }
       }
@@ -1813,16 +2051,6 @@
         }
       }
     },
-    "Lead": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "리더로"
-          }
-        }
-      }
-    },
     "Legendary": {
       "localizations": {
         "ko": {
@@ -1839,6 +2067,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "레벨"
+          }
+        }
+      }
+    },
+    "Level cap raised to %lld.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레벨 상한이 %lld까지 올랐어요."
           }
         }
       }
@@ -1913,6 +2151,16 @@
         }
       }
     },
+    "Map": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지도"
+          }
+        }
+      }
+    },
     "Mark as Done": {
       "localizations": {
         "ko": {
@@ -1969,6 +2217,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "모델을 찾을 수 없음"
+          }
+        }
+      }
+    },
+    "Move On": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여정 계속"
           }
         }
       }
@@ -2063,12 +2321,12 @@
         }
       }
     },
-    "Not very effective": {
+    "Not yet reached": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "효과가 별로"
+            "value": "아직 못 감"
           }
         }
       }
@@ -2129,16 +2387,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "배터리 사용 중"
-          }
-        }
-      }
-    },
-    "On to world %lld.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "월드 %lld로 출발!"
           }
         }
       }
@@ -2279,6 +2527,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "도감에서 포켓몬을 골라 파티에 넣어 보세요."
+          }
+        }
+      }
+    },
+    "Pick a ball to open": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "열어 볼 볼을 하나 골라 주세요"
           }
         }
       }
@@ -2593,6 +2851,16 @@
         }
       }
     },
+    "Retreat": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물러나기"
+          }
+        }
+      }
+    },
     "Rock": {
       "localizations": {
         "ko": {
@@ -2823,6 +3091,16 @@
         }
       }
     },
+    "Something stirs in Cerulean Cave…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미지의동굴에서 무언가 깨어났어요…"
+          }
+        }
+      }
+    },
     "Something went wrong": {
       "localizations": {
         "ko": {
@@ -2849,16 +3127,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "소스"
-          }
-        }
-      }
-    },
-    "Stage %@ cleared!": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "스테이지 %@ 클리어!"
           }
         }
       }
@@ -2923,12 +3191,32 @@
         }
       }
     },
+    "Stay Here": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "머물기"
+          }
+        }
+      }
+    },
     "Stay quiet while Claude's app is in front": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "Claude 앱이 앞에 있으면 조용히"
+          }
+        }
+      }
+    },
+    "Staying at %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에 머무는 중"
           }
         }
       }
@@ -2953,16 +3241,6 @@
         }
       }
     },
-    "Super effective!": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "효과가 굉장해!"
-          }
-        }
-      }
-    },
     "Swipe down on the notch to open it or switch activities, swipe up to close, swipe sideways to skip tracks.": {
       "localizations": {
         "ko": {
@@ -2979,6 +3257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "시스템"
+          }
+        }
+      }
+    },
+    "Take on the next trainer now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 다음 트레이너에게 도전"
           }
         }
       }
@@ -3095,16 +3383,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "트랙패드 제스처"
-          }
-        }
-      }
-    },
-    "Training": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "훈련 중"
           }
         }
       }
@@ -3259,12 +3537,22 @@
         }
       }
     },
-    "While Claude or Codex works, your party of up to three battles through stages on its own. Finished turns can bring a wild Pokémon along. Bosses every ten stages decide how far you get.": {
+    "While Claude or Codex works, your party of up to three travels Kanto on its own, battling wild Pokémon and gym leaders. New Pokémon turn up along the way, and coins from cleared stages buy gacha pulls. Badges raise the level cap.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 알아서 스테이지를 돌파해요. 작업이 끝나면 야생 포켓몬이 따라오기도 하고, 10스테이지마다 나오는 보스가 얼마나 멀리 갈 수 있을지 정해요."
+            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동 지방을 여행하며 야생 포켓몬과 체육관 관장과 싸워요. 가는 길에 새 포켓몬을 만나고, 스테이지를 깨서 모은 코인으로 뽑기를 해요. 배지를 얻으면 레벨 상한이 올라가요."
+          }
+        }
+      }
+    },
+    "While you were away": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "자리 비운 동안"
           }
         }
       }
@@ -3299,12 +3587,22 @@
         }
       }
     },
-    "Your Pokémon, Pokédex and stage progress will be cleared. This can't be undone.": {
+    "You're the Champion!": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포켓몬, 도감, 스테이지 진행이 모두 지워져요. 되돌릴 수 없어요."
+            "value": "챔피언이 되었어요!"
+          }
+        }
+      }
+    },
+    "Your Pokémon, Pokédex and journey will be cleared. This can't be undone.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬, 도감, 여정이 모두 지워져요. 되돌릴 수 없어요."
           }
         }
       }

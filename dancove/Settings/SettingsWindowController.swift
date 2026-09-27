@@ -76,7 +76,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .general: "gearshape.fill"
         case .claude: "sparkle"
-        case .adventure: "pawprint.fill"
+        case .adventure: "circle.circle.fill"
         case .nowPlaying: "play.circle.fill"
         case .calendar: "calendar"
         case .clipboard: "list.clipboard.fill"

@@ -1,9 +1,9 @@
 import Foundation
 
-// The adventure's rules: stats, damage, stages and an auto-battle that advances one action per
-// tick. Pure value types, so scripts/adventure-sim.swift can run it outside the app.
+// The adventure's battles: stats, Gen 3 damage, real moves and a 1:1 relay that advances one action
+// per tick. Pure value types, so scripts/adventure-sim.swift can run it outside the app.
 
-/// SplitMix64: small, fast and reproducible, so a stage always holds the same Pokémon.
+/// SplitMix64: small, fast and reproducible.
 nonisolated struct SeededRNG: RandomNumberGenerator, Equatable, Sendable {
     var state: UInt64
 
@@ -18,6 +18,22 @@ nonisolated struct SeededRNG: RandomNumberGenerator, Equatable, Sendable {
     }
 
     mutating func unit() -> Double { Double(next() >> 11) / Double(1 << 53) }
+
+    mutating func pick(_ range: ClosedRange<Int>) -> Int {
+        range.lowerBound + Int(next() % UInt64(range.count))
+    }
+
+    /// An index chosen in proportion to `weights`.
+    mutating func weighted(_ weights: [Double]) -> Int? {
+        let total = weights.reduce(0, +)
+        guard total > 0 else { return nil }
+        var roll = unit() * total
+        for (index, weight) in weights.enumerated() {
+            if roll < weight { return index }
+            roll -= weight
+        }
+        return weights.indices.last
+    }
 }
 
 nonisolated struct PokeStats: Codable, Equatable, Sendable {
@@ -55,166 +71,48 @@ nonisolated enum PokeMath {
         return min(level, maxLevel)
     }
 
+    /// The most experience a Pokémon can hold under a level cap; the rest is banked.
+    static func xpLimit(cap: Int) -> Int {
+        cap >= maxLevel ? xp(forLevel: maxLevel) : xp(forLevel: cap + 1) - 1
+    }
+
     /// Experience for knocking out a Pokémon, shared in full by the whole party.
-    /// It grows much slower than the L³ curve, so early levels come quickly and later ones take
-    /// real work.
-    static func defeatXP(baseExperience: Int, level: Int, boss: Bool) -> Int {
-        let xp = Double(baseExperience) * (1 + Double(level) / 50) * xpScale
-        return max(1, Int(boss ? xp * 3 : xp))
+    ///
+    /// It follows the square root of the species' base experience, so evolved Pokémon are worth
+    /// more without the late game racing ahead: levels come every few minutes at first and take
+    /// about an hour near the Elite Four. Foes below the party's level are worth less, so
+    /// revisiting early routes doesn't beat pushing on.
+    static func defeatXP(baseExperience: Int, level: Int, partyLevel: Int, kind: StagePlan.Kind) -> Int {
+        let bonus: Double = switch kind {
+        case .wild: 1
+        case .trainer: 1.5
+        case .legend: 3
+        }
+        let relative = min(1, Double(level) / Double(max(1, partyLevel)))
+        return max(1, Int((xpScale * Double(max(20, baseExperience)).squareRoot() * (0.4 + 0.6 * relative) * bonus).rounded()))
     }
 
     /// Tuning knob for how fast the party grows (see scripts/adventure-sim.swift).
-    nonisolated(unsafe) static var xpScale = 0.12
+    nonisolated(unsafe) static var xpScale = 1.1
 }
 
-/// One Pokémon on the field.
-nonisolated struct Combatant: Identifiable, Equatable, Sendable {
-    let id: UUID
-    var speciesID: Int
-    var level: Int
-    var types: [PokeType]
-    var stats: PokeStats
-    var hp: Int
-    var isBoss = false
-    /// The party member this is, for experience and evolution.
-    var ownedID: UUID?
+/// Everything the rules read: species, moves and wild encounters.
+nonisolated struct GameData: Sendable {
+    let dex: DexView
+    let moves: MoveDex
+    let encounters: EncounterDex
+    /// The main journey for this player's starter.
+    let nodes: [JourneyNode]
 
-    var maxHP: Int { stats.hp }
-    var isFainted: Bool { hp <= 0 }
-    var hpFraction: Double { maxHP > 0 ? Double(max(0, hp)) / Double(maxHP) : 0 }
-
-    init(species: PokeSpecies, level: Int, isBoss: Bool = false, ownedID: UUID? = nil) {
-        id = UUID()
-        speciesID = species.id
-        self.level = level
-        types = species.types
-        var stats = PokeMath.stats(species.stats, level: level)
-        if isBoss { stats.hp = Int(Double(stats.hp) * Stage.bossHPMultiplier) }
-        self.stats = stats
-        hp = stats.hp
-        self.isBoss = isBoss
-        self.ownedID = ownedID
+    init(species: [PokeSpecies], moves: MoveDex, encounters: EncounterDex, starter: Int) {
+        dex = DexView(species)
+        self.moves = moves
+        self.encounters = encounters
+        nodes = Kanto.main(starter: starter)
     }
 
-    /// After a level-up or evolution: new stats, keeping the damage already taken.
-    mutating func become(_ species: PokeSpecies, level: Int) {
-        let taken = maxHP - hp
-        speciesID = species.id
-        self.level = level
-        types = species.types
-        stats = PokeMath.stats(species.stats, level: level)
-        hp = isFainted ? 0 : max(1, stats.hp - taken)
-    }
-}
-
-nonisolated struct Stage: Codable, Hashable, Comparable, Sendable {
-    var world: Int
-    var number: Int
-
-    static let first = Stage(world: 1, number: 1)
-    static let perWorld = 10
-    static let bossHPMultiplier = 2.5
-    static let bossLevelBonus = 4
-
-    var index: Int { (world - 1) * Self.perWorld + (number - 1) }
-    var isBoss: Bool { number == Self.perWorld }
-    var next: Stage { number < Self.perWorld ? Stage(world: world, number: number + 1) : Stage(world: world + 1, number: 1) }
-    var label: String { "\(world)-\(number)" }
-
-    /// The level wild Pokémon have here.
-    var enemyLevel: Int { min(PokeMath.maxLevel - Self.bossLevelBonus, 3 + Int((Double(index) * Self.levelStep).rounded())) }
-    static let levelStep = 1.5
-
-    static func < (lhs: Stage, rhs: Stage) -> Bool { lhs.index < rhs.index }
-}
-
-/// Where the party is: the first stage not yet cleared, and whether it's training on the one
-/// before after being wiped out there.
-nonisolated struct StageProgress: Codable, Equatable, Sendable {
-    var frontier = Stage.first
-    /// Clears of the previous stage still to go before trying the frontier again.
-    var training = 0
-
-    static let trainingClears = 3
-
-    var current: Stage {
-        guard training > 0, frontier.index > 0 else { return frontier }
-        return Stage(index: frontier.index - 1)
-    }
-
-    var isTraining: Bool { current != frontier }
-
-    /// Returns true when this clear opened a new stage.
-    @discardableResult
-    mutating func record(cleared: Bool) -> Bool {
-        if cleared {
-            if isTraining { training -= 1; return false }
-            frontier = frontier.next
-            return true
-        }
-        training = frontier.index > 0 ? Self.trainingClears : 0
-        return false
-    }
-}
-
-nonisolated extension Stage {
-    init(index: Int) {
-        self.init(world: index / Stage.perWorld + 1, number: index % Stage.perWorld + 1)
-    }
-}
-
-nonisolated struct StageEnemy: Codable, Equatable, Sendable {
-    var speciesID: Int
-    var level: Int
-    var isBoss: Bool
-}
-
-nonisolated struct StagePlan: Equatable, Sendable {
-    let stage: Stage
-    let waves: [[StageEnemy]]
-
-    /// The same stage always holds the same Pokémon.
-    static func make(for stage: Stage, dex: DexView) -> StagePlan {
-        var rng = SeededRNG(seed: UInt64(stage.index + 1) &* 0x2545_F491_4F6C_DD1D)
-        let level = stage.enemyLevel
-        if stage.isBoss {
-            let boss = pickBoss(level: level + Stage.bossLevelBonus, world: stage.world, dex: dex, rng: &rng)
-            return StagePlan(stage: stage, waves: [[StageEnemy(speciesID: boss, level: level + Stage.bossLevelBonus, isBoss: true)]])
-        }
-        let pool = dex.species.filter { !$0.isSpecial && fits($0, level: level, dex: dex) }
-        var waves: [[StageEnemy]] = []
-        for wave in 0..<3 {
-            let count = rng.unit() < 0.35 + Double(wave) * 0.15 + Double(stage.index) * 0.01 ? 2 : 1
-            waves.append((0..<count).map { _ in
-                let species = pool.isEmpty ? 16 : pool[Int(rng.next() % UInt64(pool.count))].id
-                let spread = Int(rng.next() % 3) - 1
-                return StageEnemy(speciesID: species, level: max(2, level + spread), isBoss: false)
-            })
-        }
-        return StagePlan(stage: stage, waves: waves)
-    }
-
-    /// Evolved forms only show up once wild Pokémon are around the level they evolve at.
-    private static func fits(_ species: PokeSpecies, level: Int, dex: DexView) -> Bool {
-        guard let evolveLevel = species.evolveLevel else { return true }
-        return level + 3 >= evolveLevel
-    }
-
-    private static func pickBoss(level: Int, world: Int, dex: DexView, rng: inout SeededRNG) -> Int {
-        // Every fifth world ends with a legendary.
-        if world % 5 == 0 {
-            let legends = dex.species.filter(\.isSpecial)
-            if !legends.isEmpty { return legends[Int(rng.next() % UInt64(legends.count))].id }
-        }
-        let strong = dex.species.filter { species in
-            guard !species.isSpecial else { return false }
-            let evolved = species.evolvesFrom != nil && (species.evolveLevel ?? 0) <= level
-            let loner = species.evolvesFrom == nil && dex.evolutions(species.id).isEmpty && species.stats.total >= 440
-            return evolved || loner
-        }
-        let pool = strong.isEmpty ? dex.species.filter { !$0.isSpecial } : strong
-        return pool[Int(rng.next() % UInt64(pool.count))].id
-    }
+    func node(_ id: String) -> JourneyNode? { nodes.first { $0.id == id } ?? Kanto.legends.first { $0.id == id } }
+    func nodeIndex(_ id: String) -> Int? { nodes.firstIndex { $0.id == id } }
 }
 
 /// The parts of the dex the rules need, so they don't depend on the observable store.
@@ -240,91 +138,221 @@ nonisolated struct DexView: Sendable {
         while let from = current?.evolvesFrom, let previous = byID[from] { stage += 1; current = previous }
         return stage
     }
+
+    /// The first form of a species' evolution line.
+    func base(of id: Int) -> Int {
+        var current = id
+        while let from = byID[current]?.evolvesFrom, byID[from] != nil { current = from }
+        return current
+    }
 }
 
-nonisolated struct BattleAttack: Equatable, Sendable {
+// MARK: Combatants
+
+/// One Pokémon in a battle.
+nonisolated struct Combatant: Identifiable, Equatable, Sendable {
+    let id: UUID
+    var speciesID: Int
+    var level: Int
+    var types: [PokeType]
+    var stats: PokeStats
+    var hp: Int
+    var moves: [PokeMove]
+    /// Rounds left before a strong move can be used again.
+    var cooldowns: [Int: Int] = [:]
+    var isBoss = false
+    /// The party member this is, for experience and evolution.
+    var ownedID: UUID?
+
+    var maxHP: Int { stats.hp }
+    var isFainted: Bool { hp <= 0 }
+    var hpFraction: Double { maxHP > 0 ? Double(max(0, hp)) / Double(maxHP) : 0 }
+
+    static let bossHPMultiplier = 2.5
+
+    init(species: PokeSpecies, level: Int, moves: MoveDex, isBoss: Bool = false, ownedID: UUID? = nil) {
+        id = UUID()
+        speciesID = species.id
+        self.level = level
+        types = species.types
+        var stats = PokeMath.stats(species.stats, level: level)
+        if isBoss { stats.hp = Int(Double(stats.hp) * Self.bossHPMultiplier) }
+        self.stats = stats
+        hp = stats.hp
+        self.moves = moves.moveset(species: species.id, types: species.types, level: level)
+        self.isBoss = isBoss
+        self.ownedID = ownedID
+    }
+
+    /// After a level-up or evolution: new stats and moves, keeping the damage already taken.
+    mutating func become(_ species: PokeSpecies, level: Int, moves: MoveDex) {
+        let taken = maxHP - hp
+        speciesID = species.id
+        self.level = level
+        types = species.types
+        stats = PokeMath.stats(species.stats, level: level)
+        self.moves = moves.moveset(species: species.id, types: species.types, level: level)
+        cooldowns = cooldowns.filter { entry in self.moves.contains { $0.id == entry.key } }
+        hp = isFainted ? 0 : max(1, stats.hp - taken)
+    }
+
+    func isReady(_ move: PokeMove) -> Bool { (cooldowns[move.id] ?? 0) == 0 }
+}
+
+// MARK: Stages
+
+/// What a stage holds: wild Pokémon, a trainer's team, or a legendary.
+nonisolated struct StagePlan: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
+        case wild
+        case trainer(Trainer)
+        case legend
+    }
+
+    struct Foe: Equatable, Sendable {
+        let species: Int
+        let level: Int
+    }
+
+    let node: JourneyNode
+    /// Index of the stage within its node.
+    let stage: Int
+    let kind: Kind
+    let foes: [Foe]
+
+    var trainer: Trainer? { if case .trainer(let trainer) = kind { trainer } else { nil } }
+
+    /// Wild stages differ on every visit; the last stage of a stretch holds one more Pokémon.
+    /// Wild Pokémon stay a level or more below the party, as in the games, so only trainers and
+    /// legendaries stand in the way: the routes are for exploring, the gyms for testing the team.
+    static func make(node: JourneyNode, stage: Int, data: GameData, partyLevel: Int, rng: inout SeededRNG) -> StagePlan {
+        switch node.kind {
+        case .trainers(let trainers):
+            let trainer = trainers[min(stage, trainers.count - 1)]
+            return StagePlan(node: node, stage: stage, kind: .trainer(trainer),
+                             foes: trainer.battleTeam.map { Foe(species: $0.species, level: $0.level) })
+        case .legend(let species, let level, _):
+            return StagePlan(node: node, stage: 0, kind: .legend, foes: [Foe(species: species, level: level)])
+        case .route(let stages, let levels, _, _):
+            let pool = data.encounters.pool(for: node, dex: data.dex)
+            let t = stages > 1 ? Double(stage) / Double(stages - 1) : 1
+            let level = min(levels.lowerBound + Int((Double(levels.upperBound - levels.lowerBound) * t).rounded()), partyLevel - 1)
+            let count = stage == stages - 1 ? 3 : 2
+            let foes = (0..<count).map { index -> Foe in
+                let species = rng.weighted(pool.map(\.share)).map { pool[$0].species } ?? 16
+                // The last one is the stretch's toughest.
+                let spread = index == count - 1 ? 0 : rng.pick(-2...(-1))
+                return Foe(species: species, level: max(2, level + spread))
+            }
+            return StagePlan(node: node, stage: stage, kind: .wild, foes: foes)
+        }
+    }
+}
+
+// MARK: Battle
+
+nonisolated enum BattleSide: Sendable {
+    case party, foe
+}
+
+/// One move used, with everything the scene needs to show it.
+nonisolated struct BattleAction: Equatable, Sendable {
     let attackerID: UUID
     let targetID: UUID
+    let move: PokeMove
+    let byParty: Bool
+    let missed: Bool
+    let hits: Int
     let damage: Int
     let effectiveness: Double
     let critical: Bool
-    let type: PokeType
-    let fainted: Bool
-    /// True when the party attacked.
-    let byParty: Bool
+    let healed: Int
+    let recoil: Int
+    let targetFainted: Bool
+    let attackerFainted: Bool
 }
 
 nonisolated enum BattleEvent: Equatable, Sendable {
-    case waveStarted(Int)
-    case attack(BattleAttack)
-    case stageCleared(Stage)
-    case wiped(Stage)
+    /// A Pokémon took the field after the one before it fainted.
+    case sentOut(BattleSide, UUID)
+    case action(BattleAction)
+    case cleared
+    case wiped
 }
 
-/// A stage in progress. `step()` plays one action; the app calls it about once a second while an
-/// agent works.
+/// A stage in progress, fought one Pokémon a side at a time. `step()` plays one action; the app
+/// calls it every 1.5 s while an agent works.
 nonisolated struct BattleState: Equatable, Sendable {
     enum Phase: Equatable, Sendable {
         case intro(Int)
         case fighting
-        case betweenWaves(Int)
+        case switching(Int)
         case clearing(Int)
         case wiping(Int)
         case over(cleared: Bool)
     }
 
     let plan: StagePlan
-    private(set) var waveIndex = 0
     var party: [Combatant]
-    private(set) var enemies: [Combatant] = []
-    private(set) var phase: Phase = .intro(1)
-    private var queue: [UUID] = []
-    private var actionsThisWave = 0
+    private(set) var foes: [Combatant]
+    private(set) var partyIndex: Int
+    private(set) var foeIndex = 0
+    private(set) var phase: Phase
+    /// Sides still to act this round, with the moves they chose.
+    private var round: [(side: BattleSide, move: PokeMove)] = []
+    private var actions = 0
     private var rng: SeededRNG
 
-    var stage: Stage { plan.stage }
-    var waveCount: Int { plan.waves.count }
-    var isOver: Bool { if case .over = phase { true } else { false } }
-
-    init(plan: StagePlan, party: [Combatant], dex: DexView, seed: UInt64) {
-        self.plan = plan
-        self.party = party
-        rng = SeededRNG(seed: seed)
-        enemies = Self.spawn(plan.waves.first ?? [], dex: dex)
+    static func == (lhs: BattleState, rhs: BattleState) -> Bool {
+        lhs.plan == rhs.plan && lhs.party == rhs.party && lhs.foes == rhs.foes && lhs.partyIndex == rhs.partyIndex
+            && lhs.foeIndex == rhs.foeIndex && lhs.phase == rhs.phase && lhs.actions == rhs.actions
     }
 
-    private static func spawn(_ wave: [StageEnemy], dex: DexView) -> [Combatant] {
-        wave.compactMap { enemy in
-            dex[enemy.speciesID].map { Combatant(species: $0, level: enemy.level, isBoss: enemy.isBoss) }
+    var isOver: Bool { if case .over = phase { true } else { false } }
+    var partyActive: Combatant? { party.indices.contains(partyIndex) ? party[partyIndex] : nil }
+    var foeActive: Combatant? { foes.indices.contains(foeIndex) ? foes[foeIndex] : nil }
+
+    init(plan: StagePlan, party: [Combatant], data: GameData, seed: UInt64) {
+        self.plan = plan
+        self.party = party
+        partyIndex = party.firstIndex { !$0.isFainted } ?? 0
+        foes = plan.foes.compactMap { foe in
+            data.dex[foe.species].map { Combatant(species: $0, level: foe.level, moves: data.moves, isBoss: plan.kind == .legend) }
         }
+        rng = SeededRNG(seed: seed)
+        phase = .intro(plan.trainer == nil ? 1 : 2)
     }
 
     func combatant(_ id: UUID) -> Combatant? {
-        party.first { $0.id == id } ?? enemies.first { $0.id == id }
+        party.first { $0.id == id } ?? foes.first { $0.id == id }
     }
 
-    mutating func step(dex: DexView) -> BattleEvent? {
+    mutating func step() -> BattleEvent? {
         switch phase {
         case .intro(let ticks):
             if ticks > 0 { phase = .intro(ticks - 1); return nil }
             phase = .fighting
-            return .waveStarted(waveIndex)
-        case .betweenWaves(let ticks):
-            if ticks > 0 { phase = .betweenWaves(ticks - 1); return nil }
-            waveIndex += 1
-            enemies = Self.spawn(plan.waves[waveIndex], dex: dex)
-            queue = []
-            actionsThisWave = 0
+            return act()
+        case .switching(let ticks):
+            if ticks > 0 { phase = .switching(ticks - 1); return nil }
             phase = .fighting
-            return .waveStarted(waveIndex)
+            if partyActive?.isFainted == true, let next = party.firstIndex(where: { !$0.isFainted }) {
+                partyIndex = next
+                return .sentOut(.party, party[next].id)
+            }
+            if foeActive?.isFainted == true, let next = foes.firstIndex(where: { !$0.isFainted }) {
+                foeIndex = next
+                return .sentOut(.foe, foes[next].id)
+            }
+            return act()
         case .clearing(let ticks):
             if ticks > 0 { phase = .clearing(ticks - 1); return nil }
             phase = .over(cleared: true)
-            return .stageCleared(stage)
+            return .cleared
         case .wiping(let ticks):
             if ticks > 0 { phase = .wiping(ticks - 1); return nil }
             phase = .over(cleared: false)
-            return .wiped(stage)
+            return .wiped
         case .over:
             return nil
         case .fighting:
@@ -333,116 +361,153 @@ nonisolated struct BattleState: Equatable, Sendable {
     }
 
     private mutating func act() -> BattleEvent? {
-        actionsThisWave += 1
-        // A stalemate (say, nothing can touch a Ghost) ends as a loss rather than running forever.
-        if actionsThisWave > 240 {
+        actions += 1
+        // A stalemate ends as a loss rather than running forever.
+        if actions > 400 {
             phase = .wiping(1)
             return nil
         }
-        var actorID: UUID?
-        while actorID == nil {
-            if queue.isEmpty {
-                queue = (party + enemies).filter { !$0.isFainted }
-                    .sorted { $0.stats.speed == $1.stats.speed ? rng.unit() < 0.5 : $0.stats.speed > $1.stats.speed }
-                    .map(\.id)
-                if queue.isEmpty { return nil }
+        guard let ally = partyActive, let foe = foeActive, !ally.isFainted, !foe.isFainted else { return settle() }
+        if round.isEmpty {
+            let allyMove = Self.choose(for: ally, against: foe, smart: true, rng: &rng)
+            let foeMove = Self.choose(for: foe, against: ally, smart: plan.kind != .wild, rng: &rng)
+            let allyFirst: Bool
+            if allyMove.priority != foeMove.priority {
+                allyFirst = allyMove.priority > foeMove.priority
+            } else if ally.stats.speed != foe.stats.speed {
+                allyFirst = ally.stats.speed > foe.stats.speed
+            } else {
+                allyFirst = rng.unit() < 0.5
             }
-            let next = queue.removeFirst()
-            if let actor = combatant(next), !actor.isFainted { actorID = next }
+            round = allyFirst ? [(.party, allyMove), (.foe, foeMove)] : [(.foe, foeMove), (.party, allyMove)]
         }
-        guard let actorID, let attacker = combatant(actorID) else { return nil }
-        let byParty = party.contains { $0.id == actorID }
-
-        let targetIndex: Int?
-        if byParty {
-            targetIndex = enemies.firstIndex { !$0.isFainted }
-        } else {
-            // Enemies favor the front of the party.
-            let living = party.indices.filter { !party[$0].isFainted }
-            targetIndex = living.isEmpty ? nil : (rng.unit() < 0.5 ? living[0] : living[Int(rng.next() % UInt64(living.count))])
+        let (side, move) = round.removeFirst()
+        let action = use(move, by: side)
+        if action.targetFainted || action.attackerFainted {
+            round = []
+            _ = settle()
         }
-        guard let targetIndex else { return nil }
-        let defender = byParty ? enemies[targetIndex] : party[targetIndex]
-        let hit = Self.damage(from: attacker, to: defender, rng: &rng)
-        if byParty { enemies[targetIndex].hp -= hit.damage } else { party[targetIndex].hp -= hit.damage }
-        let fainted = (byParty ? enemies[targetIndex] : party[targetIndex]).isFainted
+        return .action(action)
+    }
 
-        if enemies.allSatisfy(\.isFainted) {
-            phase = waveIndex + 1 < plan.waves.count ? .betweenWaves(1) : .clearing(1)
+    /// After a faint: the next Pokémon comes out, or the stage ends.
+    private mutating func settle() -> BattleEvent? {
+        if foes.allSatisfy(\.isFainted) {
+            phase = .clearing(1)
         } else if party.allSatisfy(\.isFainted) {
             phase = .wiping(1)
+        } else if partyActive?.isFainted == true || foeActive?.isFainted == true {
+            phase = .switching(0)
         }
-        return .attack(BattleAttack(
-            attackerID: attacker.id, targetID: defender.id, damage: hit.damage, effectiveness: hit.effectiveness,
-            critical: hit.critical, type: hit.type, fainted: fainted, byParty: byParty
-        ))
+        return nil
     }
 
-    /// The main-series formula at power 50 with the attacker's best type against the target.
-    static func damage(from attacker: Combatant, to defender: Combatant, rng: inout SeededRNG)
-        -> (damage: Int, effectiveness: Double, critical: Bool, type: PokeType) {
-        let type = attacker.types.max { $0.effectiveness(against: defender.types) < $1.effectiveness(against: defender.types) } ?? .normal
-        let effectiveness = type.effectiveness(against: defender.types)
-        let physical = attacker.stats.attack >= attacker.stats.spAttack
-        let attack = Double(physical ? attacker.stats.attack : attacker.stats.spAttack)
-        let defense = Double(max(1, physical ? defender.stats.defense : defender.stats.spDefense))
-        let base = floor(floor((2 * Double(attacker.level) / 5 + 2) * 50 * attack / defense) / 50) + 2
-        let critical = rng.unit() < 1.0 / 16
-        let spread = 0.85 + rng.unit() * 0.15
-        // Immunities still chip a little, so every fight can end.
-        let multiplier = 1.5 * max(effectiveness, 0.25) * (critical ? 1.5 : 1) * spread
-        return (max(1, Int(base * multiplier)), effectiveness, critical, type)
-    }
-}
+    private mutating func use(_ move: PokeMove, by side: BattleSide) -> BattleAction {
+        var attacker = side == .party ? party[partyIndex] : foes[foeIndex]
+        var defender = side == .party ? foes[foeIndex] : party[partyIndex]
+        for key in attacker.cooldowns.keys { attacker.cooldowns[key] = max(0, (attacker.cooldowns[key] ?? 0) - 1) }
+        if move.cooldown > 0 { attacker.cooldowns[move.id] = move.cooldown }
 
-/// Who turns up at the end of an agent's turn: anyone in the dex, weighted by how common they
-/// are. Evolved forms and legendaries are rarer.
-nonisolated enum WildEncounter {
-    /// Turns shorter than this end before anything shows up.
-    static let minimumTurn: TimeInterval = 20
+        let effectiveness = Self.effectiveness(of: move, against: defender)
+        var missed = false
+        if let accuracy = move.accuracy, rng.unit() * 100 >= Double(accuracy) { missed = true }
 
-    static func weight(of species: PokeSpecies, dex: DexView) -> Double {
-        if species.isSpecial { return 10 }
-        let stageFactor: Double = switch dex.stage(of: species.id) {
-        case 1: 1
-        case 2: 0.3
-        default: 0.12
+        var damage = 0, hits = 0, critical = false
+        if !missed, effectiveness > 0 {
+            let count = Self.hitCount(move, rng: &rng)
+            for _ in 0..<count where !defender.isFainted {
+                let crit = Self.rollCritical(move, rng: &rng)
+                let dealt = min(defender.hp, Self.damage(move, from: attacker, to: defender, critical: crit, rng: &rng))
+                defender.hp -= dealt
+                damage += dealt
+                hits += 1
+                critical = critical || crit
+            }
         }
-        return Double(max(species.captureRate, 3)) * stageFactor
-    }
-
-    /// `partyLevel` is the party's average: a newcomer arrives a little behind it, so it's worth
-    /// raising without jumping ahead of the Pokémon already raised.
-    static func roll(dex: DexView, partyLevel: Int, rng: inout SeededRNG) -> StageEnemy? {
-        let weights = dex.species.map { weight(of: $0, dex: dex) }
-        let total = weights.reduce(0, +)
-        guard total > 0 else { return nil }
-        var pick = rng.unit() * total
-        var chosen = dex.species[0]
-        for (species, weight) in zip(dex.species, weights) {
-            if pick < weight { chosen = species; break }
-            pick -= weight
+        var healed = 0, recoil = 0
+        if damage > 0, move.drain > 0 {
+            healed = min(attacker.maxHP - attacker.hp, max(1, damage * move.drain / 100))
+            attacker.hp += healed
+        } else if damage > 0, move.drain < 0 {
+            recoil = min(attacker.hp, max(1, damage * -move.drain / 100))
+            attacker.hp -= recoil
         }
-        return StageEnemy(speciesID: chosen.id, level: level(of: chosen, partyLevel: partyLevel, rng: &rng), isBoss: false)
+
+        if side == .party { party[partyIndex] = attacker; foes[foeIndex] = defender } else { foes[foeIndex] = attacker; party[partyIndex] = defender }
+        return BattleAction(
+            attackerID: attacker.id, targetID: defender.id, move: move, byParty: side == .party, missed: missed,
+            hits: hits, damage: damage, effectiveness: effectiveness, critical: critical, healed: healed, recoil: recoil,
+            targetFainted: defender.isFainted, attackerFainted: attacker.isFainted
+        )
     }
 
-    static func level(of species: PokeSpecies, partyLevel: Int, rng: inout SeededRNG) -> Int {
-        let spread = Int(rng.next() % 5) - 2
-        var level = max(3, Int(Double(partyLevel) * 0.85) - 1 + spread)
-        // Evolved forms are never below the level they evolve at: a lucky find.
-        if let evolveLevel = species.evolveLevel { level = max(level, evolveLevel) }
-        if species.isSpecial { level = max(level, 40) }
-        return min(level, PokeMath.maxLevel)
+    // MARK: Rules
+
+    static func effectiveness(of move: PokeMove, against defender: Combatant) -> Double {
+        move.id == PokeMove.struggle.id ? 1 : move.type.effectiveness(against: defender.types)
     }
 
-    static func captureChance(of species: PokeSpecies) -> Double {
-        if species.isSpecial { return 0.35 }
-        return 0.55 + 0.35 * Double(species.captureRate) / 255
+    /// The best ready move for this matchup. Wild Pokémon sometimes pick at random, as in the games.
+    static func choose(for attacker: Combatant, against defender: Combatant, smart: Bool, rng: inout SeededRNG) -> PokeMove {
+        let ready = attacker.moves.filter { attacker.isReady($0) && $0.id != PokeMove.struggle.id }
+        let scored = ready.map { move in (move, expectedDamage(move, from: attacker, to: defender)) }.filter { $0.1 > 0 }
+        guard !scored.isEmpty else { return PokeMove.struggle }
+        if !smart, rng.unit() < 0.4 { return scored[Int(rng.next() % UInt64(scored.count))].0 }
+        return scored.max { $0.1 * (0.9 + 0.2 * rng.unit()) < $1.1 * (0.9 + 0.2 * rng.unit()) }!.0
     }
 
-    /// Catching one you already have is worth about a third of a level to it.
-    static func duplicateXP(level: Int) -> Int { max(20, level * level) }
+    static func expectedDamage(_ move: PokeMove, from attacker: Combatant, to defender: Combatant) -> Double {
+        let effectiveness = effectiveness(of: move, against: defender)
+        guard effectiveness > 0 else { return 0 }
+        let hits: Double = move.minHits == move.maxHits ? Double(move.minHits) : (move.minHits == 2 && move.maxHits == 5 ? 3 : Double(move.minHits + move.maxHits) / 2)
+        let chance = Double(move.accuracy ?? 100) / 100
+        switch move.damage {
+        case .fixed(let amount): return Double(amount) * chance
+        case .level: return Double(attacker.level) * chance
+        case .halfHP: return Double(defender.hp) / 2 * chance
+        case .power(let power):
+            return baseDamage(power: power, move: move, from: attacker, to: defender) * modifier(move, attacker: attacker, effectiveness: effectiveness) * 0.925 * hits * chance
+        }
+    }
 
-    /// Most turns bring someone along; not all.
-    static let encounterChance = 0.6
+    /// Gen 3's formula before the random factor, critical hits and type.
+    private static func baseDamage(power: Int, move: PokeMove, from attacker: Combatant, to defender: Combatant) -> Double {
+        let attack = Double(move.isPhysical ? attacker.stats.attack : attacker.stats.spAttack)
+        let defense = Double(max(1, move.isPhysical ? defender.stats.defense : defender.stats.spDefense))
+        return floor(floor(floor(2 * Double(attacker.level) / 5 + 2) * Double(power) * attack / defense) / 50) + 2
+    }
+
+    private static func modifier(_ move: PokeMove, attacker: Combatant, effectiveness: Double) -> Double {
+        let stab = move.id != PokeMove.struggle.id && attacker.types.contains(move.type) ? 1.5 : 1
+        return stab * effectiveness
+    }
+
+    static func damage(_ move: PokeMove, from attacker: Combatant, to defender: Combatant, critical: Bool, rng: inout SeededRNG) -> Int {
+        switch move.damage {
+        case .fixed(let amount): return amount
+        case .level: return attacker.level
+        case .halfHP: return max(1, defender.hp / 2)
+        case .power(let power):
+            let effectiveness = effectiveness(of: move, against: defender)
+            let spread = 0.85 + rng.unit() * 0.15
+            let value = baseDamage(power: power, move: move, from: attacker, to: defender)
+                * modifier(move, attacker: attacker, effectiveness: effectiveness) * (critical ? 2 : 1) * spread
+            return max(1, Int(value))
+        }
+    }
+
+    private static func rollCritical(_ move: PokeMove, rng: inout SeededRNG) -> Bool {
+        guard move.power != nil else { return false }
+        return rng.unit() < (move.critStage > 0 ? 1.0 / 8 : 1.0 / 16)
+    }
+
+    /// Gen 3's odds for 2–5 hit moves: 2 and 3 hits 3/8 each, 4 and 5 hits 1/8 each.
+    private static func hitCount(_ move: PokeMove, rng: inout SeededRNG) -> Int {
+        guard move.maxHits > move.minHits else { return move.minHits }
+        if move.minHits == 2, move.maxHits == 5 {
+            let roll = rng.unit()
+            return roll < 0.375 ? 2 : (roll < 0.75 ? 3 : (roll < 0.875 ? 4 : 5))
+        }
+        return rng.pick(move.minHits...move.maxHits)
+    }
 }

@@ -9,19 +9,36 @@ extension Notification.Name {
     static let dancoveOpenAdventure = Notification.Name("com.geonhwiii.dancove.openAdventure")
     #if DEBUG
     static let dancoveDebugSelectPokemon = Notification.Name("dancoveDebugSelectPokemon")
+    static let dancoveDebugAdventurePane = Notification.Name("dancoveDebugAdventurePane")
+    static let dancoveDebugOpenBall = Notification.Name("dancoveDebugOpenBall")
     #endif
 }
 
-/// The adventure page: the party's battle on the left, the Pokédex on the right.
+/// Which view fills the right half of the adventure page.
+enum AdventurePane: String, CaseIterable {
+    case map, dex, gacha
+
+    var title: String {
+        switch self {
+        case .map: String(localized: "Map")
+        case .dex: String(localized: "Pokédex")
+        case .gacha: String(localized: "Gacha")
+        }
+    }
+}
+
+/// The adventure page: the battle and party on the left; the map, Pokédex or gacha on the right.
 struct AdventurePageView: View {
     @Environment(AppModel.self) private var app
     /// The species whose details replace the battle scene.
     @State private var selection: Int?
+    @AppStorage("adventurePane") private var pane: AdventurePane = .map
+    @State private var showsRecap = false
 
     var body: some View {
         let adventure = app.adventure
-        HStack(alignment: .top, spacing: 14) {
-            VStack(alignment: .leading, spacing: 7) {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
                 ZStack {
                     switch adventure.dex.state {
                     case .ready:
@@ -44,145 +61,63 @@ struct AdventurePageView: View {
                 }
                 .frame(height: BattleSceneView.height)
                 .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.white.opacity(0.08)))
+                .overlay(alignment: .bottom) {
+                    if showsRecap, selection == nil, !adventure.recap.isEmpty {
+                        RecapCard { dismissRecap() }
+                            .padding(6)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.08)))
                 .animation(.smooth(duration: 0.28), value: selection)
 
                 PartyBar(selection: $selection)
             }
-            .frame(minWidth: 214, maxWidth: 262)
+            .frame(minWidth: 226, maxWidth: 262)
 
-            DexGrid(selection: $selection)
+            VStack(alignment: .leading, spacing: 6) {
+                PaneTabs(pane: $pane)
+                switch pane {
+                case .map: KantoMapView()
+                case .dex: DexGrid(selection: $selection)
+                case .gacha: GachaView()
+                }
+            }
+            .frame(width: 216)
+            .disabled(!adventure.hasStarted)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 18)
         .padding(.top, 4)
-        .padding(.bottom, 10)
+        .padding(.bottom, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onAppear { adventure.dex.load() }
+        .onAppear {
+            adventure.dex.load()
+            adventure.isWatching = true
+            showsRecap = !adventure.recap.isEmpty
+        }
+        .onDisappear { adventure.isWatching = false }
+        .task(id: showsRecap) {
+            // Only a full eight seconds on screen counts as seen; leaving early keeps it for next time.
+            guard showsRecap, (try? await Task.sleep(for: .seconds(8))) != nil else { return }
+            dismissRecap()
+        }
         #if DEBUG
         .onReceive(NotificationCenter.default.publisher(for: .dancoveDebugSelectPokemon)) { note in
             selection = note.object as? Int
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .dancoveDebugAdventurePane)) { note in
+            if let raw = note.object as? String, let value = AdventurePane(rawValue: raw) { pane = value }
+            if note.object as? String == "recap" { showsRecap = true }
         }
         #endif
     }
 }
 
-// MARK: Battle scene
-
-/// The party (left, facing right) against the stage's wild Pokémon, one action per tick.
-struct BattleSceneView: View {
-    static let height: CGFloat = 118
-
-    @Environment(AppModel.self) private var app
-    @State private var lunging: UUID?
-    @State private var struck: UUID?
-    @State private var popups: [DamagePopup] = []
-
-    var body: some View {
-        let adventure = app.adventure
-        let battle = adventure.battle
-        let stage = battle?.stage ?? adventure.progress.current
-        ZStack {
-            StageBackdrop(world: stage.world)
-
-            GeometryReader { proxy in
-                let width = proxy.size.width
-                ZStack(alignment: .topLeading) {
-                    if let battle {
-                        // Back row first, so the front row overlaps it.
-                        ForEach(Array(battle.party.enumerated()).sorted { Self.partySlot($0.offset, width: width).y < Self.partySlot($1.offset, width: width).y }, id: \.element.id) { index, member in
-                            combatantView(member, facingRight: true)
-                                .position(Self.figureCenter(Self.partySlot(index, width: width)))
-                        }
-                        ForEach(Array(battle.enemies.enumerated()), id: \.element.id) { index, enemy in
-                            combatantView(enemy, facingRight: false)
-                                .position(Self.figureCenter(Self.enemySlot(index, count: battle.enemies.count, boss: enemy.isBoss, width: width)))
-                                .zIndex(index == 0 ? 1 : 0)
-                        }
-                    }
-                    ForEach(popups) { popup in
-                        DamagePopupView(popup: popup)
-                            .position(point(for: popup.targetID, in: battle, width: width))
-                    }
-                }
-            }
-
-            SceneOverlay(stage: stage, battle: battle)
-        }
-        .onChange(of: adventure.attackSerial) { handle(adventure.lastAttack) }
-    }
-
-    /// Where a combatant's feet go. The leader stands in front, the other two a step behind.
-    static func partySlot(_ index: Int, width: CGFloat) -> CGPoint {
-        let spots: [CGPoint] = [CGPoint(x: 0.34, y: 104), CGPoint(x: 0.2, y: 92), CGPoint(x: 0.09, y: 110)]
-        let spot = spots[min(index, spots.count - 1)]
-        return CGPoint(x: spot.x * width, y: spot.y)
-    }
-
-    static func enemySlot(_ index: Int, count: Int, boss: Bool, width: CGFloat) -> CGPoint {
-        if boss { return CGPoint(x: 0.75 * width, y: 106) }
-        let spots: [CGPoint] = count == 1 ? [CGPoint(x: 0.74, y: 100)] : [CGPoint(x: 0.66, y: 106), CGPoint(x: 0.85, y: 92)]
-        let spot = spots[min(index, spots.count - 1)]
-        return CGPoint(x: spot.x * width, y: spot.y)
-    }
-
-    /// Combatants are drawn in a box this tall, feet on its bottom edge.
-    static let figureHeight: CGFloat = 96
-
-    static func figureCenter(_ feet: CGPoint) -> CGPoint {
-        CGPoint(x: feet.x, y: feet.y - figureHeight / 2)
-    }
-
-    /// Just above where a combatant stands, for its damage number.
-    private func point(for id: UUID, in battle: BattleState?, width: CGFloat) -> CGPoint {
-        var point = CGPoint(x: 0.7 * width, y: 50)
-        if let battle {
-            if let index = battle.party.firstIndex(where: { $0.id == id }) {
-                point = Self.partySlot(index, width: width)
-            } else if let index = battle.enemies.firstIndex(where: { $0.id == id }) {
-                point = Self.enemySlot(index, count: battle.enemies.count, boss: battle.enemies[index].isBoss, width: width)
-            }
-        }
-        point.y -= 44
-        return point
-    }
-
-    private func combatantView(_ combatant: Combatant, facingRight: Bool) -> some View {
-        let lunge: CGFloat = lunging == combatant.id ? (facingRight ? 7 : -7) : 0
-        return VStack(spacing: 2) {
-            HPBar(fraction: combatant.hpFraction, level: combatant.level, isBoss: combatant.isBoss)
-            PokeSpriteView(id: combatant.speciesID, pixelSize: combatant.isBoss ? 1 : 0.5, flipped: facingRight)
-                .opacity(struck == combatant.id ? 0.35 : 1)
-                .saturation(combatant.isFainted ? 0 : 1)
-        }
-        .frame(width: 90, height: Self.figureHeight, alignment: .bottom)
-        .opacity(combatant.isFainted ? 0.28 : 1)
-        .offset(x: lunge, y: combatant.isFainted ? 5 : 0)
-        .animation(.spring(response: 0.22, dampingFraction: 0.6), value: lunging)
-        .animation(.easeOut(duration: 0.12), value: struck)
-        .animation(.smooth(duration: 0.4), value: combatant.isFainted)
-        .animation(.smooth(duration: 0.35), value: combatant.hp)
-    }
-
-    private func handle(_ attack: BattleAttack?) {
-        guard let attack, let battle = app.adventure.battle else { return }
-        lunging = attack.attackerID
-        Task {
-            try? await Task.sleep(for: .milliseconds(180))
-            lunging = nil
-            struck = attack.targetID
-            try? await Task.sleep(for: .milliseconds(140))
-            struck = nil
-        }
-        _ = battle
-        let popup = DamagePopup(id: UUID(), text: "\(attack.damage)", targetID: attack.targetID,
-                                note: DamagePopup.note(for: attack), byParty: attack.byParty, critical: attack.critical)
-        popups.append(popup)
-        if popups.count > 4 { popups.removeFirst(popups.count - 4) }
-        Task {
-            try? await Task.sleep(for: .milliseconds(900))
-            popups.removeAll { $0.id == popup.id }
-        }
+extension AdventurePageView {
+    private func dismissRecap() {
+        withAnimation(.smooth(duration: 0.3)) { showsRecap = false }
+        app.adventure.markRecapSeen()
     }
 }
 
@@ -190,193 +125,139 @@ extension Array {
     subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
 
-private struct DamagePopup: Identifiable, Equatable {
-    let id: UUID
-    let text: String
-    let targetID: UUID
-    let note: String?
-    let byParty: Bool
-    let critical: Bool
-
-    static func note(for attack: BattleAttack) -> String? {
-        if attack.effectiveness >= 2 { return String(localized: "Super effective!") }
-        if attack.effectiveness < 1 { return String(localized: "Not very effective") }
-        if attack.critical { return String(localized: "Critical hit!") }
-        return nil
-    }
-}
-
-private struct DamagePopupView: View {
-    let popup: DamagePopup
-    @State private var risen = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Text(popup.text)
-                .font(.system(size: popup.critical ? 12 : 10.5, weight: .black, design: .rounded).monospacedDigit())
-                .foregroundStyle(popup.byParty ? .white : Color(hex: 0xFF8A80))
-            if let note = popup.note {
-                Text(note)
-                    .font(.system(size: 7.5, weight: .heavy))
-                    .foregroundStyle(Color(hex: 0xFFE14D))
-            }
-        }
-        .shadow(color: .black.opacity(0.8), radius: 1, y: 1)
-        .fixedSize()
-        .offset(y: risen ? -12 : 0)
-        .opacity(risen ? 0 : 1)
-        .onAppear { withAnimation(.easeOut(duration: 0.85)) { risen = true } }
-    }
-}
-
-private struct HPBar: View {
-    let fraction: Double
-    let level: Int
-    var isBoss = false
-
-    var body: some View {
-        VStack(spacing: 1) {
-            Text(isBoss ? "BOSS · Lv\(level)" : "Lv\(level)")
-                .font(.system(size: 6.5, weight: .heavy).monospacedDigit())
-                .foregroundStyle(isBoss ? Color(hex: 0xFFB0A0) : .white.opacity(0.9))
-                .shadow(color: .black.opacity(0.7), radius: 0.5, y: 0.5)
-            ZStack(alignment: .leading) {
-                Capsule().fill(.black.opacity(0.55))
-                Capsule()
-                    .fill(color)
-                    .frame(width: max(0, (isBoss ? 40 : 24) * fraction))
-            }
-            .frame(width: isBoss ? 40 : 24, height: 3)
-            .overlay(Capsule().strokeBorder(.white.opacity(0.35), lineWidth: 0.5))
-        }
-        .fixedSize()
-    }
-
-    private var color: Color {
-        fraction > 0.5 ? Color(hex: 0x5CE07A) : (fraction > 0.2 ? Color(hex: 0xF7D02C) : Color(hex: 0xFF5A4A))
-    }
-}
-
-/// Stage number, waves, and whether the party is fighting or waiting on an agent.
-private struct SceneOverlay: View {
-    let stage: Stage
-    let battle: BattleState?
-
+/// Map, Pokédex and Gacha tabs, with the coin purse.
+private struct PaneTabs: View {
+    @Binding var pane: AdventurePane
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
-        VStack {
-            HStack(alignment: .top) {
-                HStack(spacing: 5) {
-                    Text(stage.label)
-                        .font(.system(size: 10, weight: .heavy, design: .rounded).monospacedDigit())
-                    if stage.isBoss {
-                        Text("BOSS")
-                            .font(.system(size: 7.5, weight: .black))
-                            .foregroundStyle(Color(hex: 0xFF8A70))
-                    } else if let battle {
-                        HStack(spacing: 2.5) {
-                            ForEach(0..<battle.waveCount, id: \.self) { wave in
-                                Circle()
-                                    .fill(.white.opacity(wave <= battle.waveIndex ? 0.95 : 0.3))
-                                    .frame(width: 4, height: 4)
+        HStack(spacing: 3) {
+            ForEach(AdventurePane.allCases, id: \.self) { item in
+                Button {
+                    withAnimation(.smooth(duration: 0.2)) { pane = item }
+                } label: {
+                    Text(item.title)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(pane == item ? .white : .white.opacity(0.45))
+                        .padding(.horizontal, 8)
+                        .frame(height: 19)
+                        .background(pane == item ? .white.opacity(0.14) : .clear, in: Capsule())
+                        .overlay(alignment: .topTrailing) {
+                            if item == .gacha, adventure.canPull || adventure.offer != nil {
+                                Circle().fill(Color(hex: 0xFFD35A)).frame(width: 5, height: 5).offset(x: -1, y: 1)
                             }
                         }
-                    }
+                        .contentShape(Capsule())
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(.black.opacity(0.4), in: Capsule())
-
-                Spacer()
-
-                if adventure.progress.isTraining {
-                    Text("Training")
-                        .font(.system(size: 8.5, weight: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(.black.opacity(0.4), in: Capsule())
-                        .help("Beaten at \(adventure.progress.frontier.label), so training here first.")
-                }
+                .buttonStyle(.plain)
             }
-            Spacer()
-            if !adventure.isBattling {
-                HStack(spacing: 4) {
-                    Image(systemName: "moon.zzz.fill")
-                    Text("Battles go on while an agent works")
-                }
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.85))
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(.black.opacity(0.45), in: Capsule())
-                .transition(.opacity)
+            Spacer(minLength: 2)
+            BannerToggle()
+            HStack(spacing: 3) {
+                CoinIcon()
+                Text("\(adventure.coins)")
+                    .font(.system(size: 10, weight: .bold).monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.75))
+                    .contentTransition(.numericText())
             }
+            .help("Coins, from clearing stages. \(Gacha.price) buy a gacha pull.")
         }
-        .padding(7)
-        .animation(.smooth(duration: 0.25), value: adventure.isBattling)
     }
 }
 
-/// A pixel landscape per world: sky bands with a dithered seam, and ground tiles.
-private struct StageBackdrop: View {
-    let world: Int
-
-    private struct Theme {
-        var skyTop: UInt32, skyBottom: UInt32, ground: UInt32, groundDark: UInt32
-    }
-
-    private static let themes: [Theme] = [
-        Theme(skyTop: 0x3A86E0, skyBottom: 0xB8E4FF, ground: 0x6CC05A, groundDark: 0x4E9A44),   // meadow
-        Theme(skyTop: 0x1E4A3A, skyBottom: 0x5E9A6A, ground: 0x3E7A3A, groundDark: 0x2C5A2A),   // forest
-        Theme(skyTop: 0x2A2430, skyBottom: 0x5A4C58, ground: 0x7A6A5A, groundDark: 0x5A4C40),   // cave
-        Theme(skyTop: 0x2A6AD0, skyBottom: 0x9AD8F8, ground: 0xE8D8A0, groundDark: 0xC8B880),   // beach
-        Theme(skyTop: 0x4A1A1A, skyBottom: 0xC85A2A, ground: 0x5A3A30, groundDark: 0x3A2420),   // volcano
-        Theme(skyTop: 0x7A9AC8, skyBottom: 0xE8F2FF, ground: 0xF4F8FF, groundDark: 0xC8D8EC),   // snow
-        Theme(skyTop: 0x0E1230, skyBottom: 0x3A3A7A, ground: 0x4A4A6A, groundDark: 0x34344E),   // night
-    ]
+/// Mutes the adventure's banners and sounds in one click, say before sharing a screen.
+private struct BannerToggle: View {
+    @Environment(AppModel.self) private var app
 
     var body: some View {
-        let theme = Self.themes[(max(1, world) - 1) % Self.themes.count]
-        Canvas { canvas, size in
-            let pixel: CGFloat = 2
-            let horizon = size.height * 0.62
-            let bands = 5
-            for band in 0..<bands {
-                let t = Double(band) / Double(bands - 1)
-                let top = CGFloat(band) * horizon / CGFloat(bands)
-                let bottom = CGFloat(band + 1) * horizon / CGFloat(bands)
-                canvas.fill(Path(CGRect(x: 0, y: top, width: size.width, height: bottom - top + 0.5)),
-                            with: .color(Color(hex: Self.mix(theme.skyTop, theme.skyBottom, t))))
-                if band + 1 < bands {
-                    let next = Color(hex: Self.mix(theme.skyTop, theme.skyBottom, Double(band + 1) / Double(bands - 1)))
-                    for x in stride(from: 0, to: size.width, by: pixel * 2) {
-                        canvas.fill(Path(CGRect(x: x, y: bottom - pixel, width: pixel, height: pixel)), with: .color(next))
-                    }
-                }
-            }
-            canvas.fill(Path(CGRect(x: 0, y: horizon, width: size.width, height: size.height - horizon)), with: .color(Color(hex: theme.ground)))
-            // A checker of darker tiles so the ground reads as pixel art.
-            var row = 0
-            for y in stride(from: horizon + pixel * 3, to: size.height, by: pixel * 4) {
-                for x in stride(from: CGFloat(row % 2) * pixel * 6, to: size.width, by: pixel * 12) {
-                    canvas.fill(Path(CGRect(x: x, y: y, width: pixel * 3, height: pixel)), with: .color(Color(hex: theme.groundDark)))
-                }
-                row += 1
-            }
-            canvas.fill(Path(CGRect(x: 0, y: horizon, width: size.width, height: pixel)), with: .color(Color(hex: theme.groundDark)))
+        let preferences = app.preferences
+        let on = preferences.adventureAnnounceCatches
+        Button {
+            preferences.adventureAnnounceCatches.toggle()
+        } label: {
+            Image(systemName: on ? "bell.fill" : "bell.slash.fill")
+                .font(.system(size: 9.5, weight: .semibold))
+                .foregroundStyle(on ? .white.opacity(0.55) : Color(hex: 0xFF8A70))
+                .frame(width: 18, height: 18)
+                .contentShape(Rectangle())
+                .contentTransition(.symbolEffect(.replace))
         }
+        .buttonStyle(.plain)
+        .help(on ? "Adventure banners are on. Click to mute them, say before sharing your screen." : "Adventure banners are muted. Click to turn them back on.")
+    }
+}
+
+/// "While you were away": what the agents' work earned since the page was last open.
+private struct RecapCard: View {
+    let close: () -> Void
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let recap = app.adventure.recap
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("While you were away")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: close) {
+                    Image(systemName: "xmark").font(.system(size: 7.5, weight: .bold)).foregroundStyle(.white.opacity(0.5))
+                }
+                .buttonStyle(.plain)
+            }
+            HStack(spacing: 5) {
+                if recap.clears > 0 { chip(symbol: "flag.fill", text: "\(recap.clears)") }
+                if recap.coins > 0 {
+                    HStack(spacing: 2) { CoinIcon(size: 8); Text("+\(recap.coins)") }.modifier(RecapChip())
+                }
+                if recap.levels > 0 { chip(symbol: "arrow.up", text: "Lv +\(recap.levels)") }
+                if !recap.learned.isEmpty { chip(symbol: "bolt.fill", text: String(localized: "\(recap.learned.count) moves")) }
+                ForEach(recap.badges, id: \.self) { BadgeImageView(number: $0, size: 13) }
+            }
+            if !recap.discovered.isEmpty || !recap.evolved.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(Array((recap.discovered + recap.evolved).suffix(8).enumerated()), id: \.offset) { _, id in
+                        PokeIconView(id: id, pixelSize: 0.5)
+                    }
+                    Text(summary(recap))
+                        .font(.system(size: 8.5, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .padding(.leading, 3)
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color(hex: 0x101218).opacity(0.94), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(.white.opacity(0.12)))
+        .onTapGesture(perform: close)
     }
 
-    static func mix(_ a: UInt32, _ b: UInt32, _ t: Double) -> UInt32 {
-        func channel(_ shift: UInt32) -> UInt32 {
-            let x = Double((a >> shift) & 0xFF), y = Double((b >> shift) & 0xFF)
-            return UInt32((x + (y - x) * t).rounded()) << shift
+    private func summary(_ recap: AdventureRecap) -> String {
+        var parts: [String] = []
+        if !recap.discovered.isEmpty { parts.append(String(localized: "\(recap.discovered.count) new")) }
+        if !recap.evolved.isEmpty { parts.append(String(localized: "\(recap.evolved.count) evolved")) }
+        return parts.joined(separator: " · ")
+    }
+
+    private func chip(symbol: String, text: String) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: symbol).font(.system(size: 7, weight: .bold))
+            Text(text)
         }
-        return channel(16) | channel(8) | channel(0)
+        .modifier(RecapChip())
+    }
+}
+
+private struct RecapChip: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.system(size: 9, weight: .bold).monospacedDigit())
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, 5)
+            .frame(height: 15)
+            .background(.white.opacity(0.1), in: Capsule())
     }
 }
 
@@ -387,7 +268,7 @@ private struct StarterPicker: View {
 
     var body: some View {
         ZStack {
-            StageBackdrop(world: 1)
+            StageBackdrop(scenery: .meadow)
             VStack(spacing: 4) {
                 Text("Choose your partner")
                     .font(.system(size: 11, weight: .heavy))
@@ -438,7 +319,7 @@ private struct StarterButton: View {
 private struct DexLoading: View {
     var body: some View {
         ZStack {
-            StageBackdrop(world: 1)
+            StageBackdrop(scenery: .meadow)
             HStack(spacing: 6) {
                 ProgressView().controlSize(.small)
                 Text("Getting Pokédex data…")
@@ -457,7 +338,7 @@ private struct DexUnavailable: View {
 
     var body: some View {
         ZStack {
-            StageBackdrop(world: 7)
+            StageBackdrop(scenery: .cave)
             VStack(spacing: 6) {
                 Text("Couldn't reach PokéAPI")
                     .font(.system(size: 11, weight: .bold))
@@ -479,17 +360,18 @@ private struct PartyBar: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        let party = app.adventure.party
-        HStack(spacing: 5) {
+        let adventure = app.adventure
+        let party = adventure.party
+        HStack(spacing: 4) {
             ForEach(0..<AdventureService.maxParty, id: \.self) { slot in
                 if let member = party[safe: slot] {
-                    PartySlot(member: member, isLeader: slot == 0, isSelected: selection == member.speciesID) {
+                    PartySlot(member: member, order: slot + 1, isSelected: selection == member.speciesID) {
                         selection = selection == member.speciesID ? nil : member.speciesID
                     }
                 } else {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .strokeBorder(.white.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                        .frame(height: 30)
+                        .frame(height: Self.height)
                         .overlay(
                             Text("Empty")
                                 .font(.system(size: 9, weight: .semibold))
@@ -498,14 +380,30 @@ private struct PartyBar: View {
                         .help("Pick a Pokémon in the Pokédex to add it.")
                 }
             }
+            Button {
+                withAnimation(.smooth(duration: 0.25)) { adventure.recommendParty() }
+            } label: {
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .frame(width: 22, height: Self.height)
+                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(adventure.owned.count < 2)
+            .help("Best team for what's next")
         }
-        .frame(height: 30)
+        .frame(height: Self.height)
     }
+
+    static let height: CGFloat = 28
 }
 
 private struct PartySlot: View {
     let member: OwnedPokemon
-    let isLeader: Bool
+    /// Place in the relay: 1 battles first.
+    let order: Int
     let isSelected: Bool
     let action: () -> Void
 
@@ -532,19 +430,17 @@ private struct PartySlot: View {
                 Spacer(minLength: 0)
             }
             .padding(.trailing, 4)
-            .frame(maxWidth: .infinity, minHeight: 30, maxHeight: 30)
+            .frame(maxWidth: .infinity, minHeight: PartyBar.height, maxHeight: PartyBar.height)
             .background(tint.opacity(isHovering ? 0.22 : 0.13), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(isSelected ? .white.opacity(0.7) : tint.opacity(0.3), lineWidth: isSelected ? 1.5 : 1)
             )
             .overlay(alignment: .topLeading) {
-                if isLeader {
-                    Image(systemName: "crown.fill")
-                        .font(.system(size: 6.5, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xFFE14D))
-                        .offset(x: 3, y: 2)
-                }
+                Text("\(order)")
+                    .font(.system(size: 7, weight: .black, design: .rounded))
+                    .foregroundStyle(order == 1 ? Color(hex: 0xFFE14D) : .white.opacity(0.5))
+                    .offset(x: 4, y: 2)
             }
             .contentShape(Rectangle())
         }
@@ -566,25 +462,21 @@ private struct DexGrid: View {
 
     var body: some View {
         let adventure = app.adventure
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text("Pokédex")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white)
-                Spacer()
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.1))
+                        Capsule().fill(Color.adventure)
+                            .frame(width: proxy.size.width * CGFloat(adventure.caught.count) / CGFloat(PokeDexStore.maxID))
+                    }
+                }
+                .frame(height: 4)
                 Text("\(adventure.caught.count)/\(PokeDexStore.maxID)")
-                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
                     .contentTransition(.numericText())
             }
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(.white.opacity(0.1))
-                    Capsule().fill(Color.adventure)
-                        .frame(width: proxy.size.width * CGFloat(adventure.caught.count) / CGFloat(PokeDexStore.maxID))
-                }
-            }
-            .frame(height: 4)
 
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 4) {
@@ -762,10 +654,11 @@ private struct OwnedSummary: View {
                 }
                 .frame(width: 60, height: 3)
             }
+            MoveChips(moves: adventure.moves(of: member))
             HStack(spacing: 5) {
                 if inParty {
                     if !isLeader {
-                        smallButton(String(localized: "Lead"), symbol: "crown.fill") { adventure.makeLeader(member.id) }
+                        smallButton(String(localized: "Go First"), symbol: "arrow.up.to.line") { adventure.makeLeader(member.id) }
                     }
                     if adventure.partyIDs.count > 1 {
                         smallButton(String(localized: "Remove"), symbol: "minus") { adventure.toggleParty(member.id) }
@@ -794,6 +687,36 @@ private struct OwnedSummary: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// A Pokémon's four moves as type-colored chips, two to a row.
+private struct MoveChips: View {
+    let moves: [PokeMove]
+
+    var body: some View {
+        let rows = stride(from: 0, to: moves.count, by: 2).map { Array(moves[$0..<min($0 + 2, moves.count)]) }
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(spacing: 2) {
+                    ForEach(row, id: \.id) { move in
+                        Text(move.name)
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .padding(.horizontal, 4)
+                            .frame(height: 13)
+                            .background(move.type.color.opacity(0.55), in: Capsule())
+                            .help(help(move))
+                    }
+                }
+            }
+        }
+    }
+
+    private func help(_ move: PokeMove) -> String {
+        let power = move.power.map { " · \($0)" } ?? ""
+        return "\(move.type.title)\(power)"
     }
 }
 

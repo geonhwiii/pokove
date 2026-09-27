@@ -80,22 +80,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "airpods":
             app.audioRoutes.previewConnection()
         case "poke":
-            // poke starter <id> | poke catch [id] | poke xp <n> | poke stage <w> <s> | poke tick <n> | poke reset
+            // poke starter <id> | poke catch [id] | poke xp <n> | poke coins <n> | poke jump <node> <stage> <badges>
+            // | poke tick <n> | poke pull | poke pane map|dex|gacha|recap | poke auto on|off | poke reset
             let arguments = parts.dropFirst(2).compactMap { Int($0) }
             let adventure = app.adventure
             switch parts.count > 1 ? parts[1] : "" {
             case "starter": adventure.chooseStarter(arguments.first ?? 4)
             case "catch":
-                if let encounter = adventure.debugCatch(arguments.first) {
+                if let encounter = adventure.debugDiscover(arguments.first) {
                     app.activity.post(NotchBanner(style: .claudeFinished, title: String(localized: "Claude finished"),
                                                   subtitle: "dancove · 3m 12s",
-                                                  detail: "Swapped the fishing game for a Pokémon adventure.",
+                                                  detail: "Gave the Pokémon adventure a journey through Kanto.",
                                                   sessionID: "debug", encounter: encounter,
                                                   duration: encounter.isSpecial ? 9 : 7))
                 }
             case "xp": adventure.debugXP(arguments.first ?? 1000)
-            case "stage": adventure.debugStage(Stage(world: arguments.first ?? 1, number: arguments.dropFirst().first ?? 1))
+            case "coins": adventure.debugCoins(arguments.first ?? Gacha.price)
+            case "jump":
+                adventure.debugJump(node: arguments.first ?? 0, stage: arguments.dropFirst().first ?? 0,
+                                    badges: arguments.dropFirst(2).first ?? 0)
             case "tick": adventure.debugTicks(arguments.first ?? 10)
+            case "pull": adventure.pull()
+            case "pick": if let card = adventure.offer?[safe: arguments.first ?? 0] { adventure.pick(card.id) }
+            case "open": NotificationCenter.default.post(name: .dancoveDebugOpenBall, object: arguments.first ?? 0)
+            case "challenge": adventure.challengeTrainer()
+            case "badgebanner": adventure.debugBadgeBanner(arguments.first ?? 1)
+            case "state":
+                let line = "watching=\(adventure.isWatching) recap=\(adventure.recap)\n"
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent("dancove-state.txt")
+                let old = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+                try? (old + line).write(to: url, atomically: true, encoding: .utf8)
+            case "legend": adventure.challengeLegend(parts.dropFirst(2).first ?? "")
+            case "pane": NotificationCenter.default.post(name: .dancoveDebugAdventurePane, object: parts.dropFirst(2).first)
+            case "auto": adventure.autoChallenge = parts.last != "off"
             case "reset": adventure.resetAdventure()
             default: break
             }

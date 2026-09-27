@@ -51,3 +51,37 @@ struct PixelSparkles: View {
         .accessibilityHidden(true)
     }
 }
+
+/// A one-color Poké Ball, for places that use SF Symbols (tabs, settings, banners): the outline,
+/// a filled top half, the band and the button, in the current foreground style.
+struct PokeBallGlyph: View {
+    var size: CGFloat = 12
+
+    var body: some View {
+        let line = max(1, (size * 0.12 * 2).rounded() / 2)
+        ZStack {
+            Circle().strokeBorder(lineWidth: line)
+            TopHalf().padding(line / 2)
+            Rectangle().frame(height: line)
+            Circle()
+                .frame(width: size * 0.5, height: size * 0.5)
+                .blendMode(.destinationOut)
+            Circle()
+                .strokeBorder(lineWidth: line)
+                .frame(width: size * 0.36, height: size * 0.36)
+        }
+        .frame(width: size, height: size)
+        .compositingGroup()
+    }
+
+    private struct TopHalf: Shape {
+        func path(in rect: CGRect) -> Path {
+            Path { path in
+                path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+                path.addArc(center: CGPoint(x: rect.midX, y: rect.midY), radius: min(rect.width, rect.height) / 2,
+                            startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+                path.closeSubpath()
+            }
+        }
+    }
+}

@@ -132,7 +132,7 @@ nonisolated enum PokeLanguage {
     static let isKorean = Bundle.main.preferredLocalizations.first?.hasPrefix("ko") ?? false
 }
 
-/// The Pokédex: species data for Gen 1, fetched once from PokéAPI and cached.
+/// The Pokédex: species, moves and Kanto's wild encounters, fetched once from PokéAPI and cached.
 @Observable
 final class PokeDexStore {
     enum State: Equatable {
@@ -142,11 +142,15 @@ final class PokeDexStore {
         case failed(String)
     }
 
-    static let maxID = 151
+    nonisolated static let maxID = 151
     static let cacheVersion = 1
 
     private(set) var state: State = .idle
     private(set) var species: [PokeSpecies] = []
+    /// FireRed/LeafGreen moves and learnsets.
+    private(set) var moves: MoveDex?
+    /// FireRed/LeafGreen wild encounters for the journey's areas.
+    private(set) var encounters: EncounterDex?
 
     @ObservationIgnored private var byID: [Int: PokeSpecies] = [:]
     @ObservationIgnored private var evolutionsByID: [Int: [Int]] = [:]
@@ -164,6 +168,8 @@ final class PokeDexStore {
     }
 
     private var cacheURL: URL { directory.appendingPathComponent("dex-v\(Self.cacheVersion).json") }
+    private var movesURL: URL { directory.appendingPathComponent("moves-v1.json") }
+    private var encountersURL: URL { directory.appendingPathComponent("encounters-v1.json") }
 
     var isReady: Bool { state == .ready }
 
@@ -209,26 +215,43 @@ final class PokeDexStore {
 
     // MARK: Loading
 
-    /// Loads the cached dex, or downloads it the first time.
+    /// Loads the cached dex, moves and encounters, or downloads what's missing (three requests
+    /// in parallel, a few seconds the first time).
     func load() {
         guard state != .ready, state != .loading else { return }
-        if let cached = try? Data(contentsOf: cacheURL),
-           let decoded = try? JSONDecoder().decode([PokeSpecies].self, from: cached), decoded.count == Self.maxID {
-            apply(decoded)
+        let cachedSpecies = (try? Data(contentsOf: cacheURL)).flatMap { try? JSONDecoder().decode([PokeSpecies].self, from: $0) }
+            .flatMap { $0.count == Self.maxID ? $0 : nil }
+        let cachedMoves = (try? Data(contentsOf: movesURL)).flatMap { try? JSONDecoder().decode(MoveDex.self, from: $0) }
+        let cachedEncounters = (try? Data(contentsOf: encountersURL)).flatMap { try? JSONDecoder().decode(EncounterDex.self, from: $0) }
+        if let cachedSpecies, let cachedMoves, let cachedEncounters {
+            apply(cachedSpecies, moves: cachedMoves, encounters: cachedEncounters)
             return
         }
         state = .loading
+        let directory = directory, cacheURL = cacheURL, movesURL = movesURL, encountersURL = encountersURL
         loadTask = Task { [weak self] in
+            let maxID = Self.maxID, areas = Self.journeyAreas
             do {
-                let species = try await PokeAPI.fetchSpecies(maxID: Self.maxID)
-                guard let self else { return }
-                try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
-                try? JSONEncoder().encode(species).write(to: self.cacheURL, options: .atomic)
-                self.apply(species)
+                async let species = Self.fetch(cachedSpecies) { try await PokeAPI.fetchSpecies(maxID: maxID) }
+                async let moves = Self.fetch(cachedMoves) { try await PokeAPI.fetchMoves(maxID: maxID) }
+                async let encounters = Self.fetch(cachedEncounters) { try await PokeAPI.fetchEncounters(areas: areas) }
+                let (speciesList, moveDex, encounterDex) = try await (species, moves, encounters)
+                try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                if cachedSpecies == nil { try? JSONEncoder().encode(speciesList).write(to: cacheURL, options: .atomic) }
+                if cachedMoves == nil { try? JSONEncoder().encode(moveDex).write(to: movesURL, options: .atomic) }
+                if cachedEncounters == nil { try? JSONEncoder().encode(encounterDex).write(to: encountersURL, options: .atomic) }
+                self?.apply(speciesList, moves: moveDex, encounters: encounterDex)
             } catch {
                 self?.state = .failed(error.localizedDescription)
             }
         }
+    }
+
+    static let journeyAreas = Array(Set(Kanto.main(starter: 4).flatMap(\.areas))).sorted()
+
+    private nonisolated static func fetch<T: Sendable>(_ cached: T?, _ download: @Sendable () async throws -> T) async throws -> T {
+        if let cached { return cached }
+        return try await download()
     }
 
     func retry() {
@@ -236,7 +259,9 @@ final class PokeDexStore {
         load()
     }
 
-    private func apply(_ list: [PokeSpecies]) {
+    private func apply(_ list: [PokeSpecies], moves: MoveDex, encounters: EncounterDex) {
+        self.moves = moves
+        self.encounters = encounters
         species = list.sorted { $0.id < $1.id }
         byID = Dictionary(uniqueKeysWithValues: species.map { ($0.id, $0) })
         var evolutions: [Int: [Int]] = [:]
@@ -252,6 +277,9 @@ final class PokeDexStore {
 nonisolated enum PokeAPI {
     static let graphQL = URL(string: "https://beta.pokeapi.co/graphql/v1beta")!
     static let spriteBase = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon"
+    static let badgeBase = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/badges"
+    static let itemBase = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items"
+    static let trainerBase = "https://play.pokemonshowdown.com/sprites/trainers"
 
     private static let koreanID = 3
     private static let englishID = 9
@@ -268,15 +296,20 @@ nonisolated enum PokeAPI {
         types: pokemon_v2_pokemontypes { slot type: pokemon_v2_type { name } } \
         stats: pokemon_v2_pokemonstats { base_stat stat: pokemon_v2_stat { name } } } } }
         """
+        let data = try await post(query)
+        let decoded = try JSONDecoder().decode(Response.self, from: data)
+        guard let rows = decoded.data?.species, !rows.isEmpty else { throw URLError(.cannotParseResponse) }
+        return rows.compactMap { $0.species(maxID: maxID) }
+    }
+
+    static func post(_ query: String) async throws -> Data {
         var request = URLRequest(url: graphQL, timeoutInterval: 30)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query])
         let (data, response) = try await URLSession.shared.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
-        let decoded = try JSONDecoder().decode(Response.self, from: data)
-        guard let rows = decoded.data?.species, !rows.isEmpty else { throw URLError(.cannotParseResponse) }
-        return rows.compactMap { $0.species(maxID: maxID) }
+        return data
     }
 
     private struct Response: Decodable {

@@ -122,6 +122,12 @@ private struct ClaudeCompactTrailing: View {
                     if app.adventure.isEnabled, let leader = app.adventure.leader {
                         // The partner battles alongside while the agent works.
                         PartnerIcon(speciesID: leader.speciesID)
+                            .overlay(alignment: .topTrailing) {
+                                // A pull is ready in the gacha.
+                                if app.adventure.canPull || app.adventure.offer != nil {
+                                    Circle().fill(Color(hex: 0xFFD35A)).frame(width: 4, height: 4).offset(x: 1, y: 1)
+                                }
+                            }
                             .transition(.scale.combined(with: .opacity))
                     }
                     Text(timerInterval: start...Date.distantFuture, countsDown: false)

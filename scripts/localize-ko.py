@@ -349,14 +349,58 @@ KO = {
     "Normal": "노말",
     "Legendary": "전설",
 
-    # Fish
-
+    # Journey (v2)
+    "%@ earned!": "%@ 획득!",
+    "%lld evolved": "%lld마리 진화",
+    "%lld moves": "기술 %lld개",
+    "%lld new": "새 포켓몬 %lld",
+    "%lld%% to win": "승률 %lld%%",
+    "AUTO is off: tap Challenge to take on gyms": "AUTO 꺼짐: 도전을 눌러야 체육관에 도전해요",
+    "AUTO: gyms are challenged once the party is likely to win": "AUTO: 이길 만하면 알아서 체육관에 도전해요",
+    "Badges": "배지",
+    "Banners for new Pokémon, evolutions and badges": "새 포켓몬·진화·배지 알림 보기",
+    "Best team for this trainer": "이 트레이너에게 맞는 파티로 바꾸기",
+    "Best team for what's next": "다음 상대에 맞는 추천 파티",
+    "Challenge": "도전",
+    "Challenge gyms automatically (AUTO)": "체육관 자동 도전 (AUTO)",
+    "Clear stages to earn coins.": "스테이지를 깨면 코인이 모여요.",
+    "Coins": "코인",
+    "Coins, from clearing stages. %lld buy a gacha pull.": "스테이지를 깨면 모이는 코인. %lld개로 뽑기 1번.",
+    "Draw 3 Cards": "카드 3장 뽑기",
+    "EXP +%lld": "경험치 +%lld",
+    "Gacha": "뽑기",
+    "Getting ready for %@ · %lld%% to win": "%1$@에게 도전 준비 중 · 승률 %2$lld%%",
+    "Go First": "선봉으로",
+    "Joined": "합류함",
+    "Journey": "여정",
+    "Journey complete": "여정 완료",
+    "Level cap raised to %lld.": "레벨 상한이 %lld까지 올랐어요.",
+    "Map": "지도",
+    "Move On": "여정 계속",
+    "Not yet reached": "아직 못 감",
+    "Pick one to keep": "한 장을 골라 주세요",
+    "Retreat": "물러나기",
+    "Something stirs in Cerulean Cave…": "미지의동굴에서 무언가 깨어났어요…",
+    "Stay Here": "머물기",
+    "Staying at %@": "%@에 머무는 중",
+    "Take on the next trainer now": "지금 다음 트레이너에게 도전",
+    "While Claude or Codex works, your party of up to three travels Kanto on its own, battling wild Pokémon and gym leaders. New Pokémon turn up along the way, and coins from cleared stages buy gacha pulls. Badges raise the level cap.":
+        "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동 지방을 여행하며 야생 포켓몬과 체육관 관장과 싸워요. 가는 길에 새 포켓몬을 만나고, 스테이지를 깨서 모은 코인으로 뽑기를 해요. 배지를 얻으면 레벨 상한이 올라가요.",
+    "While you were away": "자리 비운 동안",
+    "Pick a ball to open": "열어 볼 볼을 하나 골라 주세요",
+    "Adventure Banners": "모험 알림",
+    "Adventure banners are on. Click to mute them, say before sharing your screen.": "모험 알림이 켜져 있어요. 화면 공유 전에 눌러서 끌 수 있어요.",
+    "Adventure banners are muted. Click to turn them back on.": "모험 알림이 꺼져 있어요. 누르면 다시 켜져요.",
+    "Get 3 Poké Balls": "몬스터볼 3개 받기",
+    "%@ EXP +%lld": "%1$@ 경험치 +%2$lld",
+    "You're the Champion!": "챔피언이 되었어요!",
+    "Your Pokémon, Pokédex and journey will be cleared. This can't be undone.": "포켓몬, 도감, 여정이 모두 지워져요. 되돌릴 수 없어요.",
 }
 
 # Keys that read the same in Korean (numbers, names, symbols).
 SAME = {
     "%@ · %@", "%@ — %@", "%lld", "%lld / %lld", "%lld%%", "%lld/%lld", "?", "AirPlay", "Bluetooth", "Claude",
-    "English", "NEW", "dancove", "· %@", "한국어", "", "Codex",
+    "English", "NEW", "dancove", "· %@", "한국어", "", "Codex", "AUTO", "+%lld",
 }
 
 # English plural variants.

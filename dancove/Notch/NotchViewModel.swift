@@ -20,7 +20,7 @@ enum NotchPage: String, CaseIterable, Identifiable {
         case .todos: "checklist"
         case .clipboard: "list.clipboard"
         case .claude: "sparkle"
-        case .adventure: "pawprint.fill"
+        case .adventure: "circle.circle.fill"
         }
     }
 

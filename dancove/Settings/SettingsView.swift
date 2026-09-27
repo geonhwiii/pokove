@@ -51,6 +51,8 @@ private struct SettingsIcon: View {
         Group {
             if pane == .claude {
                 SparkShape().fill(.white).padding(4)
+            } else if pane == .adventure {
+                PokeBallGlyph(size: 12).foregroundStyle(.white)
             } else {
                 Image(systemName: pane.symbol)
                     .font(.system(size: 11, weight: .semibold))

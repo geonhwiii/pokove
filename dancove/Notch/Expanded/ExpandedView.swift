@@ -128,7 +128,7 @@ private struct ExpandedHeader: View {
     private func badge(for page: NotchPage) -> Bool {
         switch page {
         case .claude: app.claude.needsAttention
-        case .adventure: app.adventure.isBattling
+        case .adventure: app.adventure.isBattling || app.adventure.canPull || app.adventure.offer != nil
         default: false
         }
     }
@@ -140,12 +140,22 @@ private struct PageButton: View {
     let badge: Bool
     let action: () -> Void
 
+    @Environment(AppModel.self) private var app
+
+    /// Gold when a gacha pull is waiting, orange while battling.
+    private var badgeColor: Color {
+        app.adventure.canPull || app.adventure.offer != nil ? Color(hex: 0xFFD35A) : .adventure
+    }
+
     var body: some View {
         Button(action: action) {
             Group {
                 if page == .claude {
                     ClaudeMark(color: isSelected ? .claude : .white.opacity(0.4))
                         .frame(width: 12, height: 12)
+                } else if page == .adventure {
+                    PokeBallGlyph(size: 12)
+                        .foregroundStyle(isSelected ? .white : .white.opacity(0.4))
                 } else {
                     Image(systemName: page.symbol)
                         .font(.system(size: 11.5, weight: .semibold))
@@ -157,7 +167,7 @@ private struct PageButton: View {
             .overlay(alignment: .topTrailing) {
                 if badge {
                     Circle()
-                        .fill(page == .adventure ? Color.adventure : Color.claudeAttention)
+                        .fill(page == .adventure ? badgeColor : Color.claudeAttention)
                         .frame(width: 6, height: 6)
                         .offset(x: -3, y: 3)
                 }
