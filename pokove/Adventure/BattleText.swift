@@ -109,9 +109,7 @@ nonisolated enum RecapText {
         if start == end { return korean ? "\(end.objectParticle) 지났어요" : "Passed \(end)" }
         return korean ? "\(start)에서 \(end)까지 갔어요" : "Went from \(start) to \(end)"
     }
-    static func trained(_ count: Int) -> String {
-        korean ? "\(count)번 수련했어요" : count == 1 ? "Trained once" : "Trained \(count) times"
-    }
+    static func stayed(at station: String) -> String { korean ? "\(station)에 머물렀어요" : "Stayed at \(station)" }
     static var stardust: String { korean ? "별의모래" : "Stardust" }
     static var shinyLabel: String { korean ? "이로치" : "Shiny" }
     static func shiny(_ name: String) -> String { korean ? "이로치 \(name.objectParticle) 만났어요" : "Found a shiny \(name)" }

@@ -79,8 +79,9 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     /// The first and furthest frontier stations cleared.
     var start: StationPoint?
     var reached: StationPoint?
-    /// Station wins that didn't move the line: training and repeats.
+    /// Station wins that didn't move the line (training and repeats), and where the last one was.
     var training = 0
+    var stayed: StationPoint?
     var stardust = 0
     var ultraBalls = 0
     var growth: [Growth] = []
@@ -122,6 +123,7 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         start = try container.decodeIfPresent(StationPoint.self, forKey: .start)
         reached = try container.decodeIfPresent(StationPoint.self, forKey: .reached)
         training = try container.decodeIfPresent(Int.self, forKey: .training) ?? 0
+        stayed = try container.decodeIfPresent(StationPoint.self, forKey: .stayed)
         stardust = try container.decodeIfPresent(Int.self, forKey: .stardust) ?? legacy.decodeIfPresent(Int.self, forKey: .coins) ?? 0
         ultraBalls = try container.decodeIfPresent(Int.self, forKey: .ultraBalls) ?? 0
         growth = try container.decodeIfPresent([Growth].self, forKey: .growth) ?? []
@@ -763,6 +765,7 @@ final class AdventureService {
                         recap.reached = point
                     } else {
                         recap.training += 1
+                        recap.stayed = point
                     }
                 }
             }

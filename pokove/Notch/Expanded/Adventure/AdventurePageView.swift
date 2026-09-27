@@ -502,13 +502,13 @@ struct RecapLine: Identifiable {
                                text: RecapText.learnedMore(recap.learned.count - namedLimit)))
         }
         if recap.clears > 0 || recap.stardust > 0 {
-            // How far the line moved, else how much training; the stardust rides along.
+            // How far the line moved, else where the party stayed; the stardust rides along.
             let label = { (point: StationPoint) in "\(point.chapter + 1)-\(point.station + 1)" }
             let text: String
             if let reached = recap.reached {
                 text = RecapText.moved(from: recap.start.map(label), to: label(reached))
-            } else if recap.training > 0 {
-                text = RecapText.trained(recap.training)
+            } else if let stayed = recap.stayed {
+                text = RecapText.stayed(at: label(stayed))
             } else {
                 text = RecapText.stardust
             }
