@@ -106,7 +106,7 @@ struct BattleSceneView: View {
         }
         .onChange(of: battle?.foes.first?.id) {
             introduce(adventure.battle)
-            if adventure.target?.isChallenge == true, let plan = adventure.battle?.plan { showIntro(plan) }
+            if adventure.target?.showsIntro == true, let plan = adventure.battle?.plan { showIntro(plan) }
         }
         .onChange(of: adventure.resultSerial) { showResult(adventure.lastResult) }
         .onAppear { introduce(adventure.battle) }
@@ -180,6 +180,7 @@ struct BattleSceneView: View {
         case .trainer(let trainer): say(BattleText.challenged(trainer))
         case .legend: say(BattleText.legendAppeared(name(of: battle.foeActive)))
         case .wild, .dungeon: say(BattleText.wildAppeared(name(of: battle.foeActive)))
+        case .tower(let floor): say("\(ChallengeText.tower) \(ChallengeText.floor(floor))!")
         }
     }
 
@@ -203,6 +204,8 @@ struct BattleSceneView: View {
                 if let ally = battle.combatant(id), app.adventure.isShiny(ally) { sparkle() }
             } else if let trainer = battle.plan.trainer {
                 say(BattleText.sentOut(trainer, name))
+            } else if case .tower = battle.plan.kind {
+                say(BattleText.legendAppeared(name))
             } else {
                 say(BattleText.wildAppeared(name))
             }
@@ -452,6 +455,8 @@ private struct SceneChrome: View {
         case .dungeon(let tier):
             let floor = min((adventure.battle?.foeIndex ?? 0) + 1, DailyDungeon.floors)
             return String(localized: "Dungeon \(tier.title) · \(floor)/\(DailyDungeon.floors)F")
+        case .tower(let floor):
+            return "\(ChallengeText.tower) · \(ChallengeText.floor(floor))"
         }
     }
 }

@@ -100,6 +100,7 @@ struct ChallengeIntroView: View {
         case .trainer(let trainer): trainer.name
         case .legend: foeSpecies.flatMap { app.adventure.dex.species($0)?.name } ?? ""
         case .dungeon(let tier): ChallengeText.dungeon(tier.title)
+        case .tower: ChallengeText.tower
         case .wild: ""
         }
     }
@@ -110,6 +111,7 @@ struct ChallengeIntroView: View {
         case .legend: ChallengeText.legendary
         case .dungeon:
             ChallengeText.floors(DailyDungeon.floors, types: app.adventure.dungeonTypes.map(\.title).joined(separator: "·"))
+        case .tower(let floor): ChallengeText.floor(floor)
         case .wild: ""
         }
     }
@@ -122,6 +124,7 @@ extension ChallengeResultView {
         case .boss(let trainer): trainer.name
         case .legend(let species): app.adventure.dex.species(species)?.name
         case .dungeon(let tier): ChallengeText.dungeon(tier.title)
+        case .tower: nil
         }
     }
 }
@@ -183,6 +186,8 @@ struct ChallengeResultView: View {
                 PokeIconView(id: species, pixelSize: 1)
                 Text(ChallengeText.joined(dex.species(species)?.name ?? "")).modifier(ResultLine())
             }
+        case .tower(let floor):
+            Text(ChallengeText.reached(floor)).modifier(ResultLine())
         case .dungeon(let tier):
             Text(ChallengeText.cleared(ChallengeText.dungeon(tier.title))).modifier(ResultLine())
             if result.ultraBall {
@@ -203,6 +208,18 @@ struct ChallengeResultView: View {
     }
 
     @ViewBuilder private var loss: some View {
+        if case .tower(let floor) = result.kind {
+            // A run always ends in a loss: the floor it stopped at, and the record.
+            Text(ChallengeText.stoppedAt(floor)).modifier(ResultLine())
+            if let best = result.best, best > 0 {
+                Text(ChallengeText.best(best)).modifier(ResultDetail(color: Color(hex: 0xFFD35A)))
+            }
+        } else {
+            standardLoss
+        }
+    }
+
+    @ViewBuilder private var standardLoss: some View {
         if let opponent {
             Text(ChallengeText.lost(to: opponent)).modifier(ResultLine())
         }

@@ -17,9 +17,17 @@ nonisolated enum BattleTarget: Equatable, Sendable {
     case boss(chapter: Int, index: Int)
     case legend(String)
     case dungeon(DungeonTier)
+    /// A Battle Tower floor, from 1, after the Champion.
+    case tower(Int)
 
     /// Everything but stations is a challenge, which plays out whether or not an agent works.
     var isChallenge: Bool { if case .station = self { false } else { true } }
+
+    /// Challenges open with the VS card, except tower floors after the first, which follow on at once.
+    var showsIntro: Bool {
+        if case .tower(let floor) = self { return floor == 1 }
+        return isChallenge
+    }
 }
 
 /// How far the journey has come, and where on the line the party fights.
@@ -363,6 +371,7 @@ nonisolated enum Rewards {
         case .trainer: 30
         case .legend: 60
         case .dungeon: 0
+        case .tower: BattleTower.stardustPerFloor
         }
     }
 }
@@ -477,6 +486,47 @@ nonisolated enum DailyDungeon {
         }
         return StagePlan(kind: .dungeon(tier), foes: foes, scenery: scenery(for: types))
     }
+}
+
+// MARK: Battle Tower
+
+/// After the Champion: floor after floor of three fully evolved Pokémon, a level higher each
+/// floor, until the party loses. The best floor is kept.
+nonisolated enum BattleTower {
+    static let foesPerFloor = 3
+    static let stardustPerFloor = 20
+    /// Every this many floors cleared pays an Ultra Ball.
+    static let ultraBallEvery = 10
+
+    static func level(floor: Int) -> Int { min(PokeMath.maxLevel, 50 + floor) }
+
+    /// The same three for a floor all week, so a retry faces them again.
+    static func plan(floor: Int, on date: Date, data: GameData, calendar: Calendar = .current) -> StagePlan {
+        let week = calendar.component(.yearForWeekOfYear, from: date) * 100 + calendar.component(.weekOfYear, from: date)
+        var rng = SeededRNG(seed: UInt64(week) &* 1_000_003 &+ UInt64(floor))
+        let pool = data.dex.species.filter { !$0.isSpecial && data.dex.evolutions($0.id).isEmpty && $0.stats.total >= 400 }
+        let level = level(floor: floor)
+        let foes = (0..<foesPerFloor).map { _ in
+            StagePlan.Foe(species: pool.isEmpty ? 143 : pool[Int(rng.next() % UInt64(pool.count))].id, level: level)
+        }
+        return StagePlan(kind: .tower(floor), foes: foes, scenery: .tower)
+    }
+}
+
+/// A Battle Tower run: the floor being climbed, if any, and the best floor cleared.
+nonisolated struct TowerState: Codable, Equatable, Sendable {
+    var best = 0
+    var floor: Int?
+}
+
+// MARK: Pokédex rewards
+
+nonisolated enum DexRewards {
+    /// Every this many species caught pays an Ultra Ball.
+    static let every = 10
+
+    static func earned(caught: Int) -> Int { caught / every }
+    static func next(caught: Int) -> Int? { caught >= PokeDexStore.maxID ? nil : min(PokeDexStore.maxID, (caught / every + 1) * every) }
 }
 
 // MARK: Party suggestions

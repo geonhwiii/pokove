@@ -455,6 +455,13 @@ struct RecapLine: Identifiable {
         let trainers = adventure.chapters.flatMap(\.bosses)
         var lines: [RecapLine] = []
 
+        for milestone in recap.dexMilestones {
+            lines.append(.init(id: "dex\(milestone)", icon: .symbol("book.closed.fill", Color(hex: 0xFFD35A)),
+                               text: RecapText.dexMilestone(milestone), isNotable: true))
+        }
+        if let floor = recap.tower {
+            lines.append(.init(id: "tower", icon: .symbol("building.columns.fill", Color(hex: 0xB9A4FF)), text: RecapText.tower(floor)))
+        }
         for (i, species) in recap.shinies.enumerated() {
             lines.append(.init(id: "shiny\(i)", icon: .shiny(species), text: RecapText.shiny(name(species)), isNotable: true))
         }
@@ -759,6 +766,16 @@ private struct DexGrid: View {
                     .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
                     .contentTransition(.numericText())
+                // The next Pokédex milestone, which pays an Ultra Ball.
+                if let next = DexRewards.next(caught: adventure.caught.count) {
+                    HStack(spacing: 1) {
+                        ItemSpriteView(slug: "ultra-ball", pixelSize: 0.5).frame(width: 11, height: 11)
+                        Text("\(next)")
+                            .font(.system(size: 9.5, weight: .bold).monospacedDigit())
+                            .foregroundStyle(.white.opacity(0.55))
+                    }
+                    .help(GuideText.nextDexReward(next))
+                }
                 if adventure.shinyCount > 0 {
                     HStack(spacing: 1) {
                         ShinyMark(size: 7)

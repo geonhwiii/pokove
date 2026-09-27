@@ -141,6 +141,10 @@ nonisolated enum RecapText {
     static func stayed(at station: String) -> String { korean ? "\(station)에 머물렀어요" : "Stayed at \(station)" }
     static var stardust: String { korean ? "별의모래" : "Stardust" }
     static var shinyLabel: String { korean ? "이로치" : "Shiny" }
+    static func dexMilestone(_ count: Int) -> String {
+        korean ? "도감 \(count)종! 울트라볼을 받았어요" : "\(count) in the Pokédex! An Ultra Ball for you"
+    }
+    static func tower(_ floor: Int) -> String { korean ? "배틀타워 \(floor)층까지 올랐어요" : "Climbed to floor \(floor) of the Battle Tower" }
     static func shiny(_ name: String) -> String { korean ? "이로치 \(name.objectParticle) 만났어요" : "Found a shiny \(name)" }
     static func shinyNow(_ name: String) -> String { korean ? "✦ \(name.subjectParticle) 이로치가 됐어요!" : "✦ \(name) is shiny now!" }
     static func shinyJoined(_ name: String) -> String { korean ? "✦ 이로치 \(name) 합류!" : "✦ A shiny \(name) joined your team!" }
@@ -169,7 +173,12 @@ nonisolated enum ChallengeText {
     static func cleared(_ dungeon: String) -> String { korean ? "\(dungeon) 클리어" : "\(dungeon) cleared" }
     static var ultraBall: String { korean ? "울트라볼 1개" : "1 Ultra Ball" }
     static func lost(to name: String) -> String { korean ? "\(name)에게 졌어요" : "\(name) won this time" }
-    static var nothingLost: String { korean ? "잃은 건 없어요. 수련하고 다시 도전해요." : "Nothing lost. The party trains and tries again." }
+    static var nothingLost: String { korean ? "잃은 건 없어요." : "Nothing lost." }
+    static var tower: String { korean ? "배틀타워" : "Battle Tower" }
+    static func floor(_ floor: Int) -> String { korean ? "\(floor)층" : "Floor \(floor)" }
+    static func reached(_ floor: Int) -> String { korean ? "\(floor)층까지 올랐어요" : "Made it to floor \(floor)" }
+    static func stoppedAt(_ floor: Int) -> String { korean ? "\(floor)층을 넘지 못했어요" : "Stopped at floor \(floor)" }
+    static func best(_ floor: Int) -> String { korean ? "최고 \(floor)층" : "Best: floor \(floor)" }
     static func chance(_ percent: Int) -> String { korean ? "다음 도전 이길 확률 \(percent)%" : "\(percent)% to win next time" }
 }
 
@@ -231,6 +240,7 @@ nonisolated enum GuideText {
 
     // The Pokédex.
     static var ownedOnly: String { korean ? "보유만" : "Owned" }
+    static func nextDexReward(_ count: Int) -> String { korean ? "\(count)종을 모으면 울트라볼" : "An Ultra Ball at \(count)" }
     static func cap(_ level: Int) -> String { korean ? "상한 \(level)" : "Cap \(level)" }
     static func learns(_ move: String, at level: Int) -> String {
         korean ? "Lv \(level)에 \(move.objectParticle) 배워요" : "Learns \(move) at Lv \(level)"

@@ -98,15 +98,20 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     var dungeon: [DungeonTier] = []
     /// Shinies met: newcomers, and ones you had that started to shine.
     var shinies: [Int] = []
+    /// Pokédex milestones reached (10, 20, …), each worth an Ultra Ball.
+    var dexMilestones: [Int] = []
+    /// The highest Battle Tower floor cleared.
+    var tower: Int?
 
     var isEmpty: Bool {
         clears == 0 && growth.isEmpty && discovered.isEmpty && evolutions.isEmpty && badges.isEmpty && losses.isEmpty
-            && stuck == nil && dungeon.isEmpty && shinies.isEmpty
+            && stuck == nil && dungeon.isEmpty && shinies.isEmpty && dexMilestones.isEmpty && tower == nil
     }
 
     /// Worth a line over the battle when the page opens; the rest waits in the history.
     var isNotable: Bool {
         !badges.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty || !shinies.isEmpty
+            || !dexMilestones.isEmpty
     }
 
     init() {}
@@ -137,6 +142,8 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         stuck = try container.decodeIfPresent(String.self, forKey: .stuck)
         dungeon = try container.decodeIfPresent([DungeonTier].self, forKey: .dungeon) ?? []
         shinies = try container.decodeIfPresent([Int].self, forKey: .shinies) ?? []
+        dexMilestones = try container.decodeIfPresent([Int].self, forKey: .dexMilestones) ?? []
+        tower = try container.decodeIfPresent(Int.self, forKey: .tower)
     }
 }
 
@@ -146,10 +153,14 @@ nonisolated struct ChallengeResult: Equatable, Sendable {
         case boss(Trainer)
         case legend(species: Int)
         case dungeon(DungeonTier)
+        /// The floor a Battle Tower run ended on.
+        case tower(Int)
     }
 
     let kind: Kind
     let cleared: Bool
+    /// The tower's best floor, after a run.
+    var best: Int?
     var badge: Int?
     /// The level cap before and after a badge raised it.
     var cap: ClosedRange<Int>?
@@ -199,6 +210,10 @@ final class AdventureService {
     private(set) var clears = 0
     private(set) var wipes = 0
     private(set) var pulls = 0
+    /// The Battle Tower: the floor being climbed and the best one.
+    private(set) var tower = TowerState()
+    /// Pokédex milestones already paid out.
+    private(set) var dexRewards = 0
     /// Which dungeon tiers have paid out today.
     private(set) var dungeonDay = DungeonDay(day: DailyDungeon.day(of: Date()))
     /// True while a battle is playing: at a station while an agent works, or any challenge.
@@ -535,6 +550,13 @@ final class AdventureService {
         start(.legend(id), data: data)
     }
 
+    /// Starts a Battle Tower run from the first floor.
+    func enterTower() {
+        guard progress.isChampion, !isChallenging, let data else { return }
+        tower.floor = 1
+        start(.tower(1), data: data)
+    }
+
     func enterDungeon(_ tier: DungeonTier) {
         guard !isChallenging, !isClaimed(tier), let data else { return }
         start(.dungeon(tier), data: data)
@@ -694,6 +716,11 @@ final class AdventureService {
     /// The next battle: the boss if AUTO wants it, otherwise the station. AUTO goes by the
     /// recommended team's chance and swaps that team in for the fight; it stays afterwards.
     private func lineUp(_ data: GameData, allowAuto: Bool) {
+        // A tower run climbs on by itself until it ends.
+        if let floor = tower.floor {
+            start(.tower(floor), data: data)
+            return
+        }
         let chance = { (self.hasBetterTeam ? self.bestReadiness : nil) ?? self.readiness ?? 0 }
         if allowAuto, progress.wantsBoss(data.chapters, auto: autoChallenge, partyLevel: partyLevel, chance: chance),
            let next = progress.nextBoss(data.chapters) {
@@ -718,6 +745,8 @@ final class AdventureService {
             return data.legend(id).map(StagePlan.legend)
         case .dungeon(let tier):
             return DailyDungeon.plan(tier, on: Date(), partyLevel: partyLevel, cap: levelCap, data: data)
+        case .tower(let floor):
+            return BattleTower.plan(floor: floor, on: Date(), data: data)
         }
     }
 
@@ -741,7 +770,7 @@ final class AdventureService {
         if let foe = state.foeActive { seen.insert(foe.speciesID) }
         battle = state
         if next.isChallenge, !isBattling { isBattling = true }
-        if next.isChallenge, isWatching { hold(Self.introHold) }
+        if next.showsIntro, isWatching { hold(Self.introHold) }
     }
 
     /// Holds the battle for a card, after any hold already running.
@@ -842,6 +871,20 @@ final class AdventureService {
                 }
                 note { $0.dungeon.append(tier) }
             }
+        case .tower(let floor):
+            if cleared {
+                tower.best = max(tower.best, floor)
+                tower.floor = floor + 1
+                note { $0.tower = max($0.tower ?? 0, floor) }
+                if floor % BattleTower.ultraBallEvery == 0 {
+                    ultraBalls += 1
+                    note { $0.ultraBalls += 1 }
+                }
+            } else {
+                // The run ends; only its end gets a card.
+                tower.floor = nil
+                result = ChallengeResult(kind: .tower(floor), cleared: false, best: tower.best)
+            }
         }
         battle = nil
         refreshReadiness()
@@ -927,6 +970,7 @@ final class AdventureService {
         owned[index].speciesID = next.id
         caught.insert(next.id)
         seen.insert(next.id)
+        claimDexRewards()
         note { recap in
             recap.evolutions.append(.init(from: from, to: next.id))
             if let row = recap.growth.firstIndex(where: { $0.member == member.id }) { recap.growth[row].species = next.id }
@@ -965,6 +1009,7 @@ final class AdventureService {
     private func receive(_ species: PokeSpecies, level: Int, origin: OwnedPokemon.Origin, shiny: Bool = false) {
         seen.insert(species.id)
         caught.insert(species.id)
+        defer { claimDexRewards() }
         let newcomer = OwnedPokemon(id: UUID(), speciesID: species.id, xp: PokeMath.xp(forLevel: level), caughtAt: Date(), origin: origin,
                                     shiny: shiny)
         owned.append(newcomer)
@@ -987,6 +1032,21 @@ final class AdventureService {
             self.announce(title: RecapText.shinyNow(name), detail: nil, pokemonID: species, shiny: true)
         }
         saveNow()
+    }
+
+    /// An Ultra Ball for every ten species caught, including ones reached before this existed.
+    private func claimDexRewards() {
+        let earned = DexRewards.earned(caught: caught.count)
+        guard earned > dexRewards else { return }
+        let milestones = ((dexRewards + 1)...earned).map { $0 * DexRewards.every }
+        ultraBalls += milestones.count
+        dexRewards = earned
+        note { recap in
+            recap.dexMilestones += milestones
+            recap.ultraBalls += milestones.count
+        }
+        if let top = milestones.last { announce(title: RecapText.dexMilestone(top), detail: nil, pokemonID: nil) }
+        scheduleSave()
     }
 
     // MARK: Forecast
@@ -1116,6 +1176,8 @@ final class AdventureService {
         recap = AdventureRecap()
         history = []
         historyUnread = false
+        tower = TowerState()
+        dexRewards = 0
         clears = 0
         wipes = 0
         pulls = 0
@@ -1142,6 +1204,12 @@ final class AdventureService {
     }
 
     func debugXP(_ amount: Int) { award(amount) }
+
+    /// Crowns the party, which opens the Battle Tower.
+    func debugChampion() {
+        progress.isChampion = true
+        saveNow()
+    }
 
     /// Makes the party leader shine, as a shiny duplicate would.
     func debugShiny() {
@@ -1200,6 +1268,8 @@ final class AdventureService {
         var recap: AdventureRecap
         var history: [AdventureRecap]?
         var historyUnread: Bool?
+        var tower: TowerState?
+        var dexRewards: Int?
         var clears: Int
         var wipes: Int
         var pulls: Int
@@ -1244,7 +1314,18 @@ final class AdventureService {
                 if let day = file.dungeon { dungeonDay = day }
                 history = file.history ?? []
                 historyUnread = file.historyUnread ?? false
+                tower = file.tower ?? TowerState()
+                // A run can't resume mid-floor across launches.
+                tower.floor = nil
                 trimHistory()
+                if let rewards = file.dexRewards {
+                    dexRewards = rewards
+                } else {
+                    // Saves from before the rewards count them from zero, so milestones already
+                    // reached pay out once.
+                    dexRewards = 0
+                }
+                claimDexRewards()
             } catch {
                 // Never let the next save overwrite an adventure we couldn't read.
                 let backup = storeURL.deletingPathExtension().appendingPathExtension("unreadable-\(Int(Date().timeIntervalSince1970)).json")
@@ -1294,7 +1375,8 @@ final class AdventureService {
         saveTask = nil
         let file = SaveFile(starter: starter, owned: owned, partyIDs: partyIDs, seen: seen.sorted(), caught: caught.sorted(),
                             stardust: stardust, ultraBalls: ultraBalls, progress: progress, autoChallenge: autoChallenge, offer: offer,
-                            recap: recap, history: history, historyUnread: historyUnread, clears: clears, wipes: wipes, pulls: pulls,
+                            recap: recap, history: history, historyUnread: historyUnread, tower: tower, dexRewards: dexRewards,
+                            clears: clears, wipes: wipes, pulls: pulls,
                             dungeon: dungeonDay)
         do {
             try FileManager.default.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)

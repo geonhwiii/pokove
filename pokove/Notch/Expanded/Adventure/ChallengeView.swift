@@ -3,13 +3,14 @@ import SwiftUI
 /// The three ways to take the journey on: the stage line agents push along, the gym bosses, and
 /// the daily dungeon.
 enum ChallengeMode: String, CaseIterable {
-    case stage, gym, dungeon
+    case stage, gym, dungeon, tower
 
     var title: String {
         switch self {
         case .stage: String(localized: "Stages")
         case .gym: String(localized: "Gym")
         case .dungeon: String(localized: "Dungeon")
+        case .tower: String(localized: "Tower")
         }
     }
 }
@@ -33,6 +34,8 @@ struct ChallengeView: View {
                     BossVSView()
                 case .dungeon:
                     DungeonView()
+                case .tower:
+                    TowerView()
                 }
                 if mode == .stage, let legend, let spot = app.adventure.data?.legend(legend) {
                     LegendVSView(spot: spot) { withAnimation(.smooth(duration: 0.25)) { self.legend = nil } }
@@ -53,10 +56,13 @@ struct ChallengeView: View {
 
 private struct ModePicker: View {
     @Binding var mode: ChallengeMode
+    @Environment(AppModel.self) private var app
 
     var body: some View {
+        // The tower opens after the Champion.
+        let modes = ChallengeMode.allCases.filter { $0 != .tower || app.adventure.progress.isChampion }
         HStack(spacing: 0) {
-            ForEach(ChallengeMode.allCases, id: \.self) { item in
+            ForEach(modes, id: \.self) { item in
                 Button {
                     withAnimation(.smooth(duration: 0.2)) { mode = item }
                 } label: {
@@ -929,6 +935,83 @@ private struct DungeonView: View {
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
+    }
+}
+
+// MARK: Battle Tower
+
+/// After the Champion: the next floor's three, the record, and the button to climb.
+private struct TowerView: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let adventure = app.adventure
+        let running = adventure.tower.floor != nil && adventure.isChallenging
+        let floor = adventure.tower.floor ?? 1
+        let foes = adventure.data.map { BattleTower.plan(floor: floor, on: Date(), data: $0).foes } ?? []
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 4) {
+                Text(ChallengeText.tower)
+                    .font(.system(size: 10.5, weight: .bold))
+                    .foregroundStyle(.white)
+                Spacer(minLength: 2)
+                if adventure.tower.best > 0 {
+                    Text(ChallengeText.best(adventure.tower.best))
+                        .font(.system(size: 9, weight: .heavy).monospacedDigit())
+                        .foregroundStyle(Color(hex: 0xFFD35A))
+                }
+            }
+            .padding(.horizontal, 2)
+
+            HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(ChallengeText.floor(floor))
+                        .font(.system(size: 17, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .contentTransition(.numericText())
+                    Text("Lv \(BattleTower.level(floor: floor))")
+                        .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                Spacer(minLength: 2)
+                HStack(spacing: -6) {
+                    ForEach(Array(foes.enumerated()), id: \.offset) { _, foe in PokeIconView(id: foe.species, pixelSize: 1) }
+                }
+            }
+            .padding(.horizontal, 9)
+            .frame(height: 50)
+            .background(.white.opacity(running ? 0.12 : 0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color(hex: 0xFFD35A).opacity(running ? 0.6 : 0)))
+
+            HStack(spacing: 6) {
+                HStack(spacing: 3) {
+                    StardustIcon(size: 10)
+                    Text("\(BattleTower.stardustPerFloor)").font(.system(size: 9, weight: .bold).monospacedDigit())
+                }
+                .foregroundStyle(.white.opacity(0.75))
+                HStack(spacing: 2) {
+                    ItemSpriteView(slug: "ultra-ball", pixelSize: 0.6).frame(width: 14, height: 14)
+                    Text(ChallengeText.floor(nextUltraFloor(after: floor)))
+                        .font(.system(size: 9, weight: .bold).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.75))
+                }
+                Spacer(minLength: 2)
+                if running {
+                    VSNote(symbol: "bolt.fill", text: String(localized: "Battling…"), tint: Color(hex: 0xFFD35A))
+                } else {
+                    GoButton(title: String(localized: "Challenge!")) { adventure.enterTower() }
+                        .disabled(adventure.isChallenging)
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    /// The next floor that pays an Ultra Ball, from this one.
+    private func nextUltraFloor(after floor: Int) -> Int {
+        let every = BattleTower.ultraBallEvery
+        return (floor + every - 1) / every * every
     }
 }
 

@@ -62,8 +62,18 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
 - **EXP shown:** the card shows experience left to the next level ("869 남음", also on hover over party
   slots), and a knockout at a station pops "EXP +N" over the party's plate. Challenge EXP only lands on a
   win, so it isn't shown during the fight.
-- **Next up, agreed:** after the Champion a Battle Tower (endless floors, best record) and Pokédex
-  milestone rewards. Then the README goes Korean-first with screenshots, English in `README.en.md`.
+- **Pokédex rewards** (`DexRewards`): an Ultra Ball for every 10 species caught, paid once per
+  milestone (`dexRewards` in the save; saves from before count from zero, so reached milestones pay
+  on the next launch). The dex header shows the next milestone beside an Ultra Ball.
+- **Battle Tower** (`BattleTower`, `TowerState`), after the Champion: a 타워 tab in 도전. Each floor is
+  three fully evolved non-legendary Pokémon (base stat total ≥ 400) at Lv 50 + floor, seeded by week
+  and floor. Winning climbs on at once (no VS card after floor 1, no result card between floors);
+  a loss ends the run with a card ("N층을 넘지 못했어요 · 최고 M층"). +20 stardust a floor, an Ultra Ball
+  every 10th, trainer-rate EXP on each floor won. AUTO never starts it; a run doesn't resume after
+  relaunch.
+- **Copy trimmed** at the user's request: no rules lines (the dungeon's floors, how to repeat a
+  station, "수련하고 다시 도전해요"); the history says where the party got to ("4-3에서 4-10까지 갔어요",
+  "2-10에 머물렀어요") instead of battle counts.
 
 ## v3 direction (agreed with the user, 2026-09-27)
 

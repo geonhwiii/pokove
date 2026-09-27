@@ -125,6 +125,22 @@
         }
       }
     },
+    "%@ · Lv %lld · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · Lv %2$lld · %3$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · Lv %2$lld · %3$@"
+          }
+        }
+      }
+    },
     "%@ — %@": {
       "localizations": {
         "en": {
@@ -3673,6 +3689,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘의 던전"
+          }
+        }
+      }
+    },
+    "Tower": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "타워"
           }
         }
       }

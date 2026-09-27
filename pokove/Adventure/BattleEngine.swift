@@ -93,6 +93,7 @@ nonisolated enum PokeMath {
         case .trainer: 1.5
         case .legend: 3
         case .dungeon: 1.25
+        case .tower: 1.5
         }
         let relative = min(1, Double(level) / Double(max(1, partyLevel)))
         return max(1, Int((xpScale * Double(max(20, baseExperience)).squareRoot() * (0.4 + 0.6 * relative) * bonus).rounded()))
@@ -219,6 +220,7 @@ nonisolated struct StagePlan: Equatable, Sendable {
         case trainer(Trainer)
         case legend
         case dungeon(DungeonTier)
+        case tower(Int)
     }
 
     struct Foe: Equatable, Sendable {
