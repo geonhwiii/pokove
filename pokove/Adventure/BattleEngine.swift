@@ -250,11 +250,13 @@ nonisolated struct StagePlan: Equatable, Sendable {
         }
         var foes = (0..<lastStationFoes - 1).map { _ in Foe(species: random(&rng), level: max(2, level + rng.pick(-2...(-1)))) }
         let strongest = pool.max { (data.dex[$0.species]?.stats.total ?? 0) < (data.dex[$1.species]?.stats.total ?? 0) }
-        foes.append(Foe(species: strongest?.species ?? random(&rng), level: max(2, level + 2)))
+        foes.append(Foe(species: strongest?.species ?? random(&rng), level: max(2, level + lastStationBoost)))
         return StagePlan(kind: .wild, foes: foes, scenery: station.stretch.scenery)
     }
 
     static let lastStationFoes = 3
+    /// Levels the terminus's last Pokémon is above the rest.
+    static let lastStationBoost = 2
 
     static func boss(_ trainer: Trainer, scenery: Scenery) -> StagePlan {
         StagePlan(kind: .trainer(trainer), foes: trainer.battleTeam.map { Foe(species: $0.species, level: $0.level) }, scenery: scenery)

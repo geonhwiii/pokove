@@ -17,9 +17,10 @@ this conflicts with v3.1 or v3 below, v3.2 wins.
   Drawn as a bigger dot; the gym terminal at the end of the line is gone.
 - **Stations are level-gated.** Wild Pokémon still stay a level below the party, but the line only
   moves to the next station once the party's average level reaches that station's own level; until
-  then it fights at the station before, which can be the previous chapter's terminus
-  (`stationTarget(_:partyLevel:)`, `isReady`, `AdventureService.isHoldingBack`). The footer then says
-  "다음 역은 Lv N부터". The line view follows the party, so it can show the chapter before the line's.
+  then it fights at the station before, which at a chapter's start is the previous chapter's 9th
+  station, since the terminus is tougher (`previous`, `stationTarget(_:partyLevel:)`, `isReady`,
+  `AdventureService.isHoldingBack`). The footer then says "다음 역은 Lv N부터", ahead of an open
+  gym's hint. The line view follows the party, so it can show the chapter before the line's.
   *Found in the sim, not agreed up front:* with only the old "a level below the party" rule the
   free line reached 9-10 within 1–8 h and looped there for the rest of the game; with the stations'
   own levels and no cap the party lost thousands of times. The level gate gives: chapter 2 at ~2 h,

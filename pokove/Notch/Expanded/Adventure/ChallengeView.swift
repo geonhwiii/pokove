@@ -71,7 +71,7 @@ private struct ModePicker: View {
                         .foregroundStyle(mode == item ? .white : .white.opacity(0.5))
                         .overlay(alignment: .topTrailing) {
                             // A gym is open and waiting.
-                            if item == .gym, gymWaiting {
+                            if item == .gym, waitingGym != nil {
                                 Circle().fill(Color(hex: 0xFFD35A)).frame(width: 4.5, height: 4.5).offset(x: 5, y: -1)
                             }
                         }
@@ -81,15 +81,18 @@ private struct ModePicker: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help(item == .gym ? waitingGym ?? "" : "")
             }
         }
         .padding(1.5)
         .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
     }
 
-    private var gymWaiting: Bool {
+    /// "Brock is waiting", while a gym is open and nothing else is being fought.
+    private var waitingGym: String? {
         let adventure = app.adventure
-        return adventure.progress.isBossOpen(adventure.chapters) && !adventure.isChallenging
+        guard adventure.progress.isBossOpen(adventure.chapters), !adventure.isChallenging, let boss = adventure.nextBoss else { return nil }
+        return String(localized: "\(boss.trainer.name) is waiting")
     }
 }
 
@@ -131,7 +134,7 @@ private struct StageLineView: View {
                     .position(x: width / 2, y: proxy.size.height - 11)
             }
         }
-        .onChange(of: current) { browsing = nil; selected = nil }
+        .onChange(of: app.adventure.progress.chapter) { browsing = nil; selected = nil }
     }
 
     /// Where the party is on the line: a station while it fights one, else the one lined up.
@@ -143,10 +146,7 @@ private struct StageLineView: View {
 
     /// The chapter the party is on. It can be the one before the line's, while the party works up
     /// to the next chapter's first station.
-    private var current: Int {
-        let adventure = app.adventure
-        return adventure.isChallenging ? adventure.progress.chapter : min(here.chapter, adventure.progress.chapter)
-    }
+    private var current: Int { min(here.chapter, app.adventure.progress.chapter) }
 
     // MARK: Header
 
@@ -161,7 +161,7 @@ private struct StageLineView: View {
                 .contentTransition(.numericText())
             chevron("chevron.right", enabled: index < progress.chapter) { browse(index + 1) }
             Spacer(minLength: 4)
-            if progress.badges >= 8, !progress.isChampion, progress.boss > 0 {
+            if chapter.isLeague, progress.badges >= 8, !progress.isChampion, progress.boss > 0 {
                 Text("Elite Four \(min(progress.boss, 4))/4")
                     .font(.system(size: 9, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
@@ -260,9 +260,10 @@ private struct StageLineView: View {
         let isCurrent = index == progress.chapter || index == current
         HStack(spacing: 5) {
             if let selected, selected.chapter == index {
-                let level = adventure.foeLevel(chapter.stations[selected.station])
+                let isTerminus = selected.station == Chapter.stationCount - 1
+                let level = adventure.foeLevel(chapter.stations[selected.station], isTerminus: isTerminus)
                 Text("\(chapter.number)-\(selected.station + 1)").font(.system(size: 9.5, weight: .heavy).monospacedDigit())
-                Text(selected.station == Chapter.stationCount - 1 ? "3 wild Pokémon · Lv \(level)" : "1 wild Pokémon · Lv \(level)")
+                Text(isTerminus ? "3 wild Pokémon · Lv \(level)" : "1 wild Pokémon · Lv \(level)")
                     .foregroundStyle(.white.opacity(0.5))
                 Spacer(minLength: 2)
                 if progress.repeating == selected {
@@ -279,7 +280,10 @@ private struct StageLineView: View {
                 Image(systemName: "bolt.fill").foregroundStyle(Color(hex: 0xFFD35A))
                 Text("A challenge is underway").foregroundStyle(.white.opacity(0.7))
                 Spacer(minLength: 0)
-            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), isCurrent {
+            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), isCurrent,
+                      adventure.nextStationLevel == nil {
+                // An open gym, unless the party is working up to the next station: the gym tab's
+                // dot and the battle's chip still say it's waiting.
                 let chance = adventure.readiness ?? 0
                 if chance >= Guidance.goodChance {
                     Image(systemName: "flag.checkered").foregroundStyle(Color(hex: 0xFFD35A))
@@ -322,7 +326,7 @@ private struct StageLineView: View {
                 if adventure.hasGachaWaiting {
                     fixPill(.gacha)
                 } else if adventure.isBattling {
-                    Text("Lv \(adventure.foeLevel(station))")
+                    Text("Lv \(adventure.foeLevel(station, isTerminus: point.station == Chapter.stationCount - 1))")
                         .font(.system(size: 8.5, weight: .bold).monospacedDigit())
                         .foregroundStyle(.white.opacity(0.4))
                 }

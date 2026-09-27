@@ -88,7 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             app.audioRoutes.previewConnection()
         case "poke":
             // poke starter <id> | poke catch [id] | poke xp <n> | poke stardust <n> | poke ultra
-            // | poke jump <chapter> <station, 11 = boss> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
+            // | poke jump <chapter> <station, 11 = line cleared> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
             // | poke challenge | poke legend <id> | poke dungeon easy|normal|hard | poke dungeonreset
             // | poke pane challenge|dex|gacha|history|toast | poke mode stage|gym|dungeon|tower|legend:<id> | poke reset
             let arguments = parts.dropFirst(2).compactMap { Int($0) }

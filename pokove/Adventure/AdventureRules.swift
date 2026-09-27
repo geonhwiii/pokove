@@ -88,10 +88,11 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
 
     var frontier: StationPoint { StationPoint(chapter: chapter, station: station) }
 
-    /// The station before a point, across the start of a chapter.
+    /// The station before a point, across the start of a chapter. That skips the chapter before's
+    /// terminus, which is tougher than the station the party couldn't manage.
     func previous(_ point: StationPoint) -> StationPoint? {
         if point.station > 0 { return StationPoint(chapter: point.chapter, station: point.station - 1) }
-        return point.chapter > 0 ? StationPoint(chapter: point.chapter - 1, station: Chapter.stationCount - 1) : nil
+        return point.chapter > 0 ? StationPoint(chapter: point.chapter - 1, station: Chapter.stationCount - 2) : nil
     }
 
     /// The party is up to the next station's level, so the line can move on.
@@ -141,11 +142,13 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
     /// A cleared line leads straight on to the next chapter, unless that one isn't open yet.
     @discardableResult
     mutating func moveOn(_ chapters: [Chapter]) -> Bool {
-        guard isLooping, chapter < lastChapter(chapters) else { return false }
+        guard isLooping else { return false }
+        // Training holds the line back, and a cleared line has nothing left to hold.
+        training = 0
+        guard chapter < lastChapter(chapters) else { return false }
         chapter += 1
         station = 0
         cursor = 0
-        training = 0
         return true
     }
 

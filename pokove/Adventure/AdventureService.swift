@@ -372,8 +372,11 @@ final class AdventureService {
         return (next.chapter, next.index, chapters[next.chapter].bosses[next.index])
     }
 
-    /// The level a station's wild Pokémon are met at: its own, but never above the party.
-    func foeLevel(_ station: Station) -> Int { max(2, min(station.level, partyLevel - 1)) }
+    /// The level a station's wild Pokémon are met at: its own, but never above the party. On a
+    /// terminus, the level of its last and strongest one.
+    func foeLevel(_ station: Station, isTerminus: Bool = false) -> Int {
+        max(2, min(station.level, partyLevel - 1) + (isTerminus ? StagePlan.lastStationBoost : 0))
+    }
 
     /// Stations still to clear on the current line.
     var stationsLeft: Int { max(0, Chapter.stationCount - progress.station) }
@@ -544,7 +547,7 @@ final class AdventureService {
 
     // MARK: Journey controls
 
-    /// Takes on the boss at the end of the line.
+    /// Takes on the next gym leader, or the next of the League's five, once its chapter is cleared.
     func challengeBoss() {
         guard !isChallenging, progress.isBossOpen(chapters), let next = progress.nextBoss(chapters), let data else { return }
         start(.boss(chapter: next.chapter, index: next.index), data: data)
@@ -569,7 +572,7 @@ final class AdventureService {
 
     /// Repeats a cleared station, to meet its Pokémon.
     func repeatStation(_ point: StationPoint) {
-        guard progress.isCleared(point), point != StationPoint(chapter: progress.chapter, station: progress.station) else { return }
+        guard progress.isCleared(point), point != progress.frontier else { return }
         progress.repeating = point
         if !isChallenging { battle = nil }
         scheduleSave()
@@ -797,7 +800,7 @@ final class AdventureService {
         switch target {
         case .station(let point):
             // Only the frontier counts as progress; repeats and training don't move the line.
-            let frontier = point == StationPoint(chapter: progress.chapter, station: progress.station) && progress.repeating == nil
+            let frontier = point == progress.frontier && progress.repeating == nil
             let wasOpen = progress.isBossOpen(data.chapters)
             progress.recordStation(point, cleared: cleared, chapters: data.chapters)
             if !wasOpen, progress.isBossOpen(data.chapters), let next = progress.nextBoss(data.chapters) {
@@ -836,6 +839,10 @@ final class AdventureService {
             case .badge(let badge):
                 releaseBank()
                 note { $0.badges.append(badge) }
+                // The badge can open the next gym, or the League, on a line already cleared.
+                if progress.isBossOpen(data.chapters), let next = progress.nextBoss(data.chapters) {
+                    note { $0.gymsOpened.append(next.chapter) }
+                }
                 announceBadge(badge)
                 result?.badge = badge
                 if levelCap > capBefore { result?.cap = capBefore...levelCap }
@@ -1410,4 +1417,8 @@ private extension JSONDecoder {
 
 extension Array where Element == Chapter {
     subscript(safeChapter index: Int) -> Chapter? { indices.contains(index) ? self[index] : nil }
+}
+
+extension Array {
+    subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }

@@ -146,10 +146,6 @@ extension AdventurePageView {
     }
 }
 
-extension Array {
-    subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
-}
-
 /// Challenge, Pokédex and Gacha tabs, with the history, the banner switch and the stardust purse.
 private struct PaneTabs: View {
     @Binding var pane: AdventurePane
