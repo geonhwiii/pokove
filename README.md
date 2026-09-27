@@ -169,7 +169,7 @@ cd site && pnpm install && pnpm dev   # http://localhost:4321
 
 - The hero is the app icon's pixel scene redrawn to fill the page, under a live notch that opens into the Adventure page. Its battle is scripted; the sprites load from PokéAPI's repository at runtime, like the app's, and none are in the repo.
 - Copy for both languages lives in `site/src/i18n.ts`.
-- Vercel deploys it from this repo: the project is named `pokove` with Root Directory `site` (Astro is detected on its own), so every push to `main` publishes.
+- Vercel deploys it on every push to `main`. The project `pokove` builds from the repo root, and `vercel.json` there installs and builds `site/` and serves `site/dist`.
 - The download buttons point at `releases/latest/download/pokove.zip`. `scripts/package.sh` builds that zip in `build/` and prints the `gh release create` command.
 - Headings use [Galmuri](https://github.com/quiple/galmuri) (SIL OFL, license next to the font) and body text uses Pretendard.
 
