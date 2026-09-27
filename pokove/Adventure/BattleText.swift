@@ -137,3 +137,85 @@ nonisolated enum ChallengeText {
     static var nothingLost: String { korean ? "잃은 건 없어요. 수련하고 다시 도전해요." : "Nothing lost. The party trains and tries again." }
     static func chance(_ percent: Int) -> String { korean ? "다음 도전 이길 확률 \(percent)%" : "\(percent)% to win next time" }
 }
+
+/// Hints for what to do next and why a boss wins, the history page, and the Pokédex card's extras.
+nonisolated enum GuideText {
+    private static var korean: Bool { PokeLanguage.isKorean }
+
+    // Next step and VS.
+    static func stationsTo(_ boss: String, _ count: Int) -> String {
+        korean ? "\(boss)까지 역 \(count)개" : count == 1 ? "1 station to \(boss)" : "\(count) stations to \(boss)"
+    }
+    static var resting: String { korean ? "에이전트가 일하면 다시 출발해요" : "Moves on when an agent works" }
+    /// "Lv 18이면", "Lv 25면".
+    private static func at(_ level: Int) -> String { "Lv \(level)" + ("\(level)".objectParticle.hasSuffix("을") ? "이면" : "면") }
+    static func needLevel(_ level: Int, _ chance: Double) -> String {
+        korean ? "\(at(level)) 이길 확률 \(percent(chance))" : "\(percent(chance)) to win at Lv \(level)"
+    }
+    static func needLevelShort(_ level: Int, _ chance: Double) -> String {
+        korean ? "\(at(level)) \(percent(chance))" : "\(percent(chance)) at Lv \(level)"
+    }
+    static func evenAtCap(_ level: Int, _ chance: Double) -> String {
+        let even = "\(level)".objectParticle.hasSuffix("을") ? "이어도" : "여도"
+        return korean ? "상한 Lv \(level)\(even) \(percent(chance))" : "\(percent(chance)) even at the Lv \(level) cap"
+    }
+    static func chance(_ boss: String, _ chance: Double) -> String {
+        korean ? "\(boss) · 이길 확률 \(percent(chance))" : "\(boss) · \(percent(chance)) to win"
+    }
+    static var bestTeam: String { korean ? "추천 팀" : "Best team" }
+    /// The party bar's short label for the same button.
+    static var recommend: String { korean ? "추천" : "Best" }
+    static var gacha: String { korean ? "뽑기" : "Gacha" }
+    static func dungeon(_ tier: String) -> String { korean ? "\(tier) 던전" : "\(tier) dungeon" }
+    static func percent(_ chance: Double) -> String { "\(Int((chance * 100).rounded()))%" }
+
+    // The history page.
+    static var history: String { korean ? "기록" : "History" }
+    static var historyHelp: String { korean ? "자리 비운 동안 있었던 일, 오늘과 어제" : "What happened while you were away, today and yesterday" }
+    static var noHistory: String { korean ? "아직 기록이 없어요" : "Nothing yet" }
+    static var noHistoryDetail: String {
+        korean ? "노치를 닫아 둔 동안 있었던 일이 여기 쌓여요." : "What happens while the page is closed shows up here."
+    }
+    static var justNow: String { korean ? "방금" : "Just now" }
+    static var yesterday: String { korean ? "어제" : "Yesterday" }
+    /// The toast's count of what happened: "배지 1 · 진화 2 · 새 동료 3".
+    static func summary(badges: Int, evolved: Int, joined: Int, losses: Int, dungeons: Int) -> String {
+        var parts: [String] = []
+        if badges > 0 { parts.append(korean ? "배지 \(badges)" : badges == 1 ? "1 badge" : "\(badges) badges") }
+        if evolved > 0 { parts.append(korean ? "진화 \(evolved)" : "\(evolved) evolved") }
+        if joined > 0 { parts.append(korean ? "새 동료 \(joined)" : "\(joined) joined") }
+        if dungeons > 0 { parts.append(korean ? "던전 \(dungeons)" : dungeons == 1 ? "1 dungeon" : "\(dungeons) dungeons") }
+        if losses > 0 { parts.append(korean ? "패배 \(losses)" : losses == 1 ? "1 loss" : "\(losses) losses") }
+        return parts.joined(separator: " · ")
+    }
+
+    // The Pokédex card.
+    static func cap(_ level: Int) -> String { korean ? "상한 \(level)" : "Cap \(level)" }
+    static func learns(_ move: String, at level: Int) -> String {
+        korean ? "Lv \(level)에 \(move.objectParticle) 배워요" : "Learns \(move) at Lv \(level)"
+    }
+    static func afterBadge(_ levels: Int) -> String {
+        korean ? "배지를 받으면 \(levels)레벨 올라요" : levels == 1 ? "Up 1 level with the next badge" : "Up \(levels) levels with the next badge"
+    }
+    static var atCap: String { korean ? "레벨 상한이에요. 배지를 받으면 더 커요." : "At the level cap. The next badge lets it grow." }
+    static func strong(against boss: String) -> String { korean ? "\(boss)에게 유리" : "Strong vs \(boss)" }
+    static func weak(against boss: String) -> String { korean ? "\(boss)에게 불리" : "Weak vs \(boss)" }
+    static var nextEvolution: String { korean ? "다음 진화" : "Evolves" }
+    static func oneOf(_ count: Int) -> String { korean ? "\(count)가지 중 하나" : "One of \(count)" }
+
+    static func habitat(_ habitat: Habitat, name: (Int) -> String) -> String {
+        switch habitat {
+        case .wild(let chapter): return korean ? "\(chapter + 1)장 역에서 만나요" : "Found at the stations of chapter \(chapter + 1)"
+        case .gacha(let chapter):
+            if chapter == 0 { return korean ? "뽑기에서 나와요" : "Comes from the gacha" }
+            return korean ? "\(chapter + 1)장부터 뽑기에서 나와요" : "Comes from the gacha from chapter \(chapter + 1)"
+        case .legend(let chapter): return korean ? "\(chapter + 1)장 ★ 전설에게 이기면 동료가 돼요" : "Beat chapter \(chapter + 1)'s ★ legendary to add it"
+        case .mythical: return korean ? "챔피언이 된 뒤 뽑기에서 아주 드물게 나와요" : "Very rarely from the gacha, once you're Champion"
+        case .evolves(let from, let level):
+            let before = name(from)
+            guard let level else { return korean ? "\(before.subjectParticle) 진화하면 돼요" : "Evolves from \(before)" }
+            return korean ? "\(before.subjectParticle) Lv \(level)에 진화하면 돼요" : "\(before) evolves into it at Lv \(level)"
+        case .unknown: return korean ? "에이전트가 일하는 동안 만날 수 있어요" : "Keep your agents busy to meet this one."
+        }
+    }
+}

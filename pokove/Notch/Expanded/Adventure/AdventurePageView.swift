@@ -34,8 +34,11 @@ struct AdventurePageView: View {
     /// The species whose details replace the battle scene.
     @State private var selection: Int?
     @AppStorage("adventurePane") private var pane: AdventurePane = .challenge
-    @State private var showsRecap = false
-    @State private var recapHovered = false
+    /// The right pane shows the history instead of a tab.
+    @State private var showsHistory = false
+    /// What happened while the page was closed, as one line over the battle for a few seconds.
+    @State private var toast: AdventureRecap?
+    @State private var toastHovered = false
 
     var body: some View {
         let adventure = app.adventure
@@ -51,12 +54,17 @@ struct AdventurePageView: View {
                         } else if !adventure.hasStarted {
                             StarterPicker()
                                 .transition(.blurReplace)
-                        } else if showsRecap, !adventure.recap.isEmpty {
-                            RecapPanel { dismissRecap() }
-                                .onHover { recapHovered = $0 }
-                                .transition(.blurReplace)
                         } else {
                             BattleSceneView()
+                                .overlay(alignment: .top) {
+                                    if let toast {
+                                        RecapToast(recap: toast) { openHistory() }
+                                            .onHover { toastHovered = $0 }
+                                            .padding(.top, 5)
+                                            .padding(.horizontal, 6)
+                                            .transition(.move(edge: .top).combined(with: .opacity))
+                                    }
+                                }
                                 .transition(.blurReplace)
                         }
                     case .failed:
@@ -76,11 +84,15 @@ struct AdventurePageView: View {
             .frame(minWidth: 226, maxWidth: 262)
 
             VStack(alignment: .leading, spacing: 6) {
-                PaneTabs(pane: $pane)
-                switch pane {
-                case .challenge: ChallengeView()
-                case .dex: DexGrid(selection: $selection)
-                case .gacha: GachaView()
+                PaneTabs(pane: $pane, showsHistory: $showsHistory)
+                if showsHistory {
+                    HistoryView()
+                } else {
+                    switch pane {
+                    case .challenge: ChallengeView()
+                    case .dex: DexGrid(selection: $selection)
+                    case .gacha: GachaView()
+                    }
                 }
             }
             .frame(width: 216)
@@ -93,17 +105,21 @@ struct AdventurePageView: View {
         .onAppear {
             adventure.dex.load()
             adventure.isWatching = true
-            showsRecap = !adventure.recap.isEmpty
+            // The recap goes to the history either way; only the big things get the line.
+            if let recap = adventure.takeRecap(), recap.isNotable { toast = recap }
         }
-        .onDisappear { adventure.isWatching = false }
-        .task(id: showsRecap) {
-            // Only a full fifteen seconds on screen counts as seen; leaving early keeps it for next time.
-            // It stays while the pointer rests on it.
-            guard showsRecap, (try? await Task.sleep(for: .seconds(15))) != nil else { return }
-            while recapHovered {
+        .onDisappear {
+            adventure.isWatching = false
+            toast = nil
+            showsHistory = false
+        }
+        .task(id: toast?.until) {
+            // A few seconds, longer while the pointer rests on it.
+            guard toast != nil, (try? await Task.sleep(for: .seconds(Self.toastSeconds))) != nil else { return }
+            while toastHovered {
                 guard (try? await Task.sleep(for: .seconds(1))) != nil else { return }
             }
-            dismissRecap()
+            withAnimation(.smooth(duration: 0.3)) { toast = nil }
         }
         #if DEBUG
         .onReceive(NotificationCenter.default.publisher(for: .pokoveDebugSelectPokemon)) { note in
@@ -111,16 +127,22 @@ struct AdventurePageView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .pokoveDebugAdventurePane)) { note in
             if let raw = note.object as? String, let value = AdventurePane(rawValue: raw) { pane = value }
-            if note.object as? String == "recap" { showsRecap = true }
+            if note.object as? String == "history" { openHistory() }
+            if note.object as? String == "toast" { toast = adventure.history.first }
         }
         #endif
     }
 }
 
 extension AdventurePageView {
-    private func dismissRecap() {
-        withAnimation(.smooth(duration: 0.3)) { showsRecap = false }
-        app.adventure.markRecapSeen()
+    static let toastSeconds: Double = 4
+
+    private func openHistory() {
+        withAnimation(.smooth(duration: 0.25)) {
+            toast = nil
+            showsHistory = true
+        }
+        app.adventure.markHistoryRead()
     }
 }
 
@@ -128,24 +150,26 @@ extension Array {
     subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
 
-/// Challenge, Pokédex and Gacha tabs, with the stardust purse.
+/// Challenge, Pokédex and Gacha tabs, with the history, the banner switch and the stardust purse.
 private struct PaneTabs: View {
     @Binding var pane: AdventurePane
+    @Binding var showsHistory: Bool
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
         HStack(spacing: 3) {
             ForEach(AdventurePane.allCases, id: \.self) { item in
+                let on = pane == item && !showsHistory
                 Button {
-                    withAnimation(.smooth(duration: 0.2)) { pane = item }
+                    withAnimation(.smooth(duration: 0.2)) { pane = item; showsHistory = false }
                 } label: {
                     Text(item.title)
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(pane == item ? .white : .white.opacity(0.45))
+                        .foregroundStyle(on ? .white : .white.opacity(0.45))
                         .padding(.horizontal, 8)
                         .frame(height: 19)
-                        .background(pane == item ? .white.opacity(0.14) : .clear, in: Capsule())
+                        .background(on ? .white.opacity(0.14) : .clear, in: Capsule())
                         .overlay(alignment: .topTrailing) {
                             if item == .gacha, adventure.hasGachaWaiting {
                                 Circle().fill(Color(hex: 0xFFD35A)).frame(width: 5, height: 5).offset(x: -1, y: 1)
@@ -156,6 +180,7 @@ private struct PaneTabs: View {
                 .buttonStyle(.plain)
             }
             Spacer(minLength: 2)
+            HistoryButton(showsHistory: $showsHistory)
             BannerToggle()
             HStack(spacing: 3) {
                 StardustIcon(size: 11)
@@ -191,51 +216,143 @@ private struct BannerToggle: View {
     }
 }
 
-/// "While you were away": one line per thing that happened since the page was last open, naming
-/// who did it. It takes the battle scene's place until it's closed or has been up for a while.
-private struct RecapPanel: View {
-    let close: () -> Void
+/// Opens the history: what happened while the page was closed, today and yesterday. A dot shows
+/// until the newest recap has been looked at.
+private struct HistoryButton: View {
+    @Binding var showsHistory: Bool
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
-        let lines = RecapLine.lines(for: adventure)
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Text(RecapText.title)
-                    .font(.system(size: 11, weight: .heavy))
-                    .foregroundStyle(.white)
-                if let since = adventure.recap.since {
-                    Text(RecapText.span(Date().timeIntervalSince(since)))
-                        .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
-                        .foregroundStyle(.white.opacity(0.4))
+        Button {
+            withAnimation(.smooth(duration: 0.25)) { showsHistory.toggle() }
+            if showsHistory { adventure.markHistoryRead() }
+        } label: {
+            Image(systemName: "clock.arrow.circlepath")
+                .font(.system(size: 9.5, weight: .semibold))
+                .foregroundStyle(showsHistory ? .white : .white.opacity(0.55))
+                .frame(width: 18, height: 18)
+                .background(showsHistory ? .white.opacity(0.14) : .clear, in: Circle())
+                .overlay(alignment: .topTrailing) {
+                    if adventure.historyUnread, !showsHistory {
+                        Circle().fill(Color(hex: 0xFF8A70)).frame(width: 5, height: 5).offset(x: -1, y: 1)
+                    }
                 }
-                Spacer()
-                Button(action: close) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.55))
-                        .frame(width: 18, height: 18)
-                        .background(.white.opacity(0.08), in: Circle())
-                }
-                .buttonStyle(.plain)
-            }
-            ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(lines) { RecapRow(line: $0) }
-                }
-                .padding(.bottom, 6)
-            }
-            .scrollIndicators(.automatic)
-            // A soft edge hints at more lines below.
-            .mask(LinearGradient(stops: [.init(color: .black, location: 0.82), .init(color: .black.opacity(0.25), location: 1)],
-                                 startPoint: .top, endPoint: .bottom))
+                .contentShape(Rectangle())
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 7)
-        .padding(.bottom, 4)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(hex: 0x101218))
+        .buttonStyle(.plain)
+        .help(GuideText.historyHelp)
+    }
+}
+
+/// One line over the battle when the page opens after something big: the thing itself when
+/// there's one, a count of them when there are several. Tapping it opens the history.
+private struct RecapToast: View {
+    let recap: AdventureRecap
+    let open: () -> Void
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let notable = RecapLine.lines(for: recap, adventure: app.adventure).filter(\.isNotable)
+        Button(action: open) {
+            HStack(spacing: 5) {
+                if let first = notable.first {
+                    RecapIcon(icon: first.icon).frame(width: 20, height: 15)
+                }
+                Text(notable.count == 1 ? notable[0].text : "\(RecapText.title) · \(summary)")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                Spacer(minLength: 2)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 7.5, weight: .heavy))
+                    .foregroundStyle(.white.opacity(0.45))
+            }
+            .padding(.leading, 5)
+            .padding(.trailing, 8)
+            .frame(height: 22)
+            .background(Color(hex: 0x0B0D12).opacity(0.9), in: Capsule())
+            .overlay(Capsule().strokeBorder(Color(hex: 0xFFD35A).opacity(0.45), lineWidth: 0.8))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var summary: String {
+        GuideText.summary(badges: recap.badges.count, evolved: recap.evolutions.count, joined: recap.discovered.count,
+                          losses: recap.losses.values.reduce(0, +), dungeons: recap.dungeon.count)
+    }
+}
+
+/// The right pane's history: each time the page was closed, what happened, newest first.
+private struct HistoryView: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let adventure = app.adventure
+        Group {
+            if adventure.history.isEmpty {
+                VStack(spacing: 4) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.3))
+                    Text(GuideText.noHistory)
+                        .font(.system(size: 10.5, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.75))
+                    Text(GuideText.noHistoryDetail)
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView(.vertical) {
+                    LazyVStack(alignment: .leading, spacing: 1) {
+                        // One view per recap, so its lines' IDs only need to be unique within it.
+                        ForEach(adventure.history, id: \.until) { recap in
+                            VStack(alignment: .leading, spacing: 1) {
+                                HistoryHeader(recap: recap)
+                                ForEach(RecapLine.lines(for: recap, adventure: adventure)) { RecapRow(line: $0) }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 5)
+                }
+                .scrollIndicators(.automatic)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(hex: 0x101218), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+}
+
+/// "방금 · 42분", "13:10 · 1시간 5분", "어제 22:40 · 2시간".
+private struct HistoryHeader: View {
+    let recap: AdventureRecap
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(when)
+            if let since = recap.since, let until = recap.until {
+                Text(verbatim: "·")
+                Text(RecapText.span(until.timeIntervalSince(since)))
+            }
+        }
+        .font(.system(size: 9, weight: .bold).monospacedDigit())
+        .foregroundStyle(.white.opacity(0.4))
+        .padding(.top, 4)
+        .padding(.bottom, 1)
+    }
+
+    private var when: String {
+        guard let until = recap.until else { return "" }
+        if Date().timeIntervalSince(until) < 120 { return GuideText.justNow }
+        let time = until.formatted(date: .omitted, time: .shortened)
+        let today = DailyDungeon.day(of: Date())
+        return DailyDungeon.day(of: until) == today ? time : "\(GuideText.yesterday) \(time)"
     }
 }
 
@@ -245,7 +362,7 @@ private struct RecapRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            icon
+            RecapIcon(icon: line.icon)
                 .frame(width: 22, height: 17)
             Text(line.text)
                 .font(.system(size: 10.5, weight: .semibold))
@@ -268,7 +385,7 @@ private struct RecapRow: View {
                     withAnimation(.smooth(duration: 0.25)) { app.adventure.recommendParty() }
                 } label: {
                     HStack(spacing: 2) {
-                        Image(systemName: "wand.and.stars").font(.system(size: 8, weight: .bold))
+                        Image(systemName: "hand.thumbsup.fill").font(.system(size: 7.5, weight: .bold))
                         Text(RecapText.bestTeam).font(.system(size: 9, weight: .heavy))
                     }
                     .foregroundStyle(.black)
@@ -283,8 +400,13 @@ private struct RecapRow: View {
         .frame(height: 17)
     }
 
-    @ViewBuilder private var icon: some View {
-        switch line.icon {
+}
+
+private struct RecapIcon: View {
+    let icon: RecapLine.Icon
+
+    var body: some View {
+        switch icon {
         case .pokemon(let id): PokeIconView(id: id, pixelSize: 0.5)
         case .team(let ids):
             ZStack {
@@ -318,12 +440,13 @@ struct RecapLine: Identifiable {
     var detailTint: Color = .white.opacity(0.5)
     var detailIsStardust = false
     var offersBestTeam = false
+    /// Big enough for the line over the battle.
+    var isNotable = false
 
     /// How many joins or moves get a line of their own before the rest are counted together.
     private static let namedLimit = 3
 
-    static func lines(for adventure: AdventureService) -> [RecapLine] {
-        let recap = adventure.recap
+    static func lines(for recap: AdventureRecap, adventure: AdventureService) -> [RecapLine] {
         let name = { (id: Int) in adventure.dex.species(id)?.name ?? "#\(id)" }
         let trainers = adventure.chapters.flatMap(\.bosses)
         var lines: [RecapLine] = []
@@ -331,7 +454,7 @@ struct RecapLine: Identifiable {
         for badge in recap.badges {
             let trainer = trainers.first { $0.badge == badge }?.name ?? ""
             lines.append(.init(id: "badge\(badge)", icon: .badge(badge),
-                               text: RecapText.beat(trainer, badge: Kanto.badgeName(badge))))
+                               text: RecapText.beat(trainer, badge: Kanto.badgeName(badge)), isNotable: true))
         }
         // A boss that keeps winning comes early: it's the one line with something to do.
         for (trainerID, times) in recap.losses.sorted(by: { $0.key < $1.key }) {
@@ -339,11 +462,11 @@ struct RecapLine: Identifiable {
             let stuck = recap.stuck == trainerID
             lines.append(.init(id: "lost\(trainerID)", icon: .symbol("shield.lefthalf.filled.slash", Color(hex: 0xFF9E6B)),
                                text: RecapText.lost(to: trainer.name, times: times),
-                               detail: stuck ? nil : RecapText.training, offersBestTeam: stuck))
+                               detail: stuck ? nil : RecapText.training, offersBestTeam: stuck, isNotable: true))
         }
         for (i, step) in recap.evolutions.enumerated() {
             lines.append(.init(id: "evolved\(i)", icon: .pokemon(step.to),
-                               text: RecapText.evolved(step.from == step.to ? nil : name(step.from), into: name(step.to))))
+                               text: RecapText.evolved(step.from == step.to ? nil : name(step.from), into: name(step.to)), isNotable: true))
         }
         // Party members first, then anyone else who grew.
         let order = Dictionary(uniqueKeysWithValues: adventure.partyIDs.enumerated().map { ($1, $0) })
@@ -353,14 +476,14 @@ struct RecapLine: Identifiable {
         }
         if !recap.discovered.isEmpty {
             lines.append(.init(id: "joined", icon: recap.discovered.count == 1 ? .pokemon(recap.discovered[0]) : .team(recap.discovered),
-                               text: RecapText.joined(recap.discovered.map(name))))
+                               text: RecapText.joined(recap.discovered.map(name)), isNotable: true))
         }
         for tier in recap.dungeon {
             let prize = DailyDungeon.stardust[tier]
             lines.append(.init(id: "dungeon\(tier.rawValue)", icon: .symbol("door.left.hand.open", Color(hex: 0xB9A4FF)),
                                text: RecapText.dungeon(tier.title),
                                detail: prize.map { "+\($0)" } ?? RecapText.ultraBall,
-                               detailTint: Color(hex: 0xFFD35A), detailIsStardust: prize != nil))
+                               detailTint: Color(hex: 0xFFD35A), detailIsStardust: prize != nil, isNotable: true))
         }
         for (i, learned) in recap.learned.prefix(namedLimit).enumerated() {
             let move = adventure.data?.moves.move(learned.move)?.name ?? ""
@@ -501,15 +624,19 @@ private struct PartyBar: View {
                         .help("Pick a Pokémon in the Pokédex to add it.")
                 }
             }
+            // Lit when the box holds a better team for the next boss than the one out now.
+            let better = adventure.hasBetterTeam
             Button {
                 withAnimation(.smooth(duration: 0.25)) { adventure.recommendParty() }
             } label: {
-                Image(systemName: "wand.and.stars")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.75))
-                    .frame(width: 22, height: Self.height)
-                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .contentShape(Rectangle())
+                VStack(spacing: 1) {
+                    Image(systemName: "hand.thumbsup.fill").font(.system(size: 8, weight: .bold))
+                    Text(GuideText.recommend).font(.system(size: 8, weight: .heavy))
+                }
+                .foregroundStyle(better ? .black : .white.opacity(0.75))
+                .frame(width: 30, height: Self.height)
+                .background(better ? Color(hex: 0xFFD35A) : .white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(adventure.owned.count < 2)
@@ -697,13 +824,19 @@ private struct PokeDetailCard: View {
         ZStack(alignment: .topTrailing) {
             Rectangle().fill(Color(hex: 0x101218))
             if caught {
-                RadialGradient(colors: [tint.opacity(0.35), tint.opacity(0.08), .clear], center: .init(x: 0.22, y: 0.55),
-                               startRadius: 2, endRadius: 70)
+                RadialGradient(colors: [tint.opacity(0.35), tint.opacity(0.08), .clear], center: .init(x: 0.14, y: 0.35),
+                               startRadius: 2, endRadius: 60)
             }
-            HStack(alignment: .center, spacing: 10) {
-                PokeSpriteView(id: species.id, pixelSize: 1, silhouette: !caught)
-                    .frame(width: 76, height: 96)
-                    .opacity(seen ? 1 : 0.5)
+            HStack(alignment: .top, spacing: 9) {
+                VStack(spacing: 4) {
+                    PokeSpriteView(id: species.id, pixelSize: 1, silhouette: !caught, fitHeight: 56)
+                        .frame(width: 64, height: 58, alignment: .bottom)
+                        .opacity(seen ? 1 : 0.5)
+                    if seen { EvolutionBox(species: species) }
+                }
+                .frame(width: 64)
+                .padding(.top, 2)
+
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 5) {
                         Text(species.number)
@@ -715,6 +848,7 @@ private struct PokeDetailCard: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
+                    .padding(.trailing, owned == nil ? 20 : 62)
                     if seen {
                         HStack(spacing: 3) {
                             ForEach(species.types, id: \.self) { PokeTypeBadge(type: $0, compact: true) }
@@ -729,85 +863,185 @@ private struct PokeDetailCard: View {
                     if let owned {
                         OwnedSummary(member: owned)
                     } else {
-                        Text(caught ? species.flavor : String(localized: "Keep your agents busy to meet this one."))
-                            .font(.system(size: 9.5))
-                            .foregroundStyle(.white.opacity(0.55))
-                            .lineLimit(3)
-                            .fixedSize(horizontal: false, vertical: true)
+                        Text(caught ? species.flavor : GuideText.habitat(adventure.habitat(of: species.id)) { id in
+                            adventure.dex.species(id)?.name ?? "#\(id)"
+                        })
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(.white.opacity(0.6))
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.leading, 8)
-            .padding(.trailing, 22)
-            .padding(.vertical, 8)
+            .padding(.trailing, 8)
+            .padding(.vertical, 7)
 
-            Button(action: close) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 8.5, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .frame(width: 18, height: 18)
-                    .background(.white.opacity(0.1), in: Circle())
+            HStack(spacing: 3) {
+                if let owned { PartyActions(member: owned) }
+                CardButton(symbol: "xmark", help: nil, action: close)
             }
-            .buttonStyle(.plain)
-            .padding(7)
+            .padding(6)
         }
     }
 }
 
-/// Level, experience and party actions for a Pokémon you have.
+/// The small round buttons in the card's corner.
+private struct CardButton: View {
+    let symbol: String
+    let help: String?
+    var enabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: { withAnimation(.smooth(duration: 0.25)) { action() } }) {
+            Image(systemName: symbol)
+                .font(.system(size: 8.5, weight: .bold))
+                .foregroundStyle(.white.opacity(enabled ? 0.7 : 0.25))
+                .frame(width: 18, height: 18)
+                .background(.white.opacity(0.1), in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .help(help ?? "")
+    }
+}
+
+/// Lead, remove or add, as icons so the card has room for what the Pokémon can do.
+private struct PartyActions: View {
+    let member: OwnedPokemon
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let adventure = app.adventure
+        if adventure.isInParty(member.id) {
+            if adventure.partyIDs.first != member.id {
+                CardButton(symbol: "arrow.up.to.line", help: String(localized: "Go First")) { adventure.makeLeader(member.id) }
+            }
+            if adventure.partyIDs.count > 1 {
+                CardButton(symbol: "minus", help: String(localized: "Remove")) { adventure.toggleParty(member.id) }
+            }
+        } else {
+            let full = adventure.partyIDs.count >= AdventureService.maxParty
+            CardButton(symbol: "plus", help: full ? String(localized: "Party is full") : String(localized: "Add to Party"),
+                       enabled: !full) { adventure.toggleParty(member.id) }
+        }
+    }
+}
+
+/// What this species becomes next and at what level; a silhouette until that form has been seen.
+private struct EvolutionBox: View {
+    let species: PokeSpecies
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let adventure = app.adventure
+        let next = adventure.dex.evolutions(of: species.id)
+        if let first = next.first {
+            let seen = next.map { adventure.seen.contains($0.id) || adventure.caught.contains($0.id) }
+            VStack(spacing: 1) {
+                Text(GuideText.nextEvolution)
+                    .font(.system(size: 7.5, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.4))
+                HStack(spacing: 2) {
+                    HStack(spacing: -6) {
+                        ForEach(Array(next.prefix(3).enumerated()), id: \.element.id) { index, form in
+                            PokeIconView(id: form.id, pixelSize: 0.5, silhouette: !seen[index], silhouetteOpacity: 0.35)
+                        }
+                    }
+                    .frame(height: 15)
+                    if let level = first.evolveLevel {
+                        Text("Lv \(level)")
+                            .font(.system(size: 9, weight: .heavy).monospacedDigit())
+                            .foregroundStyle(.white)
+                            .fixedSize()
+                    }
+                }
+                Text(next.count > 1 ? GuideText.oneOf(next.count) : (seen[0] ? first.name : "???"))
+                    .font(.system(size: 8.5, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.75))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .padding(.vertical, 3)
+            .frame(width: 64)
+            .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+    }
+}
+
+/// Level against the cap, moves, what comes next, and how it fares against the next boss.
 private struct OwnedSummary: View {
     let member: OwnedPokemon
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
-        let inParty = adventure.isInParty(member.id)
-        let isLeader = adventure.partyIDs.first == member.id
-        VStack(alignment: .leading, spacing: 4) {
+        let cap = adventure.levelCap
+        let atCap = member.level >= cap
+        VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 5) {
                 Text("Lv \(member.level)")
                     .font(.system(size: 11, weight: .heavy).monospacedDigit())
                     .foregroundStyle(.white)
                 ZStack(alignment: .leading) {
                     Capsule().fill(.white.opacity(0.14))
-                    Capsule().fill(Color(hex: 0x7FC8FF)).frame(width: 60 * member.levelProgress)
+                    Capsule().fill(Color(hex: 0x7FC8FF)).frame(width: 50 * (atCap ? 1 : member.levelProgress))
                 }
-                .frame(width: 60, height: 3)
+                .frame(width: 50, height: 3)
+                Text(GuideText.cap(cap))
+                    .font(.system(size: 8.5, weight: .bold).monospacedDigit())
+                    .foregroundStyle(atCap ? Color(hex: 0xFFD35A) : .white.opacity(0.4))
             }
             MoveChips(moves: adventure.moves(of: member))
-            HStack(spacing: 5) {
-                if inParty {
-                    if !isLeader {
-                        smallButton(String(localized: "Go First"), symbol: "arrow.up.to.line") { adventure.makeLeader(member.id) }
-                    }
-                    if adventure.partyIDs.count > 1 {
-                        smallButton(String(localized: "Remove"), symbol: "minus") { adventure.toggleParty(member.id) }
-                    }
-                } else if adventure.partyIDs.count < AdventureService.maxParty {
-                    smallButton(String(localized: "Add to Party"), symbol: "plus") { adventure.toggleParty(member.id) }
-                } else {
-                    Text("Party is full")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.4))
-                }
+            if let next = nextLine(adventure: adventure, atCap: atCap) {
+                Text(next)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            if let matchup = adventure.matchup(of: member), let boss = adventure.nextBoss?.trainer.name {
+                MatchupLine(matchup: matchup, boss: boss)
             }
         }
     }
 
-    private func smallButton(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: { withAnimation(.smooth(duration: 0.25)) { action() } }) {
-            HStack(spacing: 3) {
-                Image(systemName: symbol).font(.system(size: 7.5, weight: .bold))
-                Text(title).font(.system(size: 9.5, weight: .semibold))
-            }
-            .foregroundStyle(.white.opacity(0.85))
-            .padding(.horizontal, 7)
-            .frame(height: 19)
-            .background(.white.opacity(0.1), in: Capsule())
-            .contentShape(Capsule())
+    /// The next move, or at the cap, what the next badge lets it do.
+    private func nextLine(adventure: AdventureService, atCap: Bool) -> String? {
+        if atCap {
+            let badges = adventure.progress.badges
+            let nextCap = badges >= 8 ? PokeMath.maxLevel : Kanto.levelCap(badges: badges + 1, champion: false)
+            let reach = PokeMath.level(forXP: min(member.xp + member.banked, PokeMath.xpLimit(cap: nextCap)))
+            return reach > member.level ? GuideText.afterBadge(reach - member.level) : GuideText.atCap
         }
-        .buttonStyle(.plain)
+        guard let data = adventure.data, let species = data.dex[member.speciesID],
+              let next = Guidance.nextMove(species: species, level: member.level, moves: data.moves) else { return nil }
+        return GuideText.learns(next.move.name, at: next.level)
+    }
+}
+
+private struct MatchupLine: View {
+    let matchup: Matchup
+    let boss: String
+
+    var body: some View {
+        switch matchup {
+        case .strong: pill(GuideText.strong(against: boss), color: Color(hex: 0x7EE08F))
+        case .weak: pill(GuideText.weak(against: boss), color: Color(hex: 0xFF8A70))
+        }
+    }
+
+    private func pill(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.system(size: 8.5, weight: .heavy))
+            .foregroundStyle(color)
+            .padding(.horizontal, 5)
+            .frame(height: 14)
+            .background(color.opacity(0.16), in: Capsule())
+            .fixedSize()
     }
 }
 

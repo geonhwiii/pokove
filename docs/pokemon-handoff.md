@@ -3,6 +3,39 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v3.1: guidance, history, richer Pokédex card (agreed with the user, 2026-09-27)
+
+The user found the game hard to follow: what to do next, and why a boss keeps winning. The
+"while you were away" panel also covered the battle every time the page opened. Decided in a Q&A
+round with mockups; where this conflicts with v3 below, v3.1 wins.
+
+- **Away recap → toast + history.** Opening the page moves the pending recap into the history at
+  once (`takeRecap()`), so it never shows twice. Only big things (badge, evolution, newcomer, boss
+  loss, dungeon clear: `AdventureRecap.isNotable`) get a one-line toast over the top of the battle
+  for 4 s (longer while hovered); one item shows as its sentence, several as counts. Tapping it opens
+  the history. Everything else only lights the dot on the **clock button** next to the bell.
+- **History:** the clock button swaps the right pane for recaps grouped per absence, newest first
+  ("방금 · 42분", "오후 10:11 · 1분", "어제 22:40 · 2시간"). Kept for today and yesterday (days turn at
+  04:00 like the dungeon), at most 40 (`history`, `historyUnread` in the save).
+- **Next step:** the stage line's footer is now a "what to do next" line: stations to the boss, resting
+  until an agent works, the level that would beat the boss ("Lv 18이면 이길 확률 90%", or "상한 Lv 23이어도
+  20%"), training progress, with one shortcut pill: the recommended team if it differs, today's
+  easiest unclaimed dungeon, or the gacha.
+- **Why a boss wins:** the gym VS screen adds a row above its bar with the level hint for the next boss
+  ("Lv 28이면 63%"). `LevelHint` is the lowest level (everyone raised to it, evolving on the way)
+  with a ≥ 60% forecast, by binary search up to the cap, computed off the main thread whenever the
+  party, box or boss changes. Type advice ("풀 기술이 잘 먹혀요") was tried and dropped: the user wants
+  players to work out matchups themselves.
+- **Pokédex card:** next evolution (icon and level; silhouette and "???" until seen; Eevee shows
+  "3가지 중 하나"), "상한 N" next to the level bar, the next move that will make the moveset, or at the cap
+  how many levels the next badge releases, and a "X에게 유리/불리" pill against the next boss (no reason given).
+  Species you don't have show where to meet them (`Guidance.habitats`: a chapter's stations, the
+  gacha, a ★ legendary, Mew after the Champion, or evolving from another). Party actions moved to
+  icons in the card's corner.
+- **Recommend button:** the wand icon read as nothing, so it's now a labeled 👍 "추천" (party bar and VS
+  bar) / "추천 팀" (footer, history). It turns yellow when the box holds a better team for the next boss
+  (`hasBetterTeam`).
+
 ## v3 direction (agreed with the user, 2026-09-27)
 
 After playing v2 the user found the small Kanto map hard to read and the gym challenge unexciting
@@ -219,11 +252,11 @@ Six runs (three starters × two seeds), hours of agent work:
 | `pokove/Adventure/PokeMoves.swift` | `PokeMove` (Gen 3 values, damage kinds, cooldown, rating), `MoveDex` (learnsets, movesets), the moves query |
 | `pokove/Adventure/Kanto.swift` | trainers and teams, `Stretch`, `Station`, `Chapter`, `LegendSpot`, the chapters, level caps, gacha-only list, badge names, `EncounterDex` and its query |
 | `pokove/Adventure/BattleEngine.swift` | `SeededRNG`, `PokeMath` (stats, XP), `GameData`, `DexView`, `Combatant`, `StagePlan` (station, boss, legend), `BattleState` (1:1 relay) |
-| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `AutoChallenge`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend` |
-| `pokove/Adventure/BattleText.swift` | battle messages with Korean particles (이/가, 을/를, 은/는) |
+| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `AutoChallenge`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend`, `Guidance` (level hint, weaknesses, matchups, habitats, next move) |
+| `pokove/Adventure/BattleText.swift` | battle, recap, challenge and guide (`GuideText`) lines with Korean particles (이/가, 을/를, 은/는, 로/으로, 이면/면) |
 | `pokove/Adventure/AdventureService.swift` | game state, tick loop (stations on agent time, challenges on their own), growth, discovery, gacha and Ultra Balls, dungeon day, recap, banners, save (`adventure-v3.json`, migrating v2) |
 | `pokove/Adventure/PokeSprites.swift` | sprite cache (Pokémon, back sprites, trainers, items, badges) and views |
-| `pokove/Notch/Expanded/Adventure/` | `AdventurePageView` (layout, tabs, party bar, recap, dex, detail card), `ChallengeView` (mode picker, stage line, VS screens, dungeon, `StardustIcon`), `BattleSceneView`, `MoveEffects`, `GachaView` |
+| `pokove/Notch/Expanded/Adventure/` | `AdventurePageView` (layout, tabs, history button and pane, recap toast, party bar, dex, detail card), `ChallengeView` (mode picker, stage line, VS screens, dungeon, `StardustIcon`), `BattleSceneView`, `MoveEffects`, `GachaView` |
 | `pokove/Shared/PixelSparkles.swift` | `PixelSparkles`, `PokeBallGlyph` (tab, settings and banner icon) |
 
 ## Progress (v3)

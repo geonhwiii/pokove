@@ -261,16 +261,6 @@
         }
       }
     },
-    "%lld to go": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld개 남음"
-          }
-        }
-      }
-    },
     "%lld turns · %@": {
       "localizations": {
         "en": {
@@ -2245,16 +2235,6 @@
         }
       }
     },
-    "Keep your agents busy to meet this one.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "에이전트가 열심히 일하면 만날 수 있어요."
-          }
-        }
-      }
-    },
     "Keyboard": {
       "localizations": {
         "ko": {
@@ -2491,16 +2471,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "여정 계속"
-          }
-        }
-      }
-    },
-    "Moves while an agent works": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "에이전트가 일하면 움직여요"
           }
         }
       }
@@ -4085,22 +4055,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "· %@"
-          }
-        }
-      }
-    },
-    "· %@ %lld%%": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "· %1$@ %2$lld%%"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "· %1$@ %2$lld%%"
           }
         }
       }

@@ -488,3 +488,116 @@ nonisolated enum Recommend {
         return ranked.prefix(size).map(\.0)
     }
 }
+
+// MARK: Guidance
+
+/// What it would take to beat a boss: everyone at `level` (evolving on the way) wins `chance`
+/// of the time. `atCap` means even the level cap falls short of a good chance.
+nonisolated struct LevelHint: Equatable, Sendable {
+    let level: Int
+    let chance: Double
+    let atCap: Bool
+}
+
+/// How one Pokémon fares against a boss's team.
+nonisolated enum Matchup: Equatable, Sendable {
+    /// One of its moves hits the team hard.
+    case strong
+    /// The team's own types hit it hard.
+    case weak
+}
+
+/// Where a species can be met, for Pokédex entries you don't have.
+nonisolated enum Habitat: Equatable, Sendable {
+    /// Chapters are 0-based.
+    case wild(chapter: Int)
+    case gacha(chapter: Int)
+    case legend(chapter: Int)
+    case mythical
+    case evolves(from: Int, level: Int?)
+    case unknown
+}
+
+/// Hints for what to do next: the level a boss needs, the types that beat it, where to find a species.
+nonisolated enum Guidance {
+    /// A chance worth waiting for, and the forecast's "good" color.
+    static let goodChance = 0.6
+
+    /// The lowest level, up to the cap, at which the whole party would have a good chance, or
+    /// the chance at the cap when none does. Nil when everyone is at the cap already.
+    static func levelHint(party: [(species: PokeSpecies, level: Int)], plan: StagePlan, cap: Int, data: GameData) -> LevelHint? {
+        guard let lowest = party.map(\.level).min(), lowest < cap else { return nil }
+        var hint: LevelHint?
+        for level in (lowest + 1)...cap {
+            let members = party.map { member -> Combatant in
+                let grown = max(member.level, level)
+                return Combatant(species: evolved(member.species, at: grown, dex: data.dex), level: grown, moves: data.moves)
+            }
+            let chance = Forecast.winChance(party: members, plan: plan, data: data)
+            hint = LevelHint(level: level, chance: chance, atCap: chance < goodChance)
+            if chance >= goodChance { break }
+        }
+        return hint
+    }
+
+    /// The form a species reaches by this level, taking the first branch where there are several.
+    static func evolved(_ species: PokeSpecies, at level: Int, dex: DexView) -> PokeSpecies {
+        var current = species
+        while let next = dex.evolutions(current.id).compactMap({ dex[$0] }).first(where: { ($0.evolveLevel ?? .max) <= level }) {
+            current = next
+        }
+        return current
+    }
+
+    /// Strong when one of its moves hits most of the team hard, weak when the team's types hit it hard.
+    static func matchup(moves: [PokeMove], types: [PokeType], against foes: [PokeSpecies]) -> Matchup? {
+        guard !foes.isEmpty else { return nil }
+        func share(_ hits: (PokeSpecies) -> Bool) -> Double { Double(foes.filter(hits).count) / Double(foes.count) }
+        let attack = moves.filter { $0.id != PokeMove.struggle.id }
+            .map { move in share { move.type.effectiveness(against: $0.types) >= 2 } }
+            .max() ?? 0
+        let threat = Set(foes.flatMap(\.types)).filter { $0.effectiveness(against: types) >= 2 }
+            .map { type in share { $0.types.contains(type) } }
+            .max() ?? 0
+        if attack >= 0.5 { return .strong }
+        if threat >= 0.5 { return .weak }
+        return nil
+    }
+
+    /// Where each species turns up first: a legendary's branch, a chapter's stations, the gacha,
+    /// or by evolving.
+    static func habitats(data: GameData) -> [Int: Habitat] {
+        var found: [Int: Habitat] = [:]
+        for (index, chapter) in data.chapters.enumerated() {
+            if let legend = chapter.legend { found[legend.species] = found[legend.species] ?? .legend(chapter: index) }
+        }
+        var stretches: Set<String> = []
+        for (index, chapter) in data.chapters.enumerated() {
+            for station in chapter.stations where stretches.insert(station.stretch.id).inserted {
+                for entry in data.encounters.pool(for: station.stretch, dex: data.dex) where found[entry.species] == nil {
+                    found[entry.species] = .wild(chapter: index)
+                }
+            }
+        }
+        for (species, chapter) in Kanto.gachaOnly where found[species] == nil { found[species] = .gacha(chapter: chapter) }
+        if found[Kanto.mew] == nil { found[Kanto.mew] = .mythical }
+        for species in data.dex.species where found[species.id] == nil {
+            found[species.id] = species.evolvesFrom.map { .evolves(from: $0, level: species.evolveLevel) } ?? .unknown
+        }
+        return found
+    }
+
+    /// The next move that will make its moveset, and the level it comes at.
+    static func nextMove(species: PokeSpecies, level: Int, moves: MoveDex) -> (level: Int, move: PokeMove)? {
+        guard level < PokeMath.maxLevel else { return nil }
+        let known = Set(moves.moveset(species: species.id, types: species.types, level: level).map(\.id))
+        for next in (level + 1)...min(PokeMath.maxLevel, level + 40) {
+            for move in moves.learned(species: species.id, at: next) where !known.contains(move.id) {
+                if moves.moveset(species: species.id, types: species.types, level: next).contains(where: { $0.id == move.id }) {
+                    return (next, move)
+                }
+            }
+        }
+        return nil
+    }
+}

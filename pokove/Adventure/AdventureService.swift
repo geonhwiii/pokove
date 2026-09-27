@@ -57,6 +57,8 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
 
     /// When the first thing was recorded.
     var since: Date?
+    /// When the page opened and the recap moved to the history.
+    var until: Date?
     var clears = 0
     /// The furthest station cleared.
     var reached: StationPoint?
@@ -80,6 +82,11 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
             && stuck == nil && dungeon.isEmpty
     }
 
+    /// Worth a line over the battle when the page opens; the rest waits in the history.
+    var isNotable: Bool {
+        !badges.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty
+    }
+
     init() {}
 
     private enum LegacyKeys: String, CodingKey { case coins, evolved }
@@ -89,6 +96,7 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let legacy = try decoder.container(keyedBy: LegacyKeys.self)
         since = try container.decodeIfPresent(Date.self, forKey: .since)
+        until = try container.decodeIfPresent(Date.self, forKey: .until)
         clears = try container.decodeIfPresent(Int.self, forKey: .clears) ?? 0
         reached = try container.decodeIfPresent(StationPoint.self, forKey: .reached)
         stardust = try container.decodeIfPresent(Int.self, forKey: .stardust) ?? legacy.decodeIfPresent(Int.self, forKey: .coins) ?? 0
@@ -153,7 +161,12 @@ final class AdventureService {
     private var holdUntil: Date?
     /// Three balls waiting for the user to pick one.
     private(set) var offer: [GachaCard]?
+    /// What has happened since the page was last open; it moves to `history` when the page opens.
     private(set) var recap = AdventureRecap()
+    /// Earlier recaps, newest first, from today and yesterday.
+    private(set) var history: [AdventureRecap] = []
+    /// A recap landed in the history since it was last opened.
+    private(set) var historyUnread = false
     private(set) var clears = 0
     private(set) var wipes = 0
     private(set) var pulls = 0
@@ -163,6 +176,10 @@ final class AdventureService {
     private(set) var isBattling = false
     /// Forecast chance of beating the next boss with the current party.
     private(set) var readiness: Double?
+    /// The level the party needs for the next boss, while its chance is poor.
+    private(set) var levelHint: LevelHint?
+    /// The box holds a better party for the next boss than the one out now.
+    private(set) var hasBetterTeam = false
     /// Take on the boss by itself as soon as the line is cleared, and again after training.
     var autoChallenge = true {
         didSet {
@@ -190,6 +207,8 @@ final class AdventureService {
     @ObservationIgnored private var cachedData: GameData?
     @ObservationIgnored private var cachedStarter: Int?
     @ObservationIgnored private var forecastKey: String?
+    @ObservationIgnored private var hintTask: Task<Void, Never>?
+    @ObservationIgnored private var habitatCache: [Int: Habitat]?
     @ObservationIgnored private var forecasts: [String: Double] = [:]
     /// Experience earned in a challenge, granted only if it's won.
     @ObservationIgnored private var challengeXP = 0
@@ -204,6 +223,7 @@ final class AdventureService {
     static let introHold: Double = 2.4
     static let resultHold: Double = 3.2
     static let maxParty = 3
+    static let historyLimit = 40
     static let starters = [1, 4, 7]
 
     init(preferences: Preferences, activity: ActivityCenter, dex: PokeDexStore = PokeDexStore(),
@@ -328,6 +348,27 @@ final class AdventureService {
         return chance
     }
 
+    /// The next boss's team, for matchups.
+    var nextBossTeam: [PokeSpecies] {
+        nextBoss.map { $0.trainer.battleTeam.compactMap { dex.species($0.species) } } ?? []
+    }
+
+    /// How a Pokémon you have would fare against the next boss.
+    func matchup(of member: OwnedPokemon) -> Matchup? {
+        guard let species = dex.species(member.speciesID) else { return nil }
+        return Guidance.matchup(moves: moves(of: member), types: species.types, against: nextBossTeam)
+    }
+
+    /// Where a species turns up first.
+    func habitat(of species: Int) -> Habitat {
+        guard let data else { return .unknown }
+        if habitatCache == nil { habitatCache = Guidance.habitats(data: data) }
+        return habitatCache?[species] ?? .unknown
+    }
+
+    /// The easiest dungeon tier still paying out today.
+    var openDungeonTier: DungeonTier? { DungeonTier.allCases.first { !isClaimed($0) } }
+
     /// The backdrop behind the scene.
     var scenery: Scenery {
         if let battle { return battle.plan.scenery }
@@ -369,6 +410,7 @@ final class AdventureService {
         battle = nil
         target = nil
         cachedData = nil
+        habitatCache = nil
         saveNow()
     }
 
@@ -396,7 +438,14 @@ final class AdventureService {
 
     /// Swaps in the three best for a challenge: the one given, the one underway, or the next boss.
     func recommendParty(for goal: BattleTarget? = nil) {
-        guard let data else { return }
+        let picks = recommendedParty(for: goal)
+        guard !picks.isEmpty, picks != partyIDs else { return }
+        partyIDs = picks
+        partyChanged()
+    }
+
+    private func recommendedParty(for goal: BattleTarget? = nil) -> [UUID] {
+        guard let data else { return [] }
         let candidates = owned.compactMap { member in
             data.dex[member.speciesID].map { Recommend.Candidate(id: member.id, species: $0, level: member.level) }
         }
@@ -410,10 +459,7 @@ final class AdventureService {
         } else {
             foes = []
         }
-        let picks = Recommend.party(from: candidates, against: foes, data: data, size: Self.maxParty)
-        guard !picks.isEmpty, picks != partyIDs else { return }
-        partyIDs = picks
-        partyChanged()
+        return Recommend.party(from: candidates, against: foes, data: data, size: Self.maxParty)
     }
 
     private func partyChanged() {
@@ -846,11 +892,37 @@ final class AdventureService {
     // MARK: Forecast
 
     private func refreshReadiness() {
-        guard let next = progress.nextBoss(chapters) else { readiness = nil; forecastKey = nil; return }
-        let key = party.map { "\($0.speciesID):\($0.level)" }.joined(separator: ",") + "@\(next.chapter).\(next.index)"
+        guard let next = progress.nextBoss(chapters) else {
+            readiness = nil; levelHint = nil; hasBetterTeam = false; forecastKey = nil
+            return
+        }
+        // The box size counts too: a newcomer may make a better team.
+        let key = party.map { "\($0.speciesID):\($0.level)" }.joined(separator: ",") + "@\(next.chapter).\(next.index)#\(owned.count)"
         guard key != forecastKey else { return }
         forecastKey = key
-        readiness = winChance(.boss(chapter: next.chapter, index: next.index))
+        let goal = BattleTarget.boss(chapter: next.chapter, index: next.index)
+        readiness = winChance(goal)
+        let picks = recommendedParty(for: goal)
+        hasBetterTeam = !picks.isEmpty && picks != partyIDs
+        refreshLevelHint(goal)
+    }
+
+    /// Works out the level the party needs off the main thread; it takes a few forecasts.
+    private func refreshLevelHint(_ goal: BattleTarget) {
+        hintTask?.cancel()
+        guard let data, let chance = readiness, chance < Guidance.goodChance, let plan = plan(for: goal, data: data, forecast: true) else {
+            levelHint = nil
+            return
+        }
+        let members = party.compactMap { member in data.dex[member.speciesID].map { (species: $0, level: member.level) } }
+        let cap = levelCap
+        hintTask = Task { [weak self] in
+            let hint = await Task.detached(priority: .utility) {
+                Guidance.levelHint(party: members, plan: plan, cap: cap, data: data)
+            }.value
+            guard !Task.isCancelled else { return }
+            self?.levelHint = hint
+        }
     }
 
     // MARK: Recap
@@ -862,11 +934,30 @@ final class AdventureService {
         change(&recap)
     }
 
-    /// Called once the recap card has been shown.
-    func markRecapSeen() {
-        guard !recap.isEmpty else { return }
+    /// The page opened: what happened while it was closed moves to the history, and comes back
+    /// once for the line over the battle.
+    func takeRecap() -> AdventureRecap? {
+        guard !recap.isEmpty else { return nil }
+        var finished = recap
+        finished.until = Date()
         recap = AdventureRecap()
+        history.insert(finished, at: 0)
+        trimHistory()
+        historyUnread = true
         scheduleSave()
+        return finished
+    }
+
+    func markHistoryRead() {
+        guard historyUnread else { return }
+        historyUnread = false
+        scheduleSave()
+    }
+
+    /// Keeps today's and yesterday's recaps (days turn at 04:00, as the dungeon's do).
+    private func trimHistory(now: Date = Date()) {
+        let days = [DailyDungeon.day(of: now), DailyDungeon.day(of: now.addingTimeInterval(-86_400))]
+        history = Array(history.filter { days.contains(DailyDungeon.day(of: $0.until ?? $0.since ?? now)) }.prefix(Self.historyLimit))
     }
 
     // MARK: Banners
@@ -919,14 +1010,19 @@ final class AdventureService {
         lastEvent = nil
         offer = nil
         recap = AdventureRecap()
+        history = []
+        historyUnread = false
         clears = 0
         wipes = 0
         pulls = 0
         dungeonDay = DungeonDay(day: DailyDungeon.day(of: Date()))
         readiness = nil
+        levelHint = nil
+        hasBetterTeam = false
         forecastKey = nil
         forecasts = [:]
         cachedData = nil
+        habitatCache = nil
         saveNow()
     }
 
@@ -992,6 +1088,8 @@ final class AdventureService {
         var autoChallenge: Bool
         var offer: [GachaCard]?
         var recap: AdventureRecap
+        var history: [AdventureRecap]?
+        var historyUnread: Bool?
         var clears: Int
         var wipes: Int
         var pulls: Int
@@ -1034,6 +1132,9 @@ final class AdventureService {
                 ultraBalls = file.ultraBalls
                 progress = file.progress
                 if let day = file.dungeon { dungeonDay = day }
+                history = file.history ?? []
+                historyUnread = file.historyUnread ?? false
+                trimHistory()
             } catch {
                 // Never let the next save overwrite an adventure we couldn't read.
                 let backup = storeURL.deletingPathExtension().appendingPathExtension("unreadable-\(Int(Date().timeIntervalSince1970)).json")
@@ -1083,7 +1184,8 @@ final class AdventureService {
         saveTask = nil
         let file = SaveFile(starter: starter, owned: owned, partyIDs: partyIDs, seen: seen.sorted(), caught: caught.sorted(),
                             stardust: stardust, ultraBalls: ultraBalls, progress: progress, autoChallenge: autoChallenge, offer: offer,
-                            recap: recap, clears: clears, wipes: wipes, pulls: pulls, dungeon: dungeonDay)
+                            recap: recap, history: history, historyUnread: historyUnread, clears: clears, wipes: wipes, pulls: pulls,
+                            dungeon: dungeonDay)
         do {
             try FileManager.default.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder.adventure.encode(file).write(to: storeURL, options: .atomic)

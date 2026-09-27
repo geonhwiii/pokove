@@ -27,7 +27,8 @@ struct ChallengeView: View {
                 switch mode {
                 case .stage:
                     StageLineView(openLegend: { id in withAnimation(.smooth(duration: 0.25)) { legend = id } },
-                                  openGym: { withAnimation(.smooth(duration: 0.2)) { mode = .gym } })
+                                  openGym: { withAnimation(.smooth(duration: 0.2)) { mode = .gym } },
+                                  openDungeon: { withAnimation(.smooth(duration: 0.2)) { mode = .dungeon } })
                 case .gym:
                     BossVSView()
                 case .dungeon:
@@ -82,8 +83,10 @@ private struct ModePicker: View {
 private struct StageLineView: View {
     let openLegend: (String) -> Void
     let openGym: () -> Void
+    let openDungeon: () -> Void
 
     @Environment(AppModel.self) private var app
+    @AppStorage("adventurePane") private var pane: AdventurePane = .challenge
     /// The chapter on screen, when browsing back; nil follows the journey.
     @State private var browsing: Int?
     @State private var selected: StationPoint?
@@ -250,36 +253,60 @@ private struct StageLineView: View {
                 Text("A challenge is underway").foregroundStyle(.white.opacity(0.7))
                 Spacer(minLength: 0)
             } else if progress.isTraining, let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters) {
+                // Training after a loss: how far along, what level would do it, and a quicker way there.
                 Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(Color(hex: 0x7FC8FF))
                 Text("Training \(AutoChallenge.trainingClears - progress.training)/\(AutoChallenge.trainingClears)")
                     .foregroundStyle(Color(hex: 0x7FC8FF))
                     .monospacedDigit()
-                if let readiness = adventure.readiness {
-                    Text("· \(boss.trainer.name) \(Int((readiness * 100).rounded()))%").foregroundStyle(.white.opacity(0.5)).lineLimit(1)
-                }
-                Spacer(minLength: 0)
-            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), index == progress.chapter {
-                Image(systemName: "flag.checkered").foregroundStyle(Color(hex: 0xFFD35A))
-                Text("\(boss.trainer.name) is waiting").foregroundStyle(.white.opacity(0.75)).lineLimit(1)
+                    .fixedSize()
+                Text("· \(shortHint(adventure) ?? GuideText.chance(boss.trainer.name, adventure.readiness ?? 0))")
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Spacer(minLength: 2)
-                pill("VS", symbol: "bolt.fill", primary: true) { openGym() }
+                if let fix = fix(adventure) { fixPill(fix) }
+            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), index == progress.chapter {
+                let chance = adventure.readiness ?? 0
+                if chance >= Guidance.goodChance {
+                    Image(systemName: "flag.checkered").foregroundStyle(Color(hex: 0xFFD35A))
+                    Text(GuideText.chance(boss.trainer.name, chance)).foregroundStyle(.white.opacity(0.8)).lineLimit(1)
+                    Spacer(minLength: 2)
+                    pill("VS", symbol: "bolt.fill", primary: true) { openGym() }
+                } else {
+                    // Not ready: the level that would do it, and the quickest way to get stronger.
+                    Image(systemName: "chart.line.uptrend.xyaxis").foregroundStyle(Color(hex: 0xFF9E6B))
+                    Text(longHint(adventure) ?? String(localized: "\(boss.trainer.name) is waiting"))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer(minLength: 2)
+                    if let fix = fix(adventure) {
+                        fixPill(fix)
+                    } else {
+                        pill("VS", symbol: "bolt.fill", primary: true) { openGym() }
+                    }
+                }
             } else if index == progress.chapter, adventure.nextBoss == nil {
                 Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(.white.opacity(0.6))
                 Text("Looping the last line").foregroundStyle(.white.opacity(0.6))
                 Spacer(minLength: 0)
-            } else if index == progress.chapter {
-                let point = adventure.stationPoint
-                let station = chapter.stations[point.station]
+            } else if index == progress.chapter, let boss = adventure.nextBoss {
+                // On the line: how far to the boss, or that it waits for an agent; a pull when there's one.
+                let station = chapter.stations[adventure.stationPoint.station]
                 Image(systemName: adventure.isBattling ? "play.fill" : "moon.zzz.fill")
                     .foregroundStyle(adventure.isBattling ? Color(hex: 0xFFD35A) : .white.opacity(0.5))
-                Text("\(chapter.number)-\(point.station + 1)").font(.system(size: 9.5, weight: .heavy).monospacedDigit())
-                Text(adventure.isBattling ? "Lv \(adventure.foeLevel(station))" : String(localized: "Moves while an agent works"))
-                    .foregroundStyle(.white.opacity(0.5))
+                Text(adventure.isBattling ? GuideText.stationsTo(boss.trainer.name, adventure.stationsLeft) : GuideText.resting)
+                    .foregroundStyle(.white.opacity(adventure.isBattling ? 0.8 : 0.55))
                     .lineLimit(1)
-                Spacer(minLength: 0)
-                Text("\(adventure.stationsLeft) to go")
-                    .font(.system(size: 8.5, weight: .bold).monospacedDigit())
-                    .foregroundStyle(.white.opacity(0.4))
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 2)
+                if adventure.hasGachaWaiting {
+                    fixPill(.gacha)
+                } else if adventure.isBattling {
+                    Text("Lv \(adventure.foeLevel(station))")
+                        .font(.system(size: 8.5, weight: .bold).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.4))
+                }
             } else {
                 Image(systemName: "checkmark").foregroundStyle(Self.lineColor)
                 Text("Cleared · pick a station to repeat it").foregroundStyle(.white.opacity(0.55)).lineLimit(1)
@@ -293,6 +320,41 @@ private struct StageLineView: View {
         .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 
+    // MARK: Next step
+
+    /// A quicker way to get stronger than waiting: a better team from the box, today's dungeon, a pull.
+    private enum Fix { case bestTeam, dungeon(DungeonTier), gacha }
+
+    private func fix(_ adventure: AdventureService) -> Fix? {
+        if adventure.hasBetterTeam { return .bestTeam }
+        if let tier = adventure.openDungeonTier { return .dungeon(tier) }
+        if adventure.hasGachaWaiting { return .gacha }
+        return nil
+    }
+
+    @ViewBuilder
+    private func fixPill(_ fix: Fix) -> some View {
+        switch fix {
+        case .bestTeam:
+            pill(GuideText.bestTeam, symbol: "hand.thumbsup.fill", primary: true) { app.adventure.recommendParty() }
+        case .dungeon(let tier):
+            pill(GuideText.dungeon(tier.title), symbol: "door.left.hand.open", primary: true) { openDungeon() }
+        case .gacha:
+            pill(GuideText.gacha, symbol: "sparkles", primary: true) { pane = .gacha }
+        }
+    }
+
+    /// "Lv 18이면 이길 확률 90%", or "상한 Lv 23이어도 20%".
+    private func longHint(_ adventure: AdventureService) -> String? {
+        guard let hint = adventure.levelHint else { return nil }
+        return hint.atCap ? GuideText.evenAtCap(hint.level, hint.chance) : GuideText.needLevel(hint.level, hint.chance)
+    }
+
+    private func shortHint(_ adventure: AdventureService) -> String? {
+        guard let hint = adventure.levelHint else { return nil }
+        return hint.atCap ? GuideText.evenAtCap(hint.level, hint.chance) : GuideText.needLevelShort(hint.level, hint.chance)
+    }
+
     private func pill(_ title: String, symbol: String, primary: Bool = false, action: @escaping () -> Void) -> some View {
         Button {
             withAnimation(.smooth(duration: 0.25)) { action() }
@@ -304,6 +366,7 @@ private struct StageLineView: View {
             .foregroundStyle(primary ? .black : .white.opacity(0.9))
             .padding(.horizontal, 7)
             .frame(height: 16)
+            .fixedSize()
             .background(primary ? Color(hex: 0xFFD35A) : .white.opacity(0.14), in: Capsule())
             .contentShape(Capsule())
         }
@@ -465,6 +528,8 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
     let title: String
     let team: [Int]
     let chance: Double?
+    /// Why the chance is what it is, on its own row above the bar.
+    var hint: String?
     @ViewBuilder let opponent: Opponent
     @ViewBuilder let stake: Stake
     @ViewBuilder let actions: Actions
@@ -475,6 +540,7 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
         let adventure = app.adventure
         GeometryReader { proxy in
             let size = proxy.size
+            let bar: CGFloat = hint == nil ? 27 : 38
             ZStack(alignment: .topLeading) {
                 VSBackground(color: color)
 
@@ -487,7 +553,7 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
                 if let leader = adventure.leader {
                     PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, fitHeight: 52)
                         .frame(width: 78, height: 56, alignment: .bottom)
-                        .position(x: 42, y: size.height - 27 - 30)
+                        .position(x: 42, y: size.height - bar - 30)
                 }
 
                 opponent
@@ -511,7 +577,7 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
                 }
                 .lineLimit(1)
                 .frame(width: size.width - 8, alignment: .trailing)
-                .position(x: size.width / 2, y: size.height - 27 - 17)
+                .position(x: size.width / 2, y: size.height - bar - 17)
 
                 stake
                     .position(x: size.width / 2 + 1, y: 17)
@@ -523,21 +589,34 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
                     .shadow(color: .black.opacity(0.6), radius: 2)
                     .position(x: size.width / 2 + 1, y: 50)
 
-                HStack(spacing: 5) {
-                    VStack(alignment: .leading, spacing: -1) {
-                        Text("To win").font(.system(size: 7.5, weight: .bold)).foregroundStyle(.white.opacity(0.6))
-                        Text(chance.map { "\(Int(($0 * 100).rounded()))%" } ?? "–")
-                            .font(.system(size: 14, weight: .black).italic().monospacedDigit())
-                            .foregroundStyle(Self.chanceColor(chance))
-                            .contentTransition(.numericText())
+                VStack(spacing: 0) {
+                    if let hint {
+                        Text(hint)
+                            .font(.system(size: 8.5, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.85))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(height: 11)
+                            .padding(.top, 3)
                     }
-                    Spacer(minLength: 2)
-                    actions
+                    HStack(spacing: 5) {
+                        VStack(alignment: .leading, spacing: -1) {
+                            Text("To win").font(.system(size: 7.5, weight: .bold)).foregroundStyle(.white.opacity(0.6))
+                            Text(chance.map { "\(Int(($0 * 100).rounded()))%" } ?? "–")
+                                .font(.system(size: 14, weight: .black).italic().monospacedDigit())
+                                .foregroundStyle(Self.chanceColor(chance))
+                                .contentTransition(.numericText())
+                        }
+                        Spacer(minLength: 2)
+                        actions
+                    }
+                    .frame(height: hint == nil ? 27 : 24)
                 }
                 .padding(.horizontal, 7)
-                .frame(width: size.width, height: 27)
+                .frame(width: size.width, height: bar)
                 .background(.black.opacity(0.72))
-                .position(x: size.width / 2, y: size.height - 13.5)
+                .position(x: size.width / 2, y: size.height - bar / 2)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -650,15 +729,23 @@ private struct BestTeamButton: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        let adventure = app.adventure
+        // Lit when it would change the party for the next boss.
+        let better = adventure.hasBetterTeam && adventure.nextBoss.map { BattleTarget.boss(chapter: $0.chapter, index: $0.index) } == goal
         Button {
-            withAnimation(.smooth(duration: 0.25)) { app.adventure.recommendParty(for: goal) }
+            withAnimation(.smooth(duration: 0.25)) { adventure.recommendParty(for: goal) }
         } label: {
-            Image(systemName: "wand.and.stars")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(.white.opacity(0.9))
-                .frame(width: 22, height: 19)
-                .background(.white.opacity(0.14), in: Capsule())
-                .contentShape(Capsule())
+            HStack(spacing: 2) {
+                Image(systemName: "hand.thumbsup.fill").font(.system(size: 7.5, weight: .bold))
+                // The short label, so the Challenge button keeps its room.
+                Text(GuideText.recommend).font(.system(size: 8.5, weight: .heavy))
+            }
+            .foregroundStyle(better ? .black : .white.opacity(0.9))
+            .padding(.horizontal, 6)
+            .frame(height: 19)
+            .background(better ? Color(hex: 0xFFD35A) : .white.opacity(0.16), in: Capsule())
+            .contentShape(Capsule())
+            .fixedSize()
         }
         .buttonStyle(.plain)
         .disabled(app.adventure.owned.count < 2 || app.adventure.isChallenging)
@@ -694,7 +781,8 @@ private struct BossVSView: View {
         VSCard(color: entry.trainer.specialty?.color ?? Color(hex: 0xC8A040),
                name: entry.trainer.name, title: entry.trainer.title,
                team: entry.trainer.battleTeam.map(\.species),
-               chance: beaten ? nil : adventure.winChance(goal)) {
+               chance: beaten ? nil : adventure.winChance(goal),
+               hint: beaten || running ? nil : hint(isNext: isNext)) {
             TrainerSpriteView(slug: entry.trainer.sprite, pixelSize: 1)
                 .frame(width: 80, height: 80)
                 .id(entry.trainer.id)
@@ -732,6 +820,12 @@ private struct BossVSView: View {
         }
         .onChange(of: nextIndex) { browsing = nil }
         .animation(.smooth(duration: 0.25), value: shown)
+    }
+
+    /// The level the party needs for the next boss; short, since "To win" sits right below it.
+    private func hint(isNext: Bool) -> String? {
+        guard isNext, let hint = app.adventure.levelHint else { return nil }
+        return hint.atCap ? GuideText.evenAtCap(hint.level, hint.chance) : GuideText.needLevelShort(hint.level, hint.chance)
     }
 
     private func arrows(shown: Int, count: Int) -> some View {

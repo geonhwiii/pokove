@@ -70,9 +70,10 @@ While Claude or Codex works, your party of up to three Pokémon rides Kanto's st
   - **Gacha:** **stardust** from stations (+1), bosses (+30), legendaries and the dungeon buys three Poké Balls for 400. The kind of ball hints at rarity. Open one and the Pokémon inside joins; a duplicate gives experience instead.
     - The pool is everything met on the journey, plus gacha-only Pokémon: the other starters, Eevee, fossils, Lapras and more. Mew appears after the Champion.
 - **The page:**
-  - The battle and your party are on the left, with a wand button for the best team against what's next.
-  - The right side switches between **Challenge**, the **Pokédex** and the **Gacha**.
-  - "While you were away" sums up what happened since you last looked, and points at the best-team button when a boss keeps winning.
+  - The battle and your party are on the left, with a **추천** (best team) button that lights up when the box has a better team for the next boss.
+  - The right side switches between **Challenge**, the **Pokédex** and the **Gacha**. Below the stage line, one line says what to do next: stations to the boss, the level that would beat it, and a shortcut (best team, today's dungeon, a pull). The gym screen says which level would win.
+  - Opening the page after a badge, an evolution, a newcomer or a lost boss fight shows it in one line over the battle for a few seconds. Everything that happened while the page was closed is kept in the **history** (the clock next to the bell) for today and yesterday.
+  - A Pokémon's card shows its next evolution, its next move, the level cap, and how it fares against the next boss. Pokémon you don't have yet show where to meet them.
 - **Banners** only come for new species, evolutions, badges and legendaries. Mute them in one click with the bell on the page or **Adventure Banners** in the menu bar menu, say before sharing your screen.
 - **Data:** species, FireRed/LeafGreen moves and wild encounters come from three [PokéAPI](https://pokeapi.co) GraphQL requests.
   - Sprites come from the PokéAPI sprite repository: Gen VII box icons, Black/White animated sprites (front and back), items (Poké Balls, stardust) and badges. Gym leader sprites come from [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/trainers/).
@@ -197,7 +198,7 @@ Debug builds listen for `com.geonhwiii.pokove.debug` distributed notifications, 
   - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke jump <chapter> <station> <badges>` (1-based; station 11 means the boss is next), `poke tick <n>` (battle actions without an agent or the clock).
   - Gacha: `poke pull`, `poke ultra` (adds an Ultra Ball), `poke ultraopen`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
   - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon easy|normal|hard`, `poke dungeonreset`, `poke auto on|off`.
-  - Page: `poke pane challenge|dex|gacha|recap`, `poke mode stage|gym|dungeon|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/pokove-state.txt`), `select <dex number>`.
+  - Page: `poke pane challenge|dex|gacha|history|toast` (toast replays the newest history entry), `poke mode stage|gym|dungeon|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/pokove-state.txt`), `select <dex number>`.
 - **Settings:** `settings claude|adventure|…`.
 
 `defaults write com.geonhwiii.pokove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.

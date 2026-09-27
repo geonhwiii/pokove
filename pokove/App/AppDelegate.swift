@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // poke starter <id> | poke catch [id] | poke xp <n> | poke stardust <n> | poke ultra
             // | poke jump <chapter> <station, 11 = boss> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
             // | poke challenge | poke legend <id> | poke dungeon easy|normal|hard | poke dungeonreset
-            // | poke pane challenge|dex|gacha|recap | poke mode stage|gym|dungeon|legend:<id> | poke auto on|off | poke reset
+            // | poke pane challenge|dex|gacha|history|toast | poke mode stage|gym|dungeon|legend:<id> | poke auto on|off | poke reset
             let arguments = parts.dropFirst(2).compactMap { Int($0) }
             let adventure = app.adventure
             switch parts.count > 1 ? parts[1] : "" {
