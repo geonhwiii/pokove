@@ -72,7 +72,7 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
   every 10th, trainer-rate EXP on each floor won. AUTO never starts it; a run doesn't resume after
   relaunch.
 - **Copy trimmed** at the user's request: no rules lines (the dungeon's floors, how to repeat a
-  station, "수련하고 다시 도전해요"); the history says where the party got to ("4-3에서 4-10까지 갔어요",
+  station, "수련하고 다시 도전해요" on the loss card and in the history); the history says where the party got to ("4-3에서 4-10까지 갔어요",
   "2-10에 머물렀어요") instead of battle counts.
 
 ## v3 direction (agreed with the user, 2026-09-27)

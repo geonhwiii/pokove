@@ -1,207 +1,142 @@
 # pokove
 
-A Dynamic Island for the MacBook notch, modeled on [Alcove](https://tryalcove.com) with a few ideas from NotchNook. It also has coding agents built in: the notch shows what Claude Code (CLI, IDE or the Claude desktop app) and Codex are doing, tells you when they finish or need you, and lets you answer Claude's permission requests without switching apps.
+[English](README.en.md) · [웹사이트](https://pokove.vercel.app) · [다운로드](https://github.com/geonhwiii/pokove/releases/latest)
 
-pokove was called dancove until September 2026. On its first launch it copies dancove's settings and `~/Library/Application Support/dancove/` (saves, to-dos, clipboard history) and leaves the originals in place. macOS treats it as a new app, so grant Accessibility and Calendars again, and turn **Launch at Login** back on. Claude hooks installed by dancove keep working and show as outdated until you reinstall them.
+에이전트가 일하는 동안 MacBook 노치 속 파티가 여행해요.
 
-## Features
+Claude Code나 Codex가 일하면 노치 안의 포켓몬 파티가 관동 지방을 한 역씩 지나가요. 노치에서 에이전트가 뭘 하는지 보고, Claude의 권한 요청에 앱을 바꾸지 않고 답할 수 있어요. 음악, 캘린더, 할 일, 클립보드도 노치에 있어요.
 
-### The notch
-- A pure-black shape hugs the camera housing. It has concave "ears" that blend into the menu bar and continuous bottom corners.
-- The notch morphs between states on springs converted from Alcove's own values (grow 150/20, shrink 175/17.5, hover 250/14, press 160/18).
-- Hovering gives a small bouncy "breath" (1.075×) with haptic feedback, and pressing squeezes it to 0.94×.
-- It opens on hover (the delay is adjustable) or on click. It closes when the pointer leaves or when you click elsewhere.
-- Content blooms in from a blurred sliver, like Alcove.
+![모험 화면](docs/images/adventure.png)
 
-### Live activities (closed notch)
-| Activity | Left | Right |
-|---|---|---|
-| Now Playing | Album art (shrinks when paused) | Waveform tinted from the artwork |
-| Now Playing + Claude working | Album art | Spinning Claude spark + waveform |
-| Claude working | Spinning spark | Your lead Pokémon, hopping, + elapsed time for the turn |
-| Claude needs you | Pulsing spark | ✋ (permission) / 💬 (input) |
-| Charging | ⚡ Charging | Level + battery |
-| Volume / brightness HUD | Icon + "Sound" / "Display" | Level bar with rubber-band overshoot |
+## 설치
 
-- **QuickPeek:** when the track changes, the notch grows a line with a scrolling "♪ Title · Artist".
-- **AirPods and speakers:** when audio moves to Bluetooth or AirPlay, a card drops out of the notch. The device (the right AirPods model, from its Bluetooth product ID) sits inside a ring whose glowing arc orbits while it connects. The arc then sweeps closed in green with a check and settles into a gauge of the lowest battery, while the left / right / case levels fade in one by one. The battery levels come from `system_profiler`, so no Bluetooth permission is needed.
+1. [최신 릴리스](https://github.com/geonhwiii/pokove/releases/latest)에서 `pokove.zip`을 받아 압축을 풀어요.
+2. `pokove.app`을 응용 프로그램 폴더로 옮기고 실행해요.
 
-### Open notch
-There is one activity at a time, like Alcove. Swipe down or click the page icons to cycle through them. The notch reopens on the page you picked last. A Claude permission request still comes first, and Settings → General can switch this back to showing what's going on. The open notch is as wide as it needs to be, so every page icon (and its badge) stays clear of the camera housing.
-- **Now Playing:** artwork (click it to open the source app), a thick scrubber with elapsed and remaining time, previous / play-pause / next, and an audio output picker.
-- **Calendar:** weekday, a big date, and today's events, beside a month grid.
-- **To-dos:** a minimal list right next to the calendar. The number of open items is shown large, like the calendar's date. Click **New To-do** and type; Return adds it and keeps the field open for the next one. Double-click an item to rename it, hover to delete it, and right-click for more. Checked items fill with a little bounce, then slide below the open ones. The list is saved in `~/Library/Application Support/pokove/todos.json`.
-- **Clipboard:** what you've copied (text, links, colors, images, files), newest first. Click an item to copy it again, or hover it to paste it into the app in front, pin it, or delete it. Right-click for the same. Deleting the item that's on the clipboard clears the clipboard too. **Clear** takes a second click and keeps pinned items. Passwords and copies marked confidential (the nspasteboard.org markers that password managers use) are never saved. The history lives in `~/Library/Application Support/pokove/clipboard/`.
-- **Adventure:** your Pokémon party battling through stages, and the Pokédex. See below.
-- **Agents:** an at-a-glance status for Claude and Codex, laid out like the calendar. The number working is shown large. Beside it is only what's running or waiting for you (current step, timer, permission requests with Allow / Deny). When all is quiet it shows today's tally per agent and the last thing that finished. Idle sessions aren't listed. The status is the current tool ("Editing NotchView.swift"), thinking, waiting, done with duration, or failed. Pending permission requests sit on top with Allow / Always / Deny. Click a row to jump to the terminal or editor running that session.
+macOS 15 이상에서 돌아가요. 노치가 없는 화면에는 가상 노치가 생겨요. 새 버전이 나오면 노치의 톱니 아이콘에 점이 찍히고, 설정 › 정보에서 받을 수 있어요.
 
-### Notifications (banners that drop out of the notch)
-- Claude finished (with project, duration and the final message), Claude needs permission or input, and Claude turn failed (rate limit, overload and so on).
-- Low battery at 20%, 10% and 5%.
-- Hovering a banner keeps it on screen. Clicking a Claude banner focuses that session's app.
+## 포켓몬 모험
 
-### Displays
-- The notch appears on the built-in display, or on every display if you choose. Displays without a notch get a simulated one.
-- Optionally hide the notch while an app is full screen, or hide it from screen recordings.
+파티는 최대 세 마리예요. 에이전트가 일하는 동안에만 역을 지나가고, 파이어레드·리프그린의 체육관과 포켓몬리그를 따라 여행해요.
 
-### Gestures (trackpad)
-- Swipe down to open, or to cycle activities while open. Swipe up to close.
-- Swipe sideways to skip tracks.
+- **시작:** 이상해씨, 파이리, 꼬부기 중 하나를 골라요 (Lv 5). 첫 뽑기 한 번은 공짜예요.
+- **도전 탭**
+  - **스테이지:** 한 장은 역 10개짜리 노선이고, 끝에 체육관 관장이 기다려요. 9장은 사천왕과 챔피언이에요. 10장은 뮤츠가 있는 동굴을 계속 돌아요. 역마다 그 지역의 실제 야생 포켓몬이 나와요. 지나온 역을 누르면 다시 돌 수 있어요.
+  - **체육관:** 다음 보스가 VS 화면으로 나와요. 관장의 팀, 걸린 배지, 이길 확률, 필요한 레벨을 보여줘요.
+  - **던전:** 오늘의 타입으로 된 쉬움·보통·어려움 던전이에요. 단계마다 하루 한 번 별의모래나 울트라볼을 줘요. 오전 4시에 바뀌어요.
+  - **타워:** 챔피언이 된 뒤에 열리는 배틀타워예요. 지기 전까지 한 층씩 올라가고 최고 기록이 남아요.
+  - 체육관, 전설, 던전, 타워는 에이전트가 쉬어도 시작하면 끝까지 싸워요. 져도 잃는 건 없어요.
+- **아래 줄:** 도전 탭 아래 한 줄이 지금 할 일을 알려줘요. 보스까지 남은 역, 이기려면 필요한 레벨, 바로가기(추천 팀, 오늘의 던전, 뽑기) 같은 것이요.
+- **배지를 받으면 레벨 상한이 올라요.** 상한을 넘은 경험치는 쌓아 뒀다가 다음 배지 때 들어와요.
+- **전설:** 노선의 ★ 갈림길에 잠만보, 썬더, 프리져, 파이어가 있고, 챔피언 뒤에는 뮤츠가 있어요. 이기면 동료가 돼요.
+- **AUTO**(기본으로 켜짐)는 노선 끝에 닿으면 추천 팀으로 바꿔서 보스에 도전해요. 지면 같은 역에 머물면서 레벨을 올리고 다시 도전해요.
+- **배틀:** 게임처럼 1:1로 교대하며 싸워요. 3세대 기술의 위력과 명중, 급소, 연속기, 흡수와 반동이 그대로고, 독·화상·마비도 걸려요. 경험치는 파티 셋이 똑같이 받아요.
 
-## Pokémon adventure
+![체육관 VS 화면](docs/images/gym.png)
 
-While Claude or Codex works, your party of up to three Pokémon rides Kanto's stage lines on its own: an idle stage game in the notch, in the spirit of MapleStory Idle or Cookie Run, on a journey through FireRed/LeafGreen's gyms and the League.
+### 포켓몬 모으기
 
-- **Starting out:** choose Bulbasaur, Charmander or Squirtle (Lv 5). You also start with one free gacha pull.
-- **The right side's Challenge tab** has three modes:
-  - **Stages:** each chapter is a subway-style line of ten stations ending at its gym leader (chapter 9 ends at the Elite Four and the Champion; chapter 10, Cerulean Cave, loops). Stations hold wild Pokémon from the real FRLG areas along the way (one each, two at the 10th). **Only stages need an agent working.** Tap a cleared station to repeat it.
-  - **Gym:** the next boss as a VS screen: their FRLG sprite and team, the badge at stake, the forecast win chance, a best-team button and **Challenge!** It unlocks when the chapter's line is cleared.
-  - **Dungeon:** a daily dungeon with Easy, Normal and Hard tiers, set around the party's level, of the day's type (Mon grass … Sun dragon and ghost). Five floors in one relay, a boss on the last. Each tier pays once a day (60 or 120 stardust, or an Ultra Ball: a gacha round of rare balls) and resets at 4:00.
-  - Gyms, legendaries and the dungeon are **challenges**: once started they play out at one action a second, agent or not. A lost challenge gives no experience and costs nothing.
-- **Badges raise the level cap.** Experience past the cap is banked and flows back in at the next badge.
-- **Legendaries** sit on ★ branches off their chapter's line: Snorlax, Zapdos, Articuno, Moltres, and Mewtwo after the Champion. Beat one and it joins.
-- **AUTO** (on by default) challenges the boss as soon as the line is cleared. After a loss the party trains at the last station (up to 30 clears, sooner if a level gained gives it a fair chance) and tries again. With AUTO off it trains until you tap Challenge.
-- **Battles are a 1:1 relay**, shown like the games: the foe at the top right, your Pokémon from behind, info plates and a text box.
-  - Pokémon use their real level-up moves with Gen 3 power, accuracy and type, and pick the best one for the matchup.
-  - Strong moves rest for a turn or three, so movesets rotate. There are crits, multi-hits, drain and recoil, and pixel effects for each type.
-  - When one faints, the next in the party comes out. All three share the experience.
-- **Getting Pokémon never fails:**
-  - **Discovery:** about every 20 minutes of agent work, someone from the current area joins on the spot. A species you already have gives its line experience instead.
-  - **Gacha:** **stardust** from stations (+1), bosses (+30), legendaries and the dungeon buys three Poké Balls for 400. The kind of ball hints at rarity. Open one and the Pokémon inside joins; a duplicate gives experience instead.
-    - The pool is everything met on the journey, plus gacha-only Pokémon: the other starters, Eevee, fossils, Lapras and more. Mew appears after the Champion.
-- **The page:**
-  - The battle and your party are on the left, with a **추천** (best team) button that lights up when the box has a better team for the next boss. Drag party members to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in. With AUTO on, the recommended team takes over for each boss AUTO challenges.
-  - The Pokédex can show only the Pokémon you have (**보유만**).
-  - The right side switches between **Challenge**, the **Pokédex** and the **Gacha**. Below the stage line, one line says what to do next: stations to the boss, the level that would beat it, and a shortcut (best team, today's dungeon, a pull). The gym screen says which level would win.
-  - Opening the page after a badge, an evolution, a newcomer or a lost boss fight shows it in one line over the battle for a few seconds. Everything that happened while the page was closed is kept in the **history** (the clock next to the bell) for today and yesterday.
-  - A Pokémon's card shows its next evolution, its next move, the level cap, and how it fares against the next boss. Pokémon you don't have yet show where to meet them.
-- **Banners** only come for new species, evolutions, badges and legendaries. Mute them in one click with the bell on the page or **Adventure Banners** in the menu bar menu, say before sharing your screen.
-- **Data:** species, FireRed/LeafGreen moves and wild encounters come from three [PokéAPI](https://pokeapi.co) GraphQL requests.
-  - Sprites come from the PokéAPI sprite repository: Gen VII box icons, Black/White animated sprites (front and back), items (Poké Balls, stardust) and badges. Gym leader sprites come from [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/trainers/).
-  - Everything is downloaded at runtime and cached in `~/Library/Application Support/pokove/pokemon/`. **No Pokémon assets are in this repository or the app.**
-  - The save file is `adventure-v3.json` (`adventure-v3-debug.json` in Debug builds). On first launch it's migrated from v2's `adventure-v2.json`, which is left as it was, like v1's `adventure.json`.
+포켓몬을 얻다가 실패하는 일은 없어요.
 
-`scripts/adventure-sim.swift` plays the rules for hundreds of simulated hours, to tune the pacing (see `docs/pokemon-handoff.md`).
+- **발견:** 에이전트가 20분쯤 일할 때마다 그 지역 포켓몬이 바로 동료가 돼요. 이미 있는 계열이면 경험치로 바뀌어요.
+- **뽑기:** 별의모래 400으로 몬스터볼 세 개 중 하나를 열어요. 이미 있는 계열이면 경험치를 줘요. 여행에서 만난 포켓몬과 뽑기에서만 나오는 포켓몬(다른 스타터, 이브이, 화석, 라프라스 등)이 나오고, 챔피언 뒤에는 뮤가 아주 드물게 나와요.
+- **이로치:** 발견과 뽑기에서 1/128 확률로 나와요. 이미 있는 계열이 이로치로 나오면 가진 포켓몬이 그 레벨 그대로 이로치가 돼요.
+- **도감 보상:** 10종을 모을 때마다 울트라볼을 하나 줘요.
 
-> Unofficial, non-commercial fan feature. It is not affiliated with, endorsed, sponsored or approved by Nintendo, Game Freak, Creatures Inc. or The Pokémon Company. Pokémon and all related names, characters and images are their trademarks and copyrights.
+![도감과 포켓몬 카드](docs/images/pokedex.png)
 
-## Logos
+포켓몬 카드에는 다음 진화, 다음에 배울 기술, 다음 레벨까지 남은 경험치, 레벨 상한, 다음 보스와의 상성이 나와요. 아직 없는 포켓몬은 어디서 만나는지 보여줘요. 파티 칸은 끌어서 순서를 바꾸고, 도감에서 포켓몬을 끌어다 놓으면 교체돼요.
 
-The Claude mark is the official logo path from [Simple Icons](https://simpleicons.org) (`claude.svg`), drawn with a small SVG path parser (`Shared/SVGPath.swift`). The Codex mark is a vector redraw of the Codex app icon: a soft eight-lobed gradient cloud with a `>_` prompt. Both animate while their agent works. The logos are the trademarks of their owners.
+![뽑기](docs/images/gacha.png)
 
-## Keyboard focus
+### 자리 비운 동안
 
-The notch never takes keyboard focus from the app you're working in, except while you type a to-do. Then the panel (non-activating, so your app stays frontmost) becomes key. When you finish or the notch closes, key status goes back to your app.
+페이지를 닫아 둔 동안 배지, 진화, 새 동료, 보스 패배 같은 큰일이 있었다면 다시 열 때 배틀 위에 한 줄로 잠깐 알려줘요. 전부 **기록**(종 옆 시계)에 오늘과 어제 것까지 남아요.
 
-## Localization
+![자리 비운 동안](docs/images/away.png)
 
-pokove follows the system language and ships in English and Korean. **Settings → General → Language** can override it (this needs a relaunch).
+![기록](docs/images/history.png)
 
-Strings live in `pokove/Localizable.xcstrings` and `pokove/InfoPlist.xcstrings`. After adding UI text:
+배너는 새 포켓몬, 진화, 배지, 전설처럼 큰일에만 떠요. 화면을 공유하기 전에는 페이지의 종이나 메뉴 막대 메뉴의 **모험 알림**으로 한 번에 끌 수 있어요.
 
-```bash
-xcodebuild -project pokove.xcodeproj -scheme pokove -derivedDataPath build/DerivedData build
-xcrun xcstringstool sync pokove/Localizable.xcstrings --stringsdata $(find build/DerivedData -name '*.stringsdata' -path '*Debug*')
-python3 scripts/localize-ko.py   # fills Korean; lists any key without a translation
-```
+> 비공식·비상업 팬 기능이에요. Nintendo, Game Freak, Creatures Inc., The Pokémon Company와 관계가 없고 승인받지 않았어요. 포켓몬과 관련 이름, 캐릭터, 이미지는 모두 해당 회사의 상표이자 저작물이에요.
 
-## Claude Code and Codex integration
+## 에이전트
 
-**No setup needed.** pokove follows the session files agents write as they work. `~/.claude/projects` covers the Claude desktop app, the CLI and IDE extensions, and `~/.codex/sessions` covers the Codex app and CLI. From these it shows the working indicator (with the right mark for each agent), finished and failed banners, and the adventure. Toggle them in **Settings → Claude Code → Detection**.
+![닫힌 노치](docs/images/compact.png)
 
-**Hooks** add the ability to answer Claude's permission requests from the notch, plus more precise states. When a session reports through hooks, its file is ignored.
+**설정할 게 없어요.** pokove는 에이전트가 일하면서 남기는 세션 파일을 따라가요. `~/.claude/projects`는 Claude 데스크톱 앱, CLI, IDE 확장을, `~/.codex/sessions`는 Codex 앱과 CLI를 다뤄요.
 
-1. Open **Settings → Claude Code** and click **Install Hooks**.
-   - pokove adds small hooks to `~/.claude/settings.json`. Other settings and hooks are kept, and a backup is saved as `settings.json.pokove-backup`.
-   - The hooks forward each event to `127.0.0.1:47821` with `curl`, and do nothing if pokove isn't running.
-2. Restart any running Claude Code sessions so they pick up the hooks.
+- 일하는 동안 닫힌 노치에 Claude·Codex 마크와 선두 포켓몬, 경과 시간이 보여요.
+- 끝나거나, 권한이나 입력이 필요하거나, 실패하면 노치에서 배너가 내려와요. 누르면 그 세션의 앱으로 가요.
+- 노치를 열면 에이전트 페이지에 지금 일하는 세션과 기다리는 요청만 보여요.
 
-**Answering permissions from the notch:**
-- If the app that runs Claude (Terminal, iTerm, VS Code, Claude desktop…) isn't in front, pokove holds the `PermissionRequest` hook and shows Allow / Deny in the notch.
-- If you don't answer within the timeout (45 s by default), or you switch to that app, Claude asks in its own window as usual.
-- If that app *is* in front, Claude's own prompt appears right away and the notch only shows a heads-up.
+**권한 요청에 노치에서 답하기:** 설정 › Claude Code에서 **훅 설치**를 누르세요.
 
-**Stuck sessions:** a session disappears when its `claude` process exits. An Esc interrupt fires no hook, so pokove reads it from the session transcript instead.
+- `~/.claude/settings.json`에 작은 훅을 더해요. 다른 설정과 훅은 그대로 두고, 원래 파일은 `settings.json.pokove-backup`으로 남겨요.
+- 훅은 `curl`로 `127.0.0.1:47821`에 이벤트를 보내고, pokove가 꺼져 있으면 아무것도 하지 않아요.
+- 이미 돌고 있는 Claude Code 세션은 다시 시작해야 훅을 읽어요.
+- Claude가 돌아가는 앱(터미널, iTerm, VS Code, Claude 데스크톱…)이 앞에 없으면 노치에 허용 / 거부가 떠요. 45초 안에 답하지 않거나 그 앱으로 가면 Claude가 원래대로 물어봐요.
 
-## Permissions
+## 노치의 다른 기능
 
-| Feature | Permission |
+- **지금 재생 중:** 앨범 아트, 재생 위치, 이전 / 재생 / 다음, 출력 기기 선택. 곡이 바뀌면 노치가 잠깐 한 줄 늘어나요. AirPods나 스피커가 연결되면 배터리 카드가 내려와요.
+- **캘린더와 할 일:** 오늘 일정과 달력 옆에 할 일 목록이 있어요.
+- **클립보드:** 복사한 텍스트, 링크, 색, 이미지, 파일을 최신순으로 보여줘요. 누르면 다시 복사하고, 앞에 있는 앱에 바로 붙여 넣을 수도 있어요. 비밀번호 관리자가 표시한 복사본은 저장하지 않아요.
+- **HUD:** 볼륨과 밝기 표시를 노치로 바꿔요. 배터리가 20%, 10%, 5%일 때 알려줘요.
+- **제스처:** 트랙패드로 아래로 쓸면 열리고, 열린 상태에서는 페이지를 넘겨요. 위로 쓸면 닫혀요. 옆으로 쓸면 곡을 넘겨요.
+- **화면:** 내장 화면이나 모든 화면에 노치를 띄울 수 있어요. 전체 화면일 때 숨기거나, 화면 녹화에서 빼는 것도 돼요.
+
+노치는 작업 중인 앱에서 키보드 포커스를 가져가지 않아요. 할 일을 입력할 때만 잠깐 빌려 쓰고 돌려줘요.
+
+## 권한
+
+| 기능 | 권한 |
 |---|---|
-| Replacing the volume / brightness HUD | Accessibility (Settings → Display & Sound → Grant…) |
-| Pasting from the clipboard history | Accessibility (pokove presses ⌘V for you). Without it, items are only copied |
-| Calendar page | Calendars (asked the first time you open it) |
-| Now Playing | None: a tiny bridge loaded into `/usr/bin/perl` reads MediaRemote (see below) |
+| 볼륨 / 밝기 HUD 바꾸기 | 손쉬운 사용 (설정 › 디스플레이 및 사운드 › 허용…) |
+| 클립보드 기록에서 붙여 넣기 | 손쉬운 사용 (pokove가 ⌘V를 대신 눌러요). 없으면 복사만 돼요 |
+| 캘린더 페이지 | 캘린더 (처음 열 때 물어봐요) |
+| 지금 재생 중 | 필요 없어요. `/usr/bin/perl`에 올린 작은 브리지가 MediaRemote를 읽어요 |
 
-**Updates:** at launch and once a day pokove asks GitHub's API for the latest release (nothing about your Mac is sent). When there's a newer one, the notch's gear gets a dot and Settings › About links to it.
+pokove는 하루에 한 번 GitHub API에서 최신 릴리스만 확인해요. 이 Mac에 대한 정보는 보내지 않아요.
 
-## How it works
+pokove의 예전 이름은 dancove예요. 처음 실행할 때 dancove의 설정과 `~/Library/Application Support/dancove/`(세이브, 할 일, 클립보드 기록)를 복사해 오고 원본은 그대로 둬요. macOS는 새 앱으로 보기 때문에 손쉬운 사용과 캘린더 권한, 로그인 시 실행은 다시 켜 주세요.
 
-```
-pokove/
-  App/            AppDelegate (one notch window per display), AppModel (services), Preferences
-  Notch/          NotchPanel (borderless, non-activating, above the menu bar)
-                  NotchWindowController (positioning, hit-testing, hover, swipes)
-                  NotchViewModel (open/hover state → NotchPresentation)
-                  NotchLayout (sizes, radii, springs, transitions), NotchShape
-                  Compact/ Banner/ Expanded/  (the views for each presentation)
-  Services/
-    Claude/       ClaudeHookServer (loopback HTTP), ClaudeSessionStore, ClaudeHookInstaller
-    Agents/       AgentTranscriptWatcher (FSEvents over Claude Code and Codex session files)
-    Todo/         TodoStore
-    Media/        NowPlayingService, AudioOutputDevices, AudioRouteMonitor + BluetoothDeviceInfo (device card)
-    HUD/          MediaKeyInterceptor (CGEventTap), SystemVolume (CoreAudio), DisplayBrightness
-    Battery/ Calendar/
-  Adventure/      PokeDex (PokéAPI data + type chart), PokeSprites (sprite cache, GIF frames), BattleEngine (pure rules), AdventureService
-  Settings/       Sidebar settings window
-MediaRemoteAdapter/
-  PokoveMediaRemote.m, pokove-mediaremote.pl
-```
+## 데이터
 
-- **The panel** has a fixed size and stays transparent. Only the SwiftUI content animates, so the window never resizes. It ignores the mouse unless the pointer is over the visible notch, so the menu bar underneath keeps working. It never takes key focus.
-- **Now Playing:**
-  - Since macOS 15.4, MediaRemote only answers Apple-signed clients. A build phase compiles `PokoveMediaRemote.m` into `libPokoveMediaRemote.dylib`, and the app runs it inside `/usr/bin/perl`.
-  - The bridge streams JSON lines on stdout and takes `command` / `seek` lines on stdin. The approach follows [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter).
-- **Claude hooks** are `command` hooks that `curl` the event JSON to the app. They pass `__CFBundleIdentifier` and `$PPID` so pokove knows which app hosts each session.
+- 포켓몬 종, 파이어레드·리프그린 기술(상태이상 확률 포함), 야생 출현 정보는 [PokéAPI](https://pokeapi.co) GraphQL 요청 세 번으로 받아요.
+- 스프라이트는 PokéAPI 스프라이트 저장소(7세대 아이콘, 블랙·화이트 움직이는 스프라이트와 이로치, 아이템, 배지)에서, 체육관 관장은 [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/trainers/)에서 받아요.
+- 모두 실행 중에 받아서 `~/Library/Application Support/pokove/pokemon/`에 저장해요. **앱과 코드에는 포켓몬 에셋이 들어 있지 않아요.** 이 README의 스크린샷만 예외예요.
+- 세이브는 `adventure-v3.json`(Debug 빌드는 `adventure-v3-debug.json`)이에요.
 
-## Website
+## 개발
 
-`site/` is the landing page, built with [Astro](https://astro.build) and served from Vercel at https://pokove.vercel.app (Korean at `/`, English at `/en/`).
-
-```bash
-cd site && pnpm install && pnpm dev   # http://localhost:4321
-```
-
-- The hero is the app icon's pixel scene redrawn to fill the page, under a live notch that opens into the Adventure page. Its battle is scripted; the sprites load from PokéAPI's repository at runtime, like the app's, and none are in the repo.
-- Copy for both languages lives in `site/src/i18n.ts`.
-- Vercel deploys it on every push to `main`. The project `pokove` builds from the repo root, and `vercel.json` there installs and builds `site/` and serves `site/dist`.
-- The download buttons point at `releases/latest/download/pokove.zip`. `scripts/package.sh` builds that zip in `build/` and prints the `gh release create` command.
-- Headings use [Galmuri](https://github.com/quiple/galmuri) (SIL OFL, license next to the font) and body text uses Pretendard.
-
-## Building
-
-Open `pokove.xcodeproj` in Xcode 27 and run, or:
+Xcode 27에서 `pokove.xcodeproj`를 열고 실행하거나:
 
 ```bash
 xcodebuild -project pokove.xcodeproj -scheme pokove -configuration Release -derivedDataPath build/DerivedData build
 ```
 
-`swift scripts/make-icon.swift` regenerates the app icon: an Alcove-style dark bezel around a pixel-art screen (a 44-cell grid, like a GBA scene) of dusk over a cove, with the notch, a stardust sparkle and a sail on the horizon. Pass a path to render a single 1024 px preview instead.
+- `scripts/install.sh`는 Release로 빌드해서 `~/Applications`에 설치하고 다시 실행해요.
+- `scripts/package.sh`는 릴리스용 `build/pokove.zip`을 만들고 `gh release create` 명령을 알려줘요.
+- `scripts/adventure-sim.swift`는 게임 규칙을 수백 시간 돌려서 진행 속도를 맞춰요. 규칙과 조정 기록은 [`docs/pokemon-handoff.md`](docs/pokemon-handoff.md)에 있어요.
+- `swift scripts/make-icon.swift`는 앱 아이콘(노을 진 바닷가를 그린 44칸 픽셀 아트)을 다시 그려요.
 
-Debug builds listen for `com.geonhwiii.pokove.debug` distributed notifications, which drive the notch from scripts. The actions are:
+**번역:** 앱은 시스템 언어를 따르고 영어와 한국어를 지원해요. 설정 › 일반 › 언어에서 바꿀 수 있어요. 문구는 `pokove/Localizable.xcstrings`에 있어요. UI 문구를 더했다면:
 
-- **Notch:** `open media|calendar|todos|clipboard|claude|adventure`, `close`, `hover on|off`.
-- **HUDs and activities:** `volume 0.5`, `brightness 0.5`, `charging`, `airpods` (connection card), `peek`, `banner`.
-- **Media:** `media`, `toggle`, `next`.
-- **Claude:** `allow`, `deny`.
-- **To-dos:** `todo add <text>`, `todo type <text>`, `todo toggle`, `todo clear`, `keytest` (checks that key focus is lent and returned).
-- **Clipboard:** `clip seed` (sample history), `clip clear`.
-- **Windows:** `rebuild` (recreates the notch windows).
-- **Adventure:**
-  - Setup: `poke starter <id>`, `poke reset`.
-  - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke jump <chapter> <station> <badges>` (1-based; station 11 means the boss is next), `poke tick <n>` (battle actions without an agent or the clock).
-  - Gacha: `poke pull`, `poke ultra` (adds an Ultra Ball), `poke ultraopen`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
-  - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon easy|normal|hard`, `poke dungeonreset`, `poke auto on|off`.
-  - Page: `poke pane challenge|dex|gacha|history|toast` (toast replays the newest history entry), `poke mode stage|gym|dungeon|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/pokove-state.txt`), `select <dex number>`.
-- **Settings:** `settings claude|adventure|…`.
+```bash
+xcrun xcstringstool sync pokove/Localizable.xcstrings --stringsdata $(find build/DerivedData/Build/Intermediates.noindex/pokove.build -name '*.stringsdata' -path '*Debug*')
+python3 scripts/localize-ko.py   # 한국어를 채우고, 번역이 없는 키를 알려줘요
+```
 
-`defaults write com.geonhwiii.pokove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.
+**웹사이트:** `site/`는 [Astro](https://astro.build)로 만든 랜딩 페이지예요. https://pokove.vercel.app 에 한국어(`/`)와 영어(`/en/`)로 올라가 있고, `main`에 푸시할 때마다 Vercel이 배포해요.
+
+```bash
+cd site && pnpm install && pnpm dev   # http://localhost:4321
+```
+
+**디버그:** Debug 빌드는 `com.geonhwiii.pokove.debug` 알림으로 조작할 수 있어요. 명령 목록은 [README.en.md › Building](README.en.md#building)에 있어요.
+
+## 로고
+
+Claude 마크는 [Simple Icons](https://simpleicons.org)의 공식 로고 경로(`claude.svg`)를, Codex 마크는 Codex 앱 아이콘을 벡터로 다시 그린 것을 써요. 두 로고는 각 회사의 상표예요.

@@ -475,8 +475,7 @@ struct RecapLine: Identifiable {
             guard let trainer = trainers.first(where: { $0.id == trainerID }) else { continue }
             let stuck = recap.stuck == trainerID
             lines.append(.init(id: "lost\(trainerID)", icon: .symbol("shield.lefthalf.filled.slash", Color(hex: 0xFF9E6B)),
-                               text: RecapText.lost(to: trainer.name, times: times),
-                               detail: stuck ? nil : RecapText.training, offersBestTeam: stuck, isNotable: true))
+                               text: RecapText.lost(to: trainer.name, times: times), offersBestTeam: stuck, isNotable: true))
         }
         for (i, step) in recap.evolutions.enumerated() {
             lines.append(.init(id: "evolved\(i)", icon: .pokemon(step.to),

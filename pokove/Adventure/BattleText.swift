@@ -124,7 +124,6 @@ nonisolated enum RecapText {
         if korean { return "\(trainer)에게 \(times)번 졌어요" }
         return times == 1 ? "Lost to \(trainer)" : "Lost to \(trainer) \(times) times"
     }
-    static var training: String { korean ? "수련하고 다시 도전해요" : "Training, then trying again" }
     static var bestTeam: String { korean ? "추천 팀" : "Best team" }
     static func dungeon(_ tier: String) -> String { korean ? "던전 \(tier) 클리어" : "Cleared the \(tier) dungeon" }
     static var ultraBall: String { korean ? "울트라볼" : "Ultra Ball" }
