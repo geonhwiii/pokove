@@ -1081,9 +1081,16 @@ private struct OwnedSummary: View {
         let atCap = member.level >= cap
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 5) {
-                Text("Lv \(member.level)")
-                    .font(.system(size: 11, weight: .heavy).monospacedDigit())
-                    .foregroundStyle(.white)
+                // "Lv 5/16": the level out of the most it can reach before the next badge.
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text("Lv \(member.level)")
+                        .font(.system(size: 11, weight: .heavy).monospacedDigit())
+                        .foregroundStyle(.white)
+                    Text(verbatim: "/\(cap)")
+                        .font(.system(size: 9, weight: .bold).monospacedDigit())
+                        .foregroundStyle(atCap ? Color(hex: 0xFFD35A) : .white.opacity(0.45))
+                }
+                .help(GuideText.cap(cap))
                 ZStack(alignment: .leading) {
                     Capsule().fill(.white.opacity(0.14))
                     Capsule().fill(Color(hex: 0x7FC8FF)).frame(width: 40 * (atCap ? 1 : member.levelProgress))
@@ -1097,9 +1104,6 @@ private struct OwnedSummary: View {
                         .lineLimit(1)
                         .fixedSize()
                 }
-                Text(GuideText.cap(cap))
-                    .font(.system(size: 8.5, weight: .bold).monospacedDigit())
-                    .foregroundStyle(atCap ? Color(hex: 0xFFD35A) : .white.opacity(0.4))
             }
             MoveChips(moves: adventure.moves(of: member))
             if let next = nextLine(adventure: adventure, atCap: atCap) {

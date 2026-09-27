@@ -233,14 +233,14 @@ nonisolated enum GuideText {
         return parts.joined(separator: " · ")
     }
 
-    static func xpLeft(_ amount: Int) -> String { korean ? "\(amount) 남음" : "\(amount) to go" }
+    static func xpLeft(_ amount: Int) -> String { korean ? "EXP \(amount) 남음" : "\(amount) EXP to go" }
     static func xpLeftLong(_ amount: Int) -> String { korean ? "다음 레벨까지 EXP \(amount)" : "EXP \(amount) to the next level" }
     static func xpGained(_ amount: Int) -> String { "EXP +\(amount)" }
 
     // The Pokédex.
     static var ownedOnly: String { korean ? "보유만" : "Owned" }
     static func nextDexReward(_ count: Int) -> String { korean ? "\(count)종을 모으면 울트라볼" : "An Ultra Ball at \(count)" }
-    static func cap(_ level: Int) -> String { korean ? "상한 \(level)" : "Cap \(level)" }
+    static func cap(_ level: Int) -> String { korean ? "레벨 상한 \(level)" : "Level cap \(level)" }
     static func learns(_ move: String, at level: Int) -> String {
         korean ? "Lv \(level)에 \(move.objectParticle) 배워요" : "Learns \(move) at Lv \(level)"
     }
