@@ -11,6 +11,52 @@
         }
       }
     },
+    "%@ %@ · Lv %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$@ · Lv %3$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ · Lv %3$lld"
+          }
+        }
+      }
+    },
+    "%@ evolved!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 진화!"
+          }
+        }
+      }
+    },
+    "%@ joined your team!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 합류!"
+          }
+        }
+      }
+    },
+    "%@ joined your team.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 동료: %@"
+          }
+        }
+      }
+    },
     "%@ wants to use %@": {
       "localizations": {
         "en": {
@@ -27,18 +73,18 @@
         }
       }
     },
-    "%@ · %@": {
+    "%@ · Lv %lld": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "%1$@ · %2$@"
+            "value": "%1$@ · Lv %2$lld"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ · %@"
+            "value": "%1$@ · Lv %2$lld"
           }
         }
       }
@@ -79,18 +125,18 @@
         }
       }
     },
-    "%lld / %lld": {
+    "%lld caught · %lld seen / %lld": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "new",
-            "value": "%1$lld / %2$lld"
+            "value": "%1$lld caught · %2$lld seen / %3$lld"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld / %lld"
+            "value": "%1$lld마리 잡음 · %2$lld마리 발견 / %3$lld"
           }
         }
       }
@@ -337,16 +383,6 @@
         }
       }
     },
-    "A spark of inspiration that learned to swim. It only appears when you build something great.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "헤엄치는 법을 배운 영감의 불꽃. 멋진 걸 만들 때만 나타난다."
-          }
-        }
-      }
-    },
     "API overloaded": {
       "localizations": {
         "ko": {
@@ -363,6 +399,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "정보"
+          }
+        }
+      }
+    },
+    "About the data": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "데이터 안내"
           }
         }
       }
@@ -403,6 +449,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "진행 중인 세션"
+          }
+        }
+      }
+    },
+    "Add to Party": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파티에 넣기"
+          }
+        }
+      }
+    },
+    "Adventure": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험"
+          }
+        }
+      }
+    },
+    "Adventure partner": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 파트너"
           }
         }
       }
@@ -537,32 +613,12 @@
         }
       }
     },
-    "Always shows up where you forgot it;": {
+    "An unofficial, non-commercial fan feature, not affiliated with or endorsed by Nintendo, Game Freak, Creatures Inc. or The Pokémon Company. Pokémon and all related names are their trademarks.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "꼭 빠뜨린 자리에만 나타난다;"
-          }
-        }
-      }
-    },
-    "Anchovy": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "멸치"
-          }
-        }
-      }
-    },
-    "Anglerfish": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "초롱아귀"
+            "value": "비공식·비상업 팬 기능이에요. Nintendo, Game Freak, Creatures Inc., The Pokémon Company와 관계가 없고 승인받지 않았어요. 포켓몬과 관련 이름은 모두 해당 회사의 상표예요."
           }
         }
       }
@@ -617,12 +673,42 @@
         }
       }
     },
+    "BOSS": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보스"
+          }
+        }
+      }
+    },
+    "BOSS · Lv%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보스 · Lv%lld"
+          }
+        }
+      }
+    },
     "Background agent finished": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "백그라운드 에이전트 완료"
+          }
+        }
+      }
+    },
+    "Banners for catches, evolutions and bosses": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포획·진화·보스 알림 보기"
           }
         }
       }
@@ -657,42 +743,32 @@
         }
       }
     },
+    "Battles go on while an agent works": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 일하면 전투가 이어져요"
+          }
+        }
+      }
+    },
+    "Beaten at %@, so training here first.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에서 져서 여기서 먼저 훈련 중이에요."
+          }
+        }
+      }
+    },
     "Billing issue": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "결제 문제"
-          }
-        }
-      }
-    },
-    "Blue Crab": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "꽃게"
-          }
-        }
-      }
-    },
-    "Blue Whale": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "흰수염고래"
-          }
-        }
-      }
-    },
-    "Bluefin Tuna": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "참다랑어"
           }
         }
       }
@@ -707,32 +783,22 @@
         }
       }
     },
-    "Bugfish": {
+    "Boss %@ cleared!": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "버그피시"
+            "value": "보스 %@ 클리어!"
           }
         }
       }
     },
-    "Built for speed. Never waits for CI.": {
+    "Bug": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "속도를 위해 태어났다. CI를 기다리지 않는다."
-          }
-        }
-      }
-    },
-    "CATCH": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "획득"
+            "value": "벌레"
           }
         }
       }
@@ -757,36 +823,6 @@
         }
       }
     },
-    "Can hold eight pull requests at once.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "풀 리퀘스트 여덟 개를 한꺼번에 붙잡는다."
-          }
-        }
-      }
-    },
-    "Casts when Claude starts working": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Claude가 일을 시작하면 낚싯대를 던져요"
-          }
-        }
-      }
-    },
-    "Caught a %@!": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 획득!"
-          }
-        }
-      }
-    },
     "Charging": {
       "localizations": {
         "ko": {
@@ -803,6 +839,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "1024에서 65535 사이의 포트를 고르세요."
+          }
+        }
+      }
+    },
+    "Choose your partner": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파트너를 골라 주세요"
           }
         }
       }
@@ -977,16 +1023,6 @@
         }
       }
     },
-    "Clownfish": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "흰동가리"
-          }
-        }
-      }
-    },
     "Codex": {
       "localizations": {
         "ko": {
@@ -1023,26 +1059,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Codex가 멈췄어요"
-          }
-        }
-      }
-    },
-    "Coelacanth": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "실러캔스"
-          }
-        }
-      }
-    },
-    "Collection": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "도감"
           }
         }
       }
@@ -1147,32 +1163,32 @@
         }
       }
     },
-    "Crucian Carp": {
+    "Couldn't reach PokéAPI": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "붕어"
+            "value": "PokéAPI에 연결할 수 없어요"
           }
         }
       }
     },
-    "Curls up whenever someone says “quick fix.”": {
+    "Critical hit!": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "누가 “간단한 수정”이라고 하면 몸을 움츠린다."
+            "value": "급소!"
           }
         }
       }
     },
-    "Cuts through spaghetti code in one strike.": {
+    "Dark": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "스파게티 코드를 단칼에 벤다."
+            "value": "악"
           }
         }
       }
@@ -1267,42 +1283,12 @@
         }
       }
     },
-    "Dragon King": {
+    "Dragon": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "용왕"
-          }
-        }
-      }
-    },
-    "Drags whole monoliths down to the deep.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "모놀리스를 통째로 심해로 끌고 간다."
-          }
-        }
-      }
-    },
-    "Drifts along with no plan. Somehow ships anyway.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "계획 없이 떠다니지만 어쨌든 출시는 한다."
-          }
-        }
-      }
-    },
-    "Each pattern is unique. So are its merge conflicts.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "무늬가 저마다 다르다. 머지 충돌도 그렇다."
+            "value": "드래곤"
           }
         }
       }
@@ -1347,22 +1333,22 @@
         }
       }
     },
-    "Eight arms, two tentacles, ten parallel tool calls.": {
+    "Electric": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "다리 여덟, 촉완 둘. 병렬 도구 호출도 열 개."
+            "value": "전기"
           }
         }
       }
     },
-    "Empty Can": {
+    "Empty": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "빈 캔"
+            "value": "빈 자리"
           }
         }
       }
@@ -1387,42 +1373,12 @@
         }
       }
     },
-    "Every Claude turn casts a line. Tool calls are nibbles, and when Claude finishes you reel in a catch. Longer, busier turns bring rarer fish.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Claude가 작업을 시작하면 낚싯대를 던져요. 도구를 쓸 때마다 입질이 오고, 작업이 끝나면 물고기를 낚아 올려요. 오래, 바쁘게 일할수록 희귀한 물고기가 잡혀요."
-          }
-        }
-      }
-    },
-    "Every species and record will be forgotten. This can't be undone.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "모든 어종과 기록이 사라져요. 되돌릴 수 없어요."
-          }
-        }
-      }
-    },
     "Expand on hover": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "마우스를 올리면 펼치기"
-          }
-        }
-      }
-    },
-    "Eyes on top of its head, always watching the logs.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "눈이 머리 위에 달려 있어 늘 로그를 지켜본다."
           }
         }
       }
@@ -1437,12 +1393,12 @@
         }
       }
     },
-    "Faints if a single test fails. Extremely rare to land alive.": {
+    "Fairy": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "테스트 하나만 실패해도 기절한다. 살아서 낚기는 하늘의 별 따기."
+            "value": "페어리"
           }
         }
       }
@@ -1467,6 +1423,16 @@
         }
       }
     },
+    "Fighting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "격투"
+          }
+        }
+      }
+    },
     "Finding %@": {
       "localizations": {
         "ko": {
@@ -1487,72 +1453,22 @@
         }
       }
     },
-    "First caught %@": {
+    "Fire": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "첫 포획 %@"
+            "value": "불꽃"
           }
         }
       }
     },
-    "Fish landed": {
+    "Flying": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "낚은 물고기"
-          }
-        }
-      }
-    },
-    "Fishing": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "낚시"
-          }
-        }
-      }
-    },
-    "Fishing Collection": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "낚시 도감"
-          }
-        }
-      }
-    },
-    "Fishing spot": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "낚시터"
-          }
-        }
-      }
-    },
-    "Fishing while Claude works": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Claude가 일하는 동안 낚시"
-          }
-        }
-      }
-    },
-    "Fix it once and it comes back in the next release.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "한 번 고치면 다음 릴리스에 꼭 다시 나타난다."
+            "value": "비행"
           }
         }
       }
@@ -1567,22 +1483,12 @@
         }
       }
     },
-    "Forgets everything after three seconds. Unlike Claude's context.": {
+    "Furthest stage": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "3초면 모든 걸 잊는다. Claude의 컨텍스트와는 다르다."
-          }
-        }
-      }
-    },
-    "Found in every stream. Honest, like a first commit.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "어느 개울에나 사는 친구. 첫 커밋처럼 소박하다."
+            "value": "최고 스테이지"
           }
         }
       }
@@ -1597,52 +1503,32 @@
         }
       }
     },
-    "Glides over the reef like a clean abstraction.": {
+    "Getting Pokédex data…": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "잘 만든 추상화처럼 산호초 위를 미끄러진다."
+            "value": "도감 데이터를 받는 중…"
           }
         }
       }
     },
-    "Go fishing": {
+    "Ghost": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "낚시하기"
+            "value": "고스트"
           }
         }
       }
     },
-    "Goby": {
+    "Go on an adventure": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "망둥어"
-          }
-        }
-      }
-    },
-    "Golden Carp": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "황금 잉어"
-          }
-        }
-      }
-    },
-    "Goldfish": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "금붕어"
+            "value": "모험 떠나기"
           }
         }
       }
@@ -1663,6 +1549,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "허용…"
+          }
+        }
+      }
+    },
+    "Grass": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "풀"
+          }
+        }
+      }
+    },
+    "Ground": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "땅"
           }
         }
       }
@@ -1707,16 +1613,6 @@
         }
       }
     },
-    "Holds the pearl of perfect uptime. Nines without end.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "완벽한 가동률의 여의주를 쥐고 있다. 끝없이 이어지는 9."
-          }
-        }
-      }
-    },
     "Hooks": {
       "localizations": {
         "ko": {
@@ -1747,6 +1643,16 @@
         }
       }
     },
+    "Ice": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "얼음"
+          }
+        }
+      }
+    },
     "Idle": {
       "localizations": {
         "ko": {
@@ -1773,16 +1679,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld분 후"
-          }
-        }
-      }
-    },
-    "Inflates when the test suite goes red.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "테스트가 빨갛게 물들면 몸을 부풀린다."
           }
         }
       }
@@ -1837,22 +1733,22 @@
         }
       }
     },
+    "It became %@.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 모습: %@"
+          }
+        }
+      }
+    },
     "Jot things down without leaving what you're doing.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "하던 일을 멈추지 않고 바로 적어 두세요."
-          }
-        }
-      }
-    },
-    "Keep Claude busy to meet this one.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Claude에게 일을 더 맡기면 만날 수 있어요."
           }
         }
       }
@@ -1877,12 +1773,12 @@
         }
       }
     },
-    "Keeps its secrets like a private repo.": {
+    "Keep your agents busy to meet this one.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "비공개 저장소처럼 입을 꾹 다물고 있다."
+            "value": "에이전트가 열심히 일하면 만날 수 있어요."
           }
         }
       }
@@ -1897,42 +1793,12 @@
         }
       }
     },
-    "Koi": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "비단잉어"
-          }
-        }
-      }
-    },
-    "Kraken": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "크라켄"
-          }
-        }
-      }
-    },
     "Language": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "언어"
-          }
-        }
-      }
-    },
-    "Last catch": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "최근 조과"
           }
         }
       }
@@ -1947,12 +1813,22 @@
         }
       }
     },
+    "Lead": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "리더로"
+          }
+        }
+      }
+    },
     "Legendary": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "레전더리"
+            "value": "전설"
           }
         }
       }
@@ -1963,16 +1839,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "레벨"
-          }
-        }
-      }
-    },
-    "Leviathan": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "레비아탄"
           }
         }
       }
@@ -2007,16 +1873,6 @@
         }
       }
     },
-    "Lives in an anemone. Rent-free, like tech debt.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "말미잘에 얹혀산다. 기술 부채처럼 월세도 안 낸다."
-          }
-        }
-      }
-    },
     "Low Battery": {
       "localizations": {
         "ko": {
@@ -2037,42 +1893,22 @@
         }
       }
     },
-    "Lures juniors to the deep with a single glowing TODO.": {
+    "Lv %lld": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "빛나는 TODO 하나로 신입을 심해로 꾀어낸다."
+            "value": "Lv %lld"
           }
         }
       }
     },
-    "Mackerel": {
+    "Lv%lld": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "고등어"
-          }
-        }
-      }
-    },
-    "Magic": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매직"
-          }
-        }
-      }
-    },
-    "Manta Ray": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "쥐가오리"
+            "value": "Lv%lld"
           }
         }
       }
@@ -2137,32 +1973,12 @@
         }
       }
     },
-    "Moon Jelly": {
+    "Mythical": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "보름달물해파리"
-          }
-        }
-      }
-    },
-    "Must keep moving or the sprint dies.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "멈추면 스프린트가 죽는다. 계속 헤엄쳐야 한다."
-          }
-        }
-      }
-    },
-    "Mythic": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "신화"
+            "value": "환상"
           }
         }
       }
@@ -2227,26 +2043,6 @@
         }
       }
     },
-    "Not a fish. Someone's bug report from 2019.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "물고기가 아니다. 누군가 2019년에 올린 버그 리포트다."
-          }
-        }
-      }
-    },
-    "Not caught yet": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "아직 낚지 못했어요"
-          }
-        }
-      }
-    },
     "Not granted": {
       "localizations": {
         "ko": {
@@ -2263,6 +2059,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "설치 안 됨"
+          }
+        }
+      }
+    },
+    "Not very effective": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "효과가 별로"
           }
         }
       }
@@ -2317,52 +2123,22 @@
         }
       }
     },
-    "Ocean Sunfish": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "개복치"
-          }
-        }
-      }
-    },
-    "Octopus": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "문어"
-          }
-        }
-      }
-    },
-    "Old Boot": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "낡은 장화"
-          }
-        }
-      }
-    },
-    "Older than the first line of code. Sleeps beneath every legacy system.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "최초의 코드보다 오래된 존재. 모든 레거시 아래에 잠들어 있다."
-          }
-        }
-      }
-    },
     "On battery": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "배터리 사용 중"
+          }
+        }
+      }
+    },
+    "On to world %lld.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "월드 %lld로 출발!"
           }
         }
       }
@@ -2387,12 +2163,12 @@
         }
       }
     },
-    "Open Collection in Notch": {
+    "Open Pokédex": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "노치에서 도감 열기"
+            "value": "도감 열기"
           }
         }
       }
@@ -2403,6 +2179,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "재생 중인 앱 열기"
+          }
+        }
+      }
+    },
+    "Party": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파티"
+          }
+        }
+      }
+    },
+    "Party is full": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파티가 가득 찼어요"
           }
         }
       }
@@ -2477,6 +2273,16 @@
         }
       }
     },
+    "Pick a Pokémon in the Pokédex to add it.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감에서 포켓몬을 골라 파티에 넣어 보세요."
+          }
+        }
+      }
+    },
     "Pin": {
       "localizations": {
         "ko": {
@@ -2497,12 +2303,12 @@
         }
       }
     },
-    "Play a sound for Unique catches and up": {
+    "Play a sound for new Pokémon": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "유니크 이상을 낚으면 효과음 재생"
+            "value": "새 포켓몬을 잡으면 소리 내기"
           }
         }
       }
@@ -2543,6 +2349,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "전원 연결됨"
+          }
+        }
+      }
+    },
+    "Poison": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "독"
+          }
+        }
+      }
+    },
+    "Pokédex": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감"
+          }
+        }
+      }
+    },
+    "Pokémon adventure": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬 모험"
+          }
+        }
+      }
+    },
+    "Pokémon data and sprites are downloaded from PokéAPI (pokeapi.co) while dancove runs and are cached on this Mac. None are bundled with dancove.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬 데이터와 이미지는 dancove가 실행될 때 PokéAPI(pokeapi.co)에서 받아 이 Mac에 저장해요. dancove에는 들어 있지 않아요."
           }
         }
       }
@@ -2637,12 +2483,22 @@
         }
       }
     },
-    "Pufferfish": {
+    "Progress": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "복어"
+            "value": "진행 상황"
+          }
+        }
+      }
+    },
+    "Psychic": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에스퍼"
           }
         }
       }
@@ -2653,16 +2509,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "dancove 종료"
-          }
-        }
-      }
-    },
-    "Rare": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "레어"
           }
         }
       }
@@ -2697,16 +2543,6 @@
         }
       }
     },
-    "Recent catches": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "최근 조과"
-          }
-        }
-      }
-    },
     "Relaunch Now": {
       "localizations": {
         "ko": {
@@ -2732,7 +2568,7 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "제거"
+            "value": "빼기"
           }
         }
       }
@@ -2757,32 +2593,12 @@
         }
       }
     },
-    "Reset Collection": {
+    "Rock": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "도감 초기화"
-          }
-        }
-      }
-    },
-    "Reset Collection…": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "도감 초기화…"
-          }
-        }
-      }
-    },
-    "Reset the fishing collection?": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "낚시 도감을 초기화할까요?"
+            "value": "바위"
           }
         }
       }
@@ -2807,62 +2623,12 @@
         }
       }
     },
-    "Said to grant one wish: a green build on the first try.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "소원 하나를 들어준다고 한다. 첫 빌드부터 초록불."
-          }
-        }
-      }
-    },
-    "Salmon": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "연어"
-          }
-        }
-      }
-    },
     "Saved": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "저장된 항목"
-          }
-        }
-      }
-    },
-    "Scallop": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "가리비"
-          }
-        }
-      }
-    },
-    "Sea Turtle": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "바다거북"
-          }
-        }
-      }
-    },
-    "Seahorse": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "해마"
           }
         }
       }
@@ -2927,16 +2693,6 @@
         }
       }
     },
-    "Semicolon Eel": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "세미콜론 장어"
-          }
-        }
-      }
-    },
     "Server error": {
       "localizations": {
         "ko": {
@@ -2967,16 +2723,6 @@
         }
       }
     },
-    "Shark": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "상어"
-          }
-        }
-      }
-    },
     "Show Now Playing live activity": {
       "localizations": {
         "ko": {
@@ -3003,16 +2749,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "노치에 캘린더 표시"
-          }
-        }
-      }
-    },
-    "Show catches on Claude's banners": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Claude 알림에 조과 표시"
           }
         }
       }
@@ -3087,26 +2823,6 @@
         }
       }
     },
-    "Shrimp": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "새우"
-          }
-        }
-      }
-    },
-    "Slow and steady. Its builds take 45 minutes.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "느리지만 꾸준하다. 빌드는 45분 걸린다."
-          }
-        }
-      }
-    },
     "Something went wrong": {
       "localizations": {
         "ko": {
@@ -3137,32 +2853,22 @@
         }
       }
     },
-    "Sparkfish": {
+    "Stage %@ cleared!": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "스파크피시"
+            "value": "스테이지 %@ 클리어!"
           }
         }
       }
     },
-    "Species found": {
+    "Stages cleared": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "발견한 어종"
-          }
-        }
-      }
-    },
-    "Squid": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "오징어"
+            "value": "클리어한 스테이지"
           }
         }
       }
@@ -3173,6 +2879,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "어디서든 Claude나 Codex를 시작하세요. 하는 일이 여기에 나타나요."
+          }
+        }
+      }
+    },
+    "Start Over": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "처음부터"
+          }
+        }
+      }
+    },
+    "Start Over…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "처음부터 다시…"
+          }
+        }
+      }
+    },
+    "Start the adventure over?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험을 처음부터 다시 할까요?"
           }
         }
       }
@@ -3197,12 +2933,12 @@
         }
       }
     },
-    "Still fizzing with last night's energy drink.": {
+    "Steel": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "어젯밤 에너지 드링크가 아직 톡 쏜다."
+            "value": "강철"
           }
         }
       }
@@ -3217,12 +2953,12 @@
         }
       }
     },
-    "Swims upstream against every code review.": {
+    "Super effective!": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "모든 코드 리뷰를 거슬러 헤엄쳐 오른다."
+            "value": "효과가 굉장해!"
           }
         }
       }
@@ -3237,16 +2973,6 @@
         }
       }
     },
-    "Swordfish": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "황새치"
-          }
-        }
-      }
-    },
     "System": {
       "localizations": {
         "ko": {
@@ -3257,52 +2983,12 @@
         }
       }
     },
-    "Tastes best grilled at midnight after a deploy.": {
+    "The adventure starts once the Pokédex downloads.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "배포 끝난 자정에 구워 먹으면 제일 맛있다."
-          }
-        }
-      }
-    },
-    "The father carries the eggs. And the on-call pager.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "알은 아빠가 품는다. 온콜 호출기도."
-          }
-        }
-      }
-    },
-    "The fish got away": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "물고기가 도망갔어요"
-          }
-        }
-      }
-    },
-    "The largest creature ever. About the size of node_modules.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지구상 가장 큰 생물. node_modules만 하다."
-          }
-        }
-      }
-    },
-    "The line snapped": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "낚싯줄이 끊어졌어요"
+            "value": "도감을 받으면 모험이 시작돼요."
           }
         }
       }
@@ -3347,32 +3033,12 @@
         }
       }
     },
-    "Thought extinct, like that legacy service still in production.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "멸종한 줄 알았다. 아직 운영 중인 그 레거시 서비스처럼."
-          }
-        }
-      }
-    },
     "Tint with album artwork": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "앨범 아트 색으로 물들이기"
-          }
-        }
-      }
-    },
-    "Tiny, but a whole school of them could refactor a codebase.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "작지만 떼로 몰려오면 코드베이스 하나쯤은 리팩터링한다."
           }
         }
       }
@@ -3423,16 +3089,6 @@
         }
       }
     },
-    "Too quick for a bite": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "입질이 오기엔 너무 짧았어요"
-          }
-        }
-      }
-    },
     "Trackpad gestures": {
       "localizations": {
         "ko": {
@@ -3443,12 +3099,22 @@
         }
       }
     },
-    "Turn on the Claude integration to fish.": {
+    "Training": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "낚시를 하려면 Claude 연동을 켜 주세요."
+            "value": "훈련 중"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시도"
           }
         }
       }
@@ -3459,26 +3125,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "사용할 수 없음"
-          }
-        }
-      }
-    },
-    "Unique": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "유니크"
-          }
-        }
-      }
-    },
-    "Unknown fish": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "알 수 없는 물고기"
           }
         }
       }
@@ -3553,12 +3199,12 @@
         }
       }
     },
-    "Walks sideways, like a merge that shouldn't have happened.": {
+    "Water": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "옆으로 걷는다. 하지 말았어야 할 머지처럼."
+            "value": "물"
           }
         }
       }
@@ -3613,6 +3259,16 @@
         }
       }
     },
+    "While Claude or Codex works, your party of up to three battles through stages on its own. Finished turns can bring a wild Pokémon along. Bosses every ten stages decide how far you get.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 알아서 스테이지를 돌파해요. 작업이 끝나면 야생 포켓몬이 따라오기도 하고, 10스테이지마다 나오는 보스가 얼마나 멀리 갈 수 있을지 정해요."
+          }
+        }
+      }
+    },
     "Works with Music, Spotify, browsers and any app that reports to Control Center.": {
       "localizations": {
         "ko": {
@@ -3639,6 +3295,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 작성 중"
+          }
+        }
+      }
+    },
+    "Your Pokémon, Pokédex and stage progress will be cleared. This can't be undone.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬, 도감, 스테이지 진행이 모두 지워져요. 되돌릴 수 없어요."
           }
         }
       }
@@ -3749,70 +3415,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "· %@"
-          }
-        }
-      }
-    },
-    "· %lld nibbles": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "· %lld nibble"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "· %lld nibbles"
-                }
-              }
-            }
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "· 입질 %lld회"
-          }
-        }
-      }
-    },
-    "· New record": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "· 최고 기록"
-          }
-        }
-      }
-    },
-    "· Trophy": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "· 월척!"
-          }
-        }
-      }
-    },
-    "×%lld · best %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "×%1$lld · best %2$@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "×%lld · 최대 %@"
           }
         }
       }

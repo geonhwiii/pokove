@@ -29,8 +29,8 @@ struct ExpandedView: View {
                 case .claude:
                     ClaudePageView()
                         .transition(.pageSwap)
-                case .fishing:
-                    FishingPageView()
+                case .adventure:
+                    AdventurePageView()
                         .transition(.pageSwap)
                 }
             }
@@ -121,14 +121,14 @@ private struct ExpandedHeader: View {
         case .calendar, .todos: .calendar
         case .clipboard: .clipboard
         case .claude: .claude
-        case .fishing: .fishing
+        case .adventure: .adventure
         }
     }
 
     private func badge(for page: NotchPage) -> Bool {
         switch page {
         case .claude: app.claude.needsAttention
-        case .fishing: app.fishing.isFishing
+        case .adventure: app.adventure.isBattling
         default: false
         }
     }
@@ -157,7 +157,7 @@ private struct PageButton: View {
             .overlay(alignment: .topTrailing) {
                 if badge {
                     Circle()
-                        .fill(page == .fishing ? Color(hex: 0x8FD0FF) : Color.claudeAttention)
+                        .fill(page == .adventure ? Color.adventure : Color.claudeAttention)
                         .frame(width: 6, height: 6)
                         .offset(x: -3, y: 3)
                 }

@@ -26,8 +26,8 @@ private struct MenuBarContent: View {
         Button("Settings…") { SettingsWindowController.shared.show(app: app) }
             .keyboardShortcut(",")
         Button("Claude Code Settings…") { SettingsWindowController.shared.show(app: app, pane: .claude) }
-        if app.preferences.claudeEnabled && app.preferences.fishingEnabled {
-            Button("Fishing Collection") { NotificationCenter.default.post(name: .dancoveOpenFishing, object: nil) }
+        if app.preferences.adventureEnabled {
+            Button("Open Pokédex") { NotificationCenter.default.post(name: .dancoveOpenAdventure, object: nil) }
         }
         Divider()
         Button("Preview Claude Notification") { claude.simulateDemo() }

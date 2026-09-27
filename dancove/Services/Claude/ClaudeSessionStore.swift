@@ -15,7 +15,7 @@ final class ClaudeSessionStore {
 
     @ObservationIgnored private let activity: ActivityCenter
     @ObservationIgnored private let preferences: Preferences
-    @ObservationIgnored private let fishing: FishingService
+    @ObservationIgnored private let adventure: AdventureService
     @ObservationIgnored private var server: ClaudeHookServer?
     @ObservationIgnored private var transcripts: AgentTranscriptWatcher?
     /// Sessions whose hooks said goodbye; late lines in their files must not bring them back.
@@ -27,10 +27,10 @@ final class ClaudeSessionStore {
 
     static let hookPath = "/claude/hook"
 
-    init(activity: ActivityCenter, preferences: Preferences, fishing: FishingService) {
+    init(activity: ActivityCenter, preferences: Preferences, adventure: AdventureService) {
         self.activity = activity
         self.preferences = preferences
-        self.fishing = fishing
+        self.adventure = adventure
     }
 
     // MARK: Derived state
@@ -137,7 +137,7 @@ final class ClaudeSessionStore {
 
     func stop() {
         resolveAllPermissions()
-        fishing.reelInAll()
+        adventure.endAllTurns()
         server?.stop()
         server = nil
         transcripts?.stop()
@@ -209,7 +209,7 @@ final class ClaudeSessionStore {
 
     func remove(sessionID: String) {
         sessions.removeAll { $0.id == sessionID }
-        fishing.snap(sessionID: sessionID)
+        adventure.turnAborted(sessionID: sessionID)
     }
 
     /// Posts sample events so the integration can be previewed without Claude running.
@@ -293,7 +293,7 @@ final class ClaudeSessionStore {
                 session.activity = .idle
                 session.turnStartedAt = nil
             }
-            fishing.snap(sessionID: sessionID)
+            adventure.turnAborted(sessionID: sessionID)
             activity.dismissBanners(forSession: sessionID, styles: [.claudeNeedsPermission, .claudeNeedsInput])
             return
         }
@@ -328,7 +328,7 @@ final class ClaudeSessionStore {
                 session.toolCount = 0
                 if let prompt = event["prompt"] as? String { session.lastPrompt = prompt }
             }
-            if fishes { fishing.cast(sessionID: sessionID, at: now) }
+            if fishes { adventure.turnStarted(sessionID: sessionID, at: now) }
 
         case "PreToolUse":
             let tool = event["tool_name"] as? String ?? "Tool"
@@ -339,11 +339,10 @@ final class ClaudeSessionStore {
                 session.toolCount += 1
             }
             if fishes {
-                // dancove may have launched mid-turn: the main agent's tool call opens the line.
-                if !isSubagent, !fishing.hasLine(for: sessionID), let start = session(id: sessionID)?.turnStartedAt {
-                    fishing.cast(sessionID: sessionID, at: start)
+                // dancove may have launched mid-turn: the main agent's tool call starts the turn.
+                if !isSubagent, !adventure.hasTurn(for: sessionID), let start = session(id: sessionID)?.turnStartedAt {
+                    adventure.turnStarted(sessionID: sessionID, at: start)
                 }
-                fishing.nibble(sessionID: sessionID)
             }
 
         case "PostToolUse", "PostToolUseFailure", "PostToolBatch":
@@ -378,12 +377,12 @@ final class ClaudeSessionStore {
             }
             scheduleIdle(sessionID)
             if let duration, fishes { recordTurn(sessionID: sessionID, duration: duration, at: now) }
-            let caught = fishes ? fishing.reel(sessionID: sessionID, project: session(id: sessionID)?.projectName, at: now) : nil
+            let caught = fishes ? adventure.turnFinished(sessionID: sessionID, at: now) : nil
             notifyFinished(sessionID: sessionID, message: message, duration: duration, caught: caught)
 
         case "StopFailure":
             let label = Self.describeFailure(event["error"] as? String)
-            fishing.snap(sessionID: sessionID)
+            adventure.turnAborted(sessionID: sessionID)
             updateSession(sessionID) { session in
                 session.activity = .failed(label)
                 session.turnStartedAt = nil
@@ -623,7 +622,7 @@ final class ClaudeSessionStore {
                     session.activity = .idle
                     session.turnStartedAt = nil
                 }
-                fishing.snap(sessionID: session.id)
+                adventure.turnAborted(sessionID: session.id)
                 continue
             }
             // Esc during a turn, or rejecting Claude's own permission prompt, fires no hook.
@@ -635,7 +634,7 @@ final class ClaudeSessionStore {
                     session.activity = .idle
                     session.turnStartedAt = nil
                 }
-                fishing.snap(sessionID: session.id)
+                adventure.turnAborted(sessionID: session.id)
             }
         }
         sessions.removeAll { session in
@@ -649,20 +648,20 @@ final class ClaudeSessionStore {
         reelInOrphanedLines()
     }
 
-    /// A line can't stay in the water for a session that no longer exists.
+    /// A turn can't stay open for a session that no longer exists.
     private func reelInOrphanedLines() {
-        for sessionID in fishing.casts.keys where session(id: sessionID) == nil {
+        for sessionID in adventure.turnIDs where session(id: sessionID) == nil {
             #if DEBUG
             if sessionID == "debug" { continue }
             #endif
-            fishing.snap(sessionID: sessionID)
+            adventure.turnAborted(sessionID: sessionID)
         }
     }
 
     private func endSession(_ sessionID: String) {
         finishedResetTasks[sessionID]?.cancel()
         sessions.removeAll { $0.id == sessionID }
-        fishing.snap(sessionID: sessionID)
+        adventure.turnAborted(sessionID: sessionID)
         cancelPermissions(forSession: sessionID)
         activity.dismissBanners(forSession: sessionID, styles: [.claudeNeedsPermission, .claudeNeedsInput])
     }
@@ -719,44 +718,40 @@ final class ClaudeSessionStore {
 
     // MARK: Notifications
 
-    private func notifyFinished(sessionID: String, message: String?, duration: TimeInterval?, caught: FishCatch?) {
-        let caught = preferences.fishingAnnounceCatches ? caught : nil
+    private func notifyFinished(sessionID: String, message: String?, duration: TimeInterval?, caught: PokeEncounter?) {
+        let caught = preferences.adventureAnnounceCatches ? caught.flatMap { $0.caught ? $0 : nil } : nil
         defer { if let caught { playCatchSound(for: caught) } }
         guard let session = session(id: sessionID) else { return }
         let quiet = !preferences.claudeNotifyOnDone || (preferences.claudeQuietWhenFocused && isHostFrontmost(session))
         if quiet {
-            // Even when "finished" banners are off, a rare catch is worth a moment of attention.
-            if let caught, let species = caught.species, species.rarity >= .rare {
-                activity.post(NotchBanner(
-                    style: .fishCatch,
-                    title: String(localized: "Caught a \(species.name)!"),
-                    subtitle: session.displayName,
-                    sessionID: sessionID,
-                    fishCatch: caught,
-                    duration: species.rarity >= .legendary ? 8 : 5
-                ))
+            // Even when "finished" banners are off, a new Pokémon is worth a moment of attention.
+            if let caught, caught.isNew, let species = adventure.dex.species(caught.speciesID) {
+                var banner = NotchBanner(style: .adventure, title: String(localized: "\(species.name) joined your team!"),
+                                         subtitle: session.displayName, sessionID: sessionID, encounter: caught,
+                                         duration: caught.isSpecial ? 8 : 5)
+                banner.pokemonID = species.id
+                activity.post(banner)
             }
             return
         }
         var subtitle = session.displayName
         if let duration, duration >= 1 { subtitle += " · " + Self.format(duration: duration) }
-        let rarity = caught?.species?.rarity
         activity.post(NotchBanner(
             style: .claudeFinished,
             title: session.agent == .codex ? String(localized: "Codex finished") : String(localized: "Claude finished"),
             subtitle: subtitle,
             detail: message.map(Self.condense),
             sessionID: sessionID,
-            fishCatch: caught,
+            encounter: caught,
             agent: session.agent,
-            duration: rarity.map { $0 >= .legendary ? 9 : 7 } ?? 5.5
+            duration: caught.map { $0.isSpecial ? 9 : 7 } ?? 5.5
         ))
         playSoundIfNeeded()
     }
 
-    private func playCatchSound(for caught: FishCatch) {
-        guard preferences.fishingSound, let rarity = caught.species?.rarity, rarity >= .unique else { return }
-        NSSound(named: rarity >= .legendary ? "Hero" : "Glass")?.play()
+    private func playCatchSound(for caught: PokeEncounter) {
+        guard preferences.adventureSound, caught.isNew || caught.isSpecial else { return }
+        NSSound(named: caught.isSpecial ? "Hero" : "Glass")?.play()
     }
 
     private func postAttention(sessionID: String, style: NotchBanner.Style, title: String, detail: String?) {

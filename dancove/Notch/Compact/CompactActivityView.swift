@@ -119,10 +119,9 @@ private struct ClaudeCompactTrailing: View {
                     .symbolEffect(.pulse, options: .repeating)
             } else if let start = app.claude.primarySession?.turnStartedAt {
                 HStack(spacing: 5) {
-                    if app.preferences.fishingEnabled && app.fishing.isFishing {
-                        // A line is in the water while Claude works; tool calls make it nibble.
-                        BobberView(nibbleTick: app.fishing.nibbleTick, pixelSize: 2)
-                            .frame(width: 16, height: 20)
+                    if app.adventure.isEnabled, let leader = app.adventure.leader {
+                        // The partner battles alongside while the agent works.
+                        PartnerIcon(speciesID: leader.speciesID)
                             .transition(.scale.combined(with: .opacity))
                     }
                     Text(timerInterval: start...Date.distantFuture, countsDown: false)

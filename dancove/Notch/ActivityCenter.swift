@@ -38,7 +38,7 @@ struct NotchBanner: Identifiable, Equatable {
         case claudeNeedsPermission
         case claudeNeedsInput
         case claudeError
-        case fishCatch
+        case adventure
         case batteryLow
         case clipboard
         case info
@@ -53,8 +53,10 @@ struct NotchBanner: Identifiable, Equatable {
     var sessionID: String?
     /// Links the banner to a pending permission request that can be answered inline.
     var permissionID: UUID?
-    /// What Claude's turn reeled in, shown beside the message.
-    var fishCatch: FishCatch?
+    /// Who turned up at the end of the agent's turn, shown beside the message.
+    var encounter: PokeEncounter?
+    /// A Pokémon to show on adventure banners (evolutions, boss clears).
+    var pokemonID: Int?
     /// Which coding agent the banner is about, for its mark and label.
     var agent: AgentKind = .claude
     /// `nil` keeps the banner until it is dismissed explicitly.
@@ -67,7 +69,7 @@ struct NotchBanner: Identifiable, Equatable {
         detail: String? = nil,
         sessionID: String? = nil,
         permissionID: UUID? = nil,
-        fishCatch: FishCatch? = nil,
+        encounter: PokeEncounter? = nil,
         agent: AgentKind = .claude,
         duration: TimeInterval? = 5
     ) {
@@ -78,16 +80,14 @@ struct NotchBanner: Identifiable, Equatable {
         self.detail = detail
         self.sessionID = sessionID
         self.permissionID = permissionID
-        self.fishCatch = fishCatch
+        self.encounter = encounter
+        pokemonID = encounter?.speciesID
         self.agent = agent
         self.duration = duration
     }
 
-    /// Legendary and Mythic catches get a full celebration.
-    var celebratesCatch: Bool {
-        guard let rarity = fishCatch?.species?.rarity else { return false }
-        return rarity >= .legendary
-    }
+    /// Legendary and mythical catches get a full celebration.
+    var celebratesCatch: Bool { encounter?.caught == true && encounter?.isSpecial == true }
 
     /// Tall banners carry inline actions or a celebration.
     var isTall: Bool { permissionID != nil || celebratesCatch }

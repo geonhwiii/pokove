@@ -28,7 +28,7 @@ struct SettingsView: View {
                 switch selection.pane {
                 case .general: GeneralSettingsPane()
                 case .claude: ClaudeSettingsPane()
-                case .fishing: FishingSettingsPane()
+                case .adventure: AdventureSettingsPane()
                 case .nowPlaying: NowPlayingSettingsPane()
                 case .calendar: CalendarSettingsPane()
                 case .clipboard: ClipboardSettingsPane()

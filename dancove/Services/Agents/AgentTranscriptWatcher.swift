@@ -5,7 +5,7 @@ import Foundation
 /// session with no setup: the Claude desktop app, the CLI, IDE extensions, and Codex.
 ///
 /// Each appended line becomes a hook-shaped event (`UserPromptSubmit`, `PreToolUse`, `Stop`…)
-/// for `ClaudeSessionStore`, so banners, the working indicator and fishing behave the same as
+/// for `ClaudeSessionStore`, so banners, the working indicator and the adventure behave the same as
 /// with hooks. Hooks stay optional: they add inline permission answers and win when both report.
 final class AgentTranscriptWatcher {
     typealias EventHandler = (_ event: [String: Any], _ headers: [String: String]) -> Void

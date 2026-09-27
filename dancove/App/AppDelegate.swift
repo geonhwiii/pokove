@@ -19,11 +19,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated { self?.rebuildWindows() }
         }
         observeDisplayPreference()
-        NotificationCenter.default.addObserver(forName: .dancoveOpenFishing, object: nil, queue: .main) { [weak self] _ in
+        NotificationCenter.default.addObserver(forName: .dancoveOpenAdventure, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.controllers.values.forEach { controller in
-                    guard controller.viewModel.availablePages.contains(.fishing) else { return }
-                    controller.viewModel.open(page: .fishing)
+                    guard controller.viewModel.availablePages.contains(.adventure) else { return }
+                    controller.viewModel.open(page: .adventure)
                 }
             }
         }
@@ -79,16 +79,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             app.preferences.showMenuBarIcon = parts.last != "off"
         case "airpods":
             app.audioRoutes.previewConnection()
-        case "fish":
-            // fish [normal|magic|rare|unique|legendary|mythic|<species id>]
-            let argument = parts.count > 1 ? parts[1] : nil
-            let rarity = argument.flatMap { name in FishRarity.allCases.first { "\($0)" == name } }
-            let fish = app.fishing.debugCatch(rarity: rarity, speciesID: rarity == nil ? argument : nil)
-            app.activity.post(NotchBanner(style: .claudeFinished, title: String(localized: "Claude finished"),
-                                          subtitle: "dancove · 3m 12s",
-                                          detail: "Wired the fishing mini-game into the Claude hooks and drew 34 pixel fish.",
-                                          sessionID: "debug", fishCatch: fish,
-                                          duration: fish.species.map { $0.rarity >= .legendary ? 9 : 7 } ?? 7))
+        case "poke":
+            // poke starter <id> | poke catch [id] | poke xp <n> | poke stage <w> <s> | poke tick <n> | poke reset
+            let arguments = parts.dropFirst(2).compactMap { Int($0) }
+            let adventure = app.adventure
+            switch parts.count > 1 ? parts[1] : "" {
+            case "starter": adventure.chooseStarter(arguments.first ?? 4)
+            case "catch":
+                if let encounter = adventure.debugCatch(arguments.first) {
+                    app.activity.post(NotchBanner(style: .claudeFinished, title: String(localized: "Claude finished"),
+                                                  subtitle: "dancove · 3m 12s",
+                                                  detail: "Swapped the fishing game for a Pokémon adventure.",
+                                                  sessionID: "debug", encounter: encounter,
+                                                  duration: encounter.isSpecial ? 9 : 7))
+                }
+            case "xp": adventure.debugXP(arguments.first ?? 1000)
+            case "stage": adventure.debugStage(Stage(world: arguments.first ?? 1, number: arguments.dropFirst().first ?? 1))
+            case "tick": adventure.debugTicks(arguments.first ?? 10)
+            case "reset": adventure.resetAdventure()
+            default: break
+            }
         case "todo":
             // todo add <text> | todo type <text> | todo toggle | todo clear
             let text = parts.dropFirst(2).joined(separator: " ")
@@ -121,13 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.controllers.removeAll()
             rebuildWindows()
         case "select":
-            NotificationCenter.default.post(name: .dancoveDebugSelectFish, object: parts.count > 1 ? parts[1] : nil)
-        case "cast":
-            app.fishing.cast(sessionID: "debug")
-        case "nibble":
-            app.fishing.nibble(sessionID: "debug")
-        case "reel":
-            app.fishing.reel(sessionID: "debug", project: "dancove")
+            NotificationCenter.default.post(name: .dancoveDebugSelectPokemon, object: parts.count > 1 ? Int(parts[1]) : nil)
         case "peek":
             app.activity.flashPeek()
         case "banner":

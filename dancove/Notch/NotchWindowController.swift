@@ -198,6 +198,10 @@ final class NotchWindowController {
         if let outside = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown], handler: { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self, self.viewModel.isOpen else { return }
+                #if DEBUG
+                // Screenshots while someone keeps working in other apps.
+                if UserDefaults.standard.bool(forKey: "debugHoldOpen") { return }
+                #endif
                 if !self.interactiveRect.contains(NSEvent.mouseLocation) { self.viewModel.close() }
             }
         }) {
@@ -221,7 +225,7 @@ final class NotchWindowController {
             scrollAccumulator = .zero
             scrollGestureFired = false
         }
-        // Scrolling pages (Claude sessions, the fishing collection) need the full scroll stream
+        // Scrolling pages (Claude sessions, the Pokédex) need the full scroll stream
         // (phases, momentum) to feel right.
         let listOwnsScroll = viewModel.isOpen && viewModel.page.scrollsVertically
         if event.phase == .ended || event.phase == .cancelled {

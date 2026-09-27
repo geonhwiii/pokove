@@ -16,7 +16,7 @@ A Dynamic Island for the MacBook notch, modeled on [Alcove](https://tryalcove.co
 |---|---|---|
 | Now Playing | Album art (shrinks when paused) | Waveform tinted from the artwork |
 | Now Playing + Claude working | Album art | Spinning Claude spark + waveform |
-| Claude working | Spinning spark | Fishing bobber + elapsed time for the turn |
+| Claude working | Spinning spark | Your lead Pokémon, hopping, + elapsed time for the turn |
 | Claude needs you | Pulsing spark | ✋ (permission) / 💬 (input) |
 | Charging | ⚡ Charging | Level + battery |
 | Volume / brightness HUD | Icon + "Sound" / "Display" | Level bar with rubber-band overshoot |
@@ -30,7 +30,7 @@ There is one activity at a time, like Alcove. Swipe down or click the page icons
 - **Calendar:** weekday, a big date, and today's events, beside a month grid.
 - **To-dos:** a minimal list right next to the calendar. The number of open items is shown large, like the calendar's date. Click **New To-do** and type; Return adds it and keeps the field open for the next one. Double-click an item to rename it, hover to delete it, and right-click for more. Checked items fill with a little bounce, then slide below the open ones. The list is saved in `~/Library/Application Support/dancove/todos.json`.
 - **Clipboard:** what you've copied (text, links, colors, images, files), newest first. Click an item to copy it again, or hover it to paste it into the app in front, pin it, or delete it. Right-click for the same. Deleting the item that's on the clipboard clears the clipboard too. **Clear** takes a second click and keeps pinned items. Passwords and copies marked confidential (the nspasteboard.org markers that password managers use) are never saved. The history lives in `~/Library/Application Support/dancove/clipboard/`.
-- **Fishing:** a pixel-art fishing spot (the sky follows the real time of day) and the collection. See below.
+- **Adventure:** your Pokémon party battling through stages, and the Pokédex. See below.
 - **Agents:** an at-a-glance status for Claude and Codex, laid out like the calendar. The number working is shown large. Beside it is only what's running or waiting for you (current step, timer, permission requests with Allow / Deny). When all is quiet it shows today's tally per agent and the last thing that finished. Idle sessions aren't listed. The status is the current tool ("Editing NotchView.swift"), thinking, waiting, done with duration, or failed. Pending permission requests sit on top with Allow / Always / Deny. Click a row to jump to the terminal or editor running that session.
 
 ### Notifications (banners that drop out of the notch)
@@ -46,19 +46,29 @@ There is one activity at a time, like Alcove. Swipe down or click the page icons
 - Swipe down to open, or to cycle activities while open. Swipe up to close.
 - Swipe sideways to skip tracks.
 
-## Fishing
+## Pokémon adventure
 
-While Claude works, a ginger cat on the dock goes fishing:
+While Claude or Codex works, your party of up to three Pokémon battles through stages on its own. It's an idle stage game in the notch, in the spirit of MapleStory Idle or Cookie Run.
 
-- Every Claude turn casts a line. Each tool call is a nibble: the bobber in the notch dips under. When Claude finishes, you reel something in.
-- Turns shorter than 6 s don't get a bite. Longer, busier turns raise the chance of a bite and tilt the odds toward rarer fish, up to 4× luck.
-- **Rarity:** Normal 55%, Magic 25%, Rare 12%, Unique 5.5%, Legendary 2%, Mythic 0.5% before luck. A Legendary is guaranteed after 120 catches without one, and species you haven't caught are favored.
-- **34 species**, drawn as 24×16 pixel sprites with one light direction and one outline weight. They run from 붕어 and a 낡은 장화 up to 레비아탄, 용왕 and the 스파크피시. Each has a size range (월척 for the top 15%) and a line of developer lore.
-- The "Claude finished" / "Codex finished" banner shows what you caught (with **NEW** for a first catch). Legendary and Mythic catches take over the banner with a glow and sparkles.
-- The **Fishing** page in the open notch holds the collection: silhouettes for fish you haven't caught, and details, counts and records for the ones you have. **Settings → Fishing** has stats, recent catches and a reset.
-- The collection lives in `~/Library/Application Support/dancove/fishing.json`. Debug builds use `fishing-debug.json`, so test catches never reach the real one.
+- **Starting out:** choose Bulbasaur, Charmander or Squirtle as your partner (Lv 5).
+- **Battles** play one action every 1.5 s, but only while an agent is working. When nothing is running, the party rests.
+  - Damage uses the main-series formula with base stats, the 18-type chart, same-type bonus and critical hits.
+  - HP carries across a stage's three waves. The whole party earns experience and evolves along its real evolution line.
+- **Stages** go `1-1 … 1-10` and on, with no end.
+  - Every tenth stage is a boss (+4 levels, 2.5× HP). The first time you beat a boss, it may join you.
+  - A party that's wiped out trains on the previous stage for three clears, then tries again.
+- **Wild Pokémon:** a finished turn of 20 s or more can bring one along, chosen at random from the whole Gen 1 dex.
+  - Common ones are more likely than evolved forms, and legendaries are rare.
+  - A newcomer joins about 85% of your party's level. A second of the same species makes the first one stronger instead.
+- **The Pokédex** is on the right of the page. Species you haven't seen are dim silhouettes, species you've seen are brighter, and caught ones are in color. Click one for details. From there you can add it to the party, remove it, or make it the leader.
+- **Banners:** the "finished" banner shows who joined (**NEW** for a first). Legendary and mythical Pokémon take over the banner, and evolutions and boss clears get their own. **Settings → Adventure** has progress and a reset.
+- **Data:** Pokémon data comes from one [PokéAPI](https://pokeapi.co) GraphQL request, and sprites come from the PokéAPI sprite repository (Gen VII box icons, Black/White animated sprites).
+  - Both are downloaded at runtime and cached in `~/Library/Application Support/dancove/pokemon/`. **No Pokémon assets are in this repository or the app.**
+  - The save file is `adventure.json` (`adventure-debug.json` in Debug builds).
 
-`scripts/fish-preview.swift` renders every sprite into a contact sheet for pixel-art review (see the header of the file).
+`scripts/adventure-sim.swift` plays the rules for hundreds of simulated hours, to tune the pacing (see `docs/pokemon-handoff.md`).
+
+> Unofficial, non-commercial fan feature. It is not affiliated with, endorsed, sponsored or approved by Nintendo, Game Freak, Creatures Inc. or The Pokémon Company. Pokémon and all related names, characters and images are their trademarks and copyrights.
 
 ## Logos
 
@@ -82,7 +92,7 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
 
 ## Claude Code and Codex integration
 
-**No setup needed.** dancove follows the session files agents write as they work. `~/.claude/projects` covers the Claude desktop app, the CLI and IDE extensions, and `~/.codex/sessions` covers the Codex app and CLI. From these it shows the working indicator (with the right mark for each agent), finished and failed banners, and fishing. Toggle them in **Settings → Claude Code → Detection**.
+**No setup needed.** dancove follows the session files agents write as they work. `~/.claude/projects` covers the Claude desktop app, the CLI and IDE extensions, and `~/.codex/sessions` covers the Codex app and CLI. From these it shows the working indicator (with the right mark for each agent), finished and failed banners, and the adventure. Toggle them in **Settings → Claude Code → Detection**.
 
 **Hooks** add the ability to answer Claude's permission requests from the notch, plus more precise states. When a session reports through hooks, its file is ignored.
 
@@ -124,7 +134,7 @@ dancove/
     Media/        NowPlayingService, AudioOutputDevices, AudioRouteMonitor + BluetoothDeviceInfo (device card)
     HUD/          MediaKeyInterceptor (CGEventTap), SystemVolume (CoreAudio), DisplayBrightness
     Battery/ Calendar/
-  Fishing/        PixelSprite (text-defined sprites, auto shading + outline), FishCatalog, FishingService, views
+  Adventure/      PokeDex (PokéAPI data + type chart), PokeSprites (sprite cache, GIF frames), BattleEngine (pure rules), AdventureService
   Settings/       Sidebar settings window
 MediaRemoteAdapter/
   DancoveMediaRemote.m, dancove-mediaremote.pl
@@ -148,14 +158,14 @@ xcodebuild -project dancove.xcodeproj -scheme dancove -configuration Release -de
 
 Debug builds listen for `com.geonhwiii.dancove.debug` distributed notifications, which drive the notch from scripts. The actions are:
 
-- **Notch:** `open media|calendar|todos|clipboard|claude|fishing`, `close`, `hover on|off`.
+- **Notch:** `open media|calendar|todos|clipboard|claude|adventure`, `close`, `hover on|off`.
 - **HUDs and activities:** `volume 0.5`, `brightness 0.5`, `charging`, `airpods` (connection card), `peek`, `banner`.
 - **Media:** `media`, `toggle`, `next`.
 - **Claude:** `allow`, `deny`.
 - **To-dos:** `todo add <text>`, `todo type <text>`, `todo toggle`, `todo clear`, `keytest` (checks that key focus is lent and returned).
 - **Clipboard:** `clip seed` (sample history), `clip clear`.
 - **Windows:** `rebuild` (recreates the notch windows).
-- **Fishing:** `fish [rarity|species]` (lands a fish into the debug collection), `cast`, `nibble`, `reel`, `select <species>`.
-- **Settings:** `settings claude|fishing|…`.
+- **Adventure:** `poke starter <id>`, `poke catch [id]` (with a finished banner), `poke xp <n>`, `poke stage <world> <n>`, `poke tick <n>` (battle actions without an agent), `poke reset`, `select <dex number>`.
+- **Settings:** `settings claude|adventure|…`.
 
-The fishing scene's time of day can be pinned with `defaults write com.geonhwiii.dancove debugSceneHour -int 12`. `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.
+`defaults write com.geonhwiii.dancove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.

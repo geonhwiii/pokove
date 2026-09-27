@@ -58,12 +58,12 @@ final class Preferences {
     var watchClaudeSessions: Bool { didSet { store(watchClaudeSessions, .watchClaudeSessions) } }
     var watchCodexSessions: Bool { didSet { store(watchCodexSessions, .watchCodexSessions) } }
 
-    // MARK: Fishing
+    // MARK: Adventure
 
-    var fishingEnabled: Bool { didSet { store(fishingEnabled, .fishingEnabled) } }
-    /// Shows what Claude's turn reeled in on the "finished" banner.
-    var fishingAnnounceCatches: Bool { didSet { store(fishingAnnounceCatches, .fishingAnnounceCatches) } }
-    var fishingSound: Bool { didSet { store(fishingSound, .fishingSound) } }
+    var adventureEnabled: Bool { didSet { store(adventureEnabled, .adventureEnabled) } }
+    /// Banners for catches, evolutions and boss clears.
+    var adventureAnnounceCatches: Bool { didSet { store(adventureAnnounceCatches, .adventureAnnounceCatches) } }
+    var adventureSound: Bool { didSet { store(adventureSound, .adventureSound) } }
 
     // MARK: Language
 
@@ -128,9 +128,9 @@ final class Preferences {
         watchClaudeSessions = defaults.bool(forKey: Key.watchClaudeSessions.rawValue)
         watchCodexSessions = defaults.bool(forKey: Key.watchCodexSessions.rawValue)
 
-        fishingEnabled = defaults.bool(forKey: Key.fishingEnabled.rawValue)
-        fishingAnnounceCatches = defaults.bool(forKey: Key.fishingAnnounceCatches.rawValue)
-        fishingSound = defaults.bool(forKey: Key.fishingSound.rawValue)
+        adventureEnabled = defaults.bool(forKey: Key.adventureEnabled.rawValue)
+        adventureAnnounceCatches = defaults.bool(forKey: Key.adventureAnnounceCatches.rawValue)
+        adventureSound = defaults.bool(forKey: Key.adventureSound.rawValue)
         let language = defaults.string(forKey: Key.appLanguage.rawValue) ?? "system"
         launchLanguage = language
         appLanguage = language
@@ -151,7 +151,7 @@ final class Preferences {
         case claudeNotifyOnDone, claudeNotifyOnAttention, claudeNotifyOnError
         case claudeApproveFromNotch, claudeApprovalTimeout, claudePlaySound, claudeQuietWhenFocused
         case watchClaudeSessions, watchCodexSessions
-        case fishingEnabled, fishingAnnounceCatches, fishingSound
+        case adventureEnabled, adventureAnnounceCatches, adventureSound
         case appLanguage
     }
 
@@ -190,9 +190,9 @@ final class Preferences {
         Key.claudeQuietWhenFocused.rawValue: false,
         Key.watchClaudeSessions.rawValue: true,
         Key.watchCodexSessions.rawValue: true,
-        Key.fishingEnabled.rawValue: true,
-        Key.fishingAnnounceCatches.rawValue: true,
-        Key.fishingSound.rawValue: true,
+        Key.adventureEnabled.rawValue: true,
+        Key.adventureAnnounceCatches.rawValue: true,
+        Key.adventureSound.rawValue: true,
         Key.appLanguage.rawValue: "system",
     ]
 }

@@ -48,8 +48,8 @@ enum NotchPresentation: Equatable {
 /// Sizing rules for the notch. All sizes exclude the concave top "ears".
 struct NotchLayout {
     let geometry: NotchGeometry
-    /// Claude's working activity makes room for the fishing bobber.
-    var showsBobber = false
+    /// Claude's working activity makes room for the adventure's partner Pokémon.
+    var showsPartner = false
     /// Page tabs in the open header, which must all fit left of the camera housing.
     var pageCount = NotchPage.allCases.count
 
@@ -60,7 +60,7 @@ struct NotchLayout {
         switch activity {
         case .charging: 88
         case .mediaAndClaude: notch.height + 28
-        case .claudeWorking where showsBobber: notch.height + 32
+        case .claudeWorking where showsPartner: notch.height + 34
         default: notch.height + 10
         }
     }

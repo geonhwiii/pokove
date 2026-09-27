@@ -13,8 +13,8 @@ struct BannerView: View {
                 .frame(height: layout.notch.height)
             if let permission = app.claude.permission(id: banner.permissionID) {
                 PermissionBannerBody(banner: banner, request: permission)
-            } else if banner.celebratesCatch, let fish = banner.fishCatch, let species = fish.species {
-                CatchCelebrationBody(banner: banner, fish: fish, species: species)
+            } else if banner.celebratesCatch, let encounter = banner.encounter, let species = app.adventure.dex.species(encounter.speciesID) {
+                CatchCelebrationBody(banner: banner, encounter: encounter, species: species)
             } else {
                 standardBody
             }
@@ -49,7 +49,7 @@ struct BannerView: View {
 
     private var standardBody: some View {
         HStack(spacing: 12) {
-            BannerIcon(style: banner.style, agent: banner.agent, size: 34, filled: true)
+            BannerIcon(style: banner.style, agent: banner.agent, size: 34, filled: true, pokemonID: banner.pokemonID)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(banner.title)
@@ -72,8 +72,8 @@ struct BannerView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if let fish = banner.fishCatch, let species = fish.species {
-                CatchChip(fish: fish, species: species)
+            if let encounter = banner.encounter, encounter.caught, let species = app.adventure.dex.species(encounter.speciesID) {
+                CatchChip(encounter: encounter, species: species)
             } else if banner.sessionID != nil {
                 Image(systemName: "arrow.up.forward.app")
                     .font(.system(size: 13, weight: .semibold))
@@ -88,42 +88,43 @@ struct BannerView: View {
 
 // MARK: Catches
 
-/// What the turn reeled in, beside the "finished" message.
+/// Who joined at the end of the turn, beside the "finished" message.
 private struct CatchChip: View {
-    let fish: FishCatch
-    let species: FishSpecies
+    let encounter: PokeEncounter
+    let species: PokeSpecies
 
     @State private var landed = false
 
     var body: some View {
+        let tint = species.types.first?.color ?? .white
         VStack(spacing: 3) {
             ZStack(alignment: .topTrailing) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(species.rarity.color.opacity(0.14))
+                        .fill(tint.opacity(0.16))
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(species.rarity.color.opacity(0.45), lineWidth: 1)
-                    FishSpriteView(species: species, pixelSize: 1.5)
-                        .offset(y: landed ? 0 : 10)
+                        .strokeBorder(tint.opacity(0.45), lineWidth: 1)
+                    PokeIconView(id: species.id)
+                        .offset(y: landed ? -2 : 10)
                         .opacity(landed ? 1 : 0)
                 }
-                .frame(width: 52, height: 34)
-                if fish.isNew {
+                .frame(width: 52, height: 36)
+                if encounter.isNew {
                     NewBadge().offset(x: 6, y: -5)
                 }
             }
             Text(species.name)
                 .font(.system(size: 9.5, weight: .bold))
-                .foregroundStyle(species.rarity.color)
+                .foregroundStyle(tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
                 .frame(maxWidth: 70)
         }
         .onAppear {
-            // The fish splashes up into the chip just after the banner lands.
+            // The newcomer hops into the chip just after the banner lands.
             withAnimation(.spring(response: 0.42, dampingFraction: 0.55).delay(0.35)) { landed = true }
         }
-        .help("\(species.rarity.title) · \(FishCatch.format(size: fish.size))")
+        .help("\(species.number) \(species.name) · Lv \(encounter.level)")
     }
 }
 
@@ -139,50 +140,42 @@ private struct NewBadge: View {
     }
 }
 
-/// Legendary and Mythic catches take over the banner.
+/// A legendary or mythical Pokémon takes over the banner.
 private struct CatchCelebrationBody: View {
     let banner: NotchBanner
-    let fish: FishCatch
-    let species: FishSpecies
+    let encounter: PokeEncounter
+    let species: PokeSpecies
 
-    @State private var leap = false
+    @State private var appeared = false
 
     var body: some View {
+        let tint = species.types.first?.color ?? .white
         HStack(spacing: 16) {
             ZStack {
-                RarityAura(rarity: species.rarity, intensity: 1.2)
-                PixelSparkles(color: species.rarity.color, count: 12, prismatic: species.rarity == .mythic)
-                FishSpriteView(species: species, pixelSize: 3)
-                    .offset(y: leap ? 0 : 36)
-                    .rotationEffect(.degrees(leap ? 0 : -18))
-                    .scaleEffect(leap ? 1 : 0.6)
-                    .opacity(leap ? 1 : 0)
+                RadialGradient(colors: [tint.opacity(0.55), tint.opacity(0.15), .clear], center: .center, startRadius: 2, endRadius: 46)
+                PixelSparkles(color: tint, count: 12, prismatic: species.isMythical)
+                PokeSpriteView(id: species.id, pixelSize: 1)
+                    .scaleEffect(appeared ? 1 : 0.4)
+                    .opacity(appeared ? 1 : 0)
             }
             .frame(width: 110, height: 92)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    RarityLabel(rarity: species.rarity, size: 11)
-                    Text("CATCH")
+                    Text(species.isMythical ? "Mythical" : "Legendary")
                         .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(.white.opacity(0.5))
-                    if fish.isNew { NewBadge() }
+                        .foregroundStyle(tint)
+                    if encounter.isNew { NewBadge() }
                 }
                 Text(species.name)
                     .font(.system(size: 19, weight: .bold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                HStack(spacing: 6) {
-                    Text(FishCatch.format(size: fish.size))
+                HStack(spacing: 5) {
+                    Text("\(species.number) · Lv \(encounter.level)")
                         .monospacedDigit()
-                    if fish.isTrophy {
-                        Text("· Trophy")
-                            .foregroundStyle(Color(hex: 0xFFE14D))
-                    } else if fish.isRecord {
-                        Text("· New record")
-                            .foregroundStyle(Color(hex: 0x8FD0FF))
-                    }
+                    ForEach(species.types, id: \.self) { PokeTypeBadge(type: $0, compact: true) }
                 }
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.7))
@@ -197,7 +190,7 @@ private struct CatchCelebrationBody: View {
         .padding(.bottom, 10)
         .frame(maxHeight: .infinity)
         .onAppear {
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.5).delay(0.3)) { leap = true }
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.5).delay(0.3)) { appeared = true }
         }
     }
 }
@@ -291,7 +284,7 @@ extension NotchBanner.Style {
     func source(for agent: AgentKind) -> String {
         switch self {
         case .claudeFinished, .claudeNeedsPermission, .claudeNeedsInput, .claudeError: agent.product
-        case .fishCatch: String(localized: "Fishing")
+        case .adventure: String(localized: "Adventure")
         case .batteryLow: String(localized: "Battery")
         case .clipboard: String(localized: "Clipboard")
         case .info: "dancove"
@@ -304,6 +297,8 @@ struct BannerIcon: View {
     var agent: AgentKind = .claude
     var size: CGFloat
     var filled = false
+    /// Adventure banners show the Pokémon they're about.
+    var pokemonID: Int?
 
     var body: some View {
         Group {
@@ -316,8 +311,15 @@ struct BannerIcon: View {
                 badge(AgentMark(agent: agent, mode: .attention), accessory: "ellipsis", accessoryColor: .claudeAttention)
             case .claudeError:
                 badge(AgentMark(agent: agent, color: .red.opacity(0.9)), accessory: "exclamationmark", accessoryColor: .red)
-            case .fishCatch:
-                symbol("fish.fill", color: Color(hex: 0x8FD0FF))
+            case .adventure:
+                if let pokemonID, size >= 24 {
+                    ZStack {
+                        Circle().fill(Color.adventure.opacity(0.16))
+                        PokeIconView(id: pokemonID)
+                    }
+                } else {
+                    symbol("pawprint.fill", color: .adventure)
+                }
             case .batteryLow:
                 symbol("battery.25percent", color: .red)
             case .clipboard:

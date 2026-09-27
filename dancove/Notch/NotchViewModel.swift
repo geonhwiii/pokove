@@ -9,7 +9,7 @@ enum NotchPage: String, CaseIterable, Identifiable {
     case todos
     case clipboard
     case claude
-    case fishing
+    case adventure
 
     var id: String { rawValue }
 
@@ -20,7 +20,7 @@ enum NotchPage: String, CaseIterable, Identifiable {
         case .todos: "checklist"
         case .clipboard: "list.clipboard"
         case .claude: "sparkle"
-        case .fishing: "fish.fill"
+        case .adventure: "pawprint.fill"
         }
     }
 
@@ -31,7 +31,7 @@ enum NotchPage: String, CaseIterable, Identifiable {
         case .todos: String(localized: "To-dos")
         case .clipboard: String(localized: "Clipboard")
         case .claude: String(localized: "Claude")
-        case .fishing: String(localized: "Fishing")
+        case .adventure: String(localized: "Adventure")
         }
     }
 
@@ -71,7 +71,7 @@ final class NotchViewModel {
     var layout: NotchLayout {
         NotchLayout(
             geometry: geometry,
-            showsBobber: app.preferences.fishingEnabled && app.fishing.isFishing,
+            showsPartner: app.adventure.isEnabled && app.adventure.leader != nil,
             pageCount: availablePages.count
         )
     }
@@ -124,7 +124,7 @@ final class NotchViewModel {
         if app.preferences.todosEnabled { pages.append(.todos) }
         if app.preferences.clipboardEnabled { pages.append(.clipboard) }
         if app.preferences.claudeEnabled { pages.append(.claude) }
-        if app.preferences.claudeEnabled && app.preferences.fishingEnabled { pages.append(.fishing) }
+        if app.preferences.adventureEnabled { pages.append(.adventure) }
         return pages
     }
 

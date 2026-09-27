@@ -76,8 +76,8 @@ struct NotchRootView: View {
         case .banner:
             guard let banner = app.activity.banner else { return }
             if banner.permissionID != nil { return }
-            if banner.style == .fishCatch {
-                viewModel.open(page: .fishing)
+            if banner.style == .adventure {
+                viewModel.open(page: .adventure)
             } else if let sessionID = banner.sessionID {
                 app.claude.focus(sessionID: sessionID)
                 app.activity.dismissBanner(id: banner.id)

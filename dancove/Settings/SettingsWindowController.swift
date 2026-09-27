@@ -48,7 +48,7 @@ final class SettingsSelection {
 enum SettingsPane: String, CaseIterable, Identifiable {
     case general
     case claude
-    case fishing
+    case adventure
     case nowPlaying
     case calendar
     case clipboard
@@ -62,7 +62,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .general: String(localized: "General")
         case .claude: "Claude Code"
-        case .fishing: String(localized: "Fishing")
+        case .adventure: String(localized: "Adventure")
         case .nowPlaying: String(localized: "Now Playing")
         case .calendar: String(localized: "Calendar & To-dos")
         case .clipboard: String(localized: "Clipboard")
@@ -76,7 +76,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .general: "gearshape.fill"
         case .claude: "sparkle"
-        case .fishing: "fish.fill"
+        case .adventure: "pawprint.fill"
         case .nowPlaying: "play.circle.fill"
         case .calendar: "calendar"
         case .clipboard: "list.clipboard.fill"
@@ -90,7 +90,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         switch self {
         case .general: .gray
         case .claude: .claude
-        case .fishing: .cyan
+        case .adventure: .orange
         case .nowPlaying: .pink
         case .calendar: .red
         case .clipboard: .teal
@@ -102,7 +102,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
 
     static let sections: [(title: String?, panes: [SettingsPane])] = [
         (nil, [.general]),
-        (String(localized: "Live Activities"), [.claude, .fishing, .nowPlaying, .calendar, .clipboard]),
+        (String(localized: "Live Activities"), [.claude, .adventure, .nowPlaying, .calendar, .clipboard]),
         (String(localized: "Notifications"), [.sound, .battery]),
         ("dancove", [.about]),
     ]

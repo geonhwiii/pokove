@@ -10,7 +10,7 @@ final class AppModel {
     let hud: HUDController
     let battery: BatteryMonitor
     let claude: ClaudeSessionStore
-    let fishing: FishingService
+    let adventure: AdventureService
     let calendar: CalendarService
     let todos = TodoStore()
     let clipboard: ClipboardStore
@@ -24,9 +24,11 @@ final class AppModel {
         nowPlaying = NowPlayingService()
         hud = HUDController(activity: activity, preferences: preferences)
         battery = BatteryMonitor(activity: activity, preferences: preferences)
-        let fishing = FishingService(preferences: preferences)
-        self.fishing = fishing
-        claude = ClaudeSessionStore(activity: activity, preferences: preferences, fishing: fishing)
+        let adventure = AdventureService(preferences: preferences, activity: activity)
+        self.adventure = adventure
+        let claude = ClaudeSessionStore(activity: activity, preferences: preferences, adventure: adventure)
+        self.claude = claude
+        adventure.isAgentWorking = { [weak claude] in claude?.isAnyWorking ?? false }
         calendar = CalendarService(preferences: preferences)
         audioRoutes = AudioRouteMonitor(activity: activity, preferences: preferences)
         clipboard = ClipboardStore(activity: activity, preferences: preferences)
@@ -46,10 +48,12 @@ final class AppModel {
         audioRoutes.start()
         fullscreen.start()
         clipboard.start()
+        adventure.start()
     }
 
     func stop() {
         nowPlaying.stop()
         claude.stop()
+        adventure.stop()
     }
 }
