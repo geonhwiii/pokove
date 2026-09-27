@@ -269,6 +269,34 @@ nonisolated struct GachaCard: Codable, Identifiable, Equatable, Sendable {
     let species: Int
     let level: Int
     let rarity: Rarity
+    /// Rolled when the balls are dealt, shown only once one is opened.
+    var shiny = false
+
+    init(id: UUID, species: Int, level: Int, rarity: Rarity, shiny: Bool = false) {
+        self.id = id
+        self.species = species
+        self.level = level
+        self.rarity = rarity
+        self.shiny = shiny
+    }
+
+    /// Tolerant, so balls dealt before shinies existed still read.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        species = try container.decode(Int.self, forKey: .species)
+        level = try container.decode(Int.self, forKey: .level)
+        rarity = try container.decode(Rarity.self, forKey: .rarity)
+        shiny = try container.decodeIfPresent(Bool.self, forKey: .shiny) ?? false
+    }
+}
+
+/// Shiny Pokémon: a rare recoloring, rolled for each discovery and each gacha ball.
+nonisolated enum Shiny {
+    /// One in this many; with about 17 rolls a day, roughly one a week.
+    static let odds = 128
+
+    static func roll(_ rng: inout SeededRNG) -> Bool { rng.unit() < 1 / Double(odds) }
 }
 
 /// Three face-up cards; the user keeps one. Nothing can go wrong.

@@ -281,7 +281,7 @@ private struct RecapToast: View {
 
     private var summary: String {
         GuideText.summary(badges: recap.badges.count, evolved: recap.evolutions.count, joined: recap.discovered.count,
-                          losses: recap.losses.values.reduce(0, +), dungeons: recap.dungeon.count)
+                          losses: recap.losses.values.reduce(0, +), dungeons: recap.dungeon.count, shinies: recap.shinies.count)
     }
 }
 
@@ -408,6 +408,8 @@ private struct RecapIcon: View {
     var body: some View {
         switch icon {
         case .pokemon(let id): PokeIconView(id: id, pixelSize: 0.5)
+        case .shiny(let id):
+            PokeIconView(id: id, pixelSize: 0.5).overlay(alignment: .topTrailing) { ShinyMark(size: 6).offset(x: 2, y: -1) }
         case .team(let ids):
             ZStack {
                 ForEach(Array(ids.prefix(3).enumerated()), id: \.offset) { index, id in
@@ -426,6 +428,8 @@ private struct RecapIcon: View {
 struct RecapLine: Identifiable {
     enum Icon {
         case pokemon(Int)
+        /// A shiny: the icon with its ✦.
+        case shiny(Int)
         /// A few Pokémon, overlapping.
         case team([Int])
         case badge(Int)
@@ -451,6 +455,9 @@ struct RecapLine: Identifiable {
         let trainers = adventure.chapters.flatMap(\.bosses)
         var lines: [RecapLine] = []
 
+        for (i, species) in recap.shinies.enumerated() {
+            lines.append(.init(id: "shiny\(i)", icon: .shiny(species), text: RecapText.shiny(name(species)), isNotable: true))
+        }
         for badge in recap.badges {
             let trainer = trainers.first { $0.badge == badge }?.name ?? ""
             lines.append(.init(id: "badge\(badge)", icon: .badge(badge),
@@ -682,6 +689,7 @@ private struct PartySlot: View {
         Button(action: action) {
             HStack(spacing: 2) {
                 PokeIconView(id: member.speciesID, pixelSize: 1)
+                    .overlay(alignment: .topTrailing) { if member.shiny { ShinyMark(size: 7).offset(x: -3, y: 1) } }
                     .padding(.leading, -3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Lv \(member.level)")
@@ -743,6 +751,15 @@ private struct DexGrid: View {
                     .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
                     .contentTransition(.numericText())
+                if adventure.shinyCount > 0 {
+                    HStack(spacing: 1) {
+                        ShinyMark(size: 7)
+                        Text("\(adventure.shinyCount)")
+                            .font(.system(size: 9.5, weight: .bold).monospacedDigit())
+                            .foregroundStyle(Color(hex: 0xFFE14D))
+                    }
+                    .help(RecapText.shinyLabel)
+                }
                 Button {
                     withAnimation(.smooth(duration: 0.2)) { ownedOnly.toggle() }
                 } label: {
@@ -819,6 +836,9 @@ private struct DexCell: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(isSelected ? .white.opacity(0.7) : (caught ? tint.opacity(0.35) : .clear), lineWidth: isSelected ? 1.5 : 1)
                 PokeIconView(id: id, pixelSize: 1, silhouette: !caught, silhouetteOpacity: seen ? 0.34 : 0.12)
+                if adventure.owned(species: id)?.shiny == true {
+                    ShinyMark(size: 7).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing).padding(3)
+                }
                 if !caught && !seen {
                     Text("?")
                         .font(.system(size: 11, weight: .heavy, design: .rounded))
@@ -882,7 +902,7 @@ private struct PokeDetailCard: View {
             }
             HStack(alignment: .top, spacing: 9) {
                 VStack(spacing: 4) {
-                    PokeSpriteView(id: species.id, pixelSize: 1, silhouette: !caught, fitHeight: 56)
+                    PokeSpriteView(id: species.id, pixelSize: 1, silhouette: !caught, shiny: owned?.shiny == true, fitHeight: 56)
                         .frame(width: 64, height: 58, alignment: .bottom)
                         .opacity(seen ? 1 : 0.5)
                     if seen { EvolutionBox(species: species) }
@@ -900,6 +920,7 @@ private struct PokeDetailCard: View {
                             .foregroundStyle(.white)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
+                        if owned?.shiny == true { ShinyMark(size: 9) }
                     }
                     .padding(.trailing, owned == nil ? 20 : 62)
                     if seen {

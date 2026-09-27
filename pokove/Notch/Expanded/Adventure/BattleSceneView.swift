@@ -19,6 +19,8 @@ struct BattleSceneView: View {
     @State private var pendingIntro: StagePlan?
     @State private var result: ChallengeResult?
     @State private var cardSerial = 0
+    @State private var sparkling = false
+    @State private var sparkleSerial = 0
 
     var body: some View {
         let adventure = app.adventure
@@ -40,12 +42,21 @@ struct BattleSceneView: View {
                     figure(ally, back: true, layout: layout)
                 }
             } else if let leader = adventure.leader {
-                PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, fitHeight: SceneLayout.allyFit)
+                PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, shiny: leader.shiny, fitHeight: SceneLayout.allyFit)
                     .frame(width: 110, height: SceneLayout.allyFit, alignment: .bottom)
                     .position(x: layout.allyFeet.x, y: layout.allyFeet.y - SceneLayout.allyFit / 2)
             }
 
             MoveEffectsLayer(effects: effects)
+
+            // A shiny partner sparkles as it comes out.
+            if sparkling {
+                PixelSparkles(color: Color(hex: 0xFFE14D), count: 12, prismatic: true)
+                    .frame(width: 90, height: 70)
+                    .position(x: layout.allyFeet.x, y: layout.allyFeet.y - SceneLayout.allyFit / 2)
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+            }
 
             ForEach(popups) { popup in
                 ScenePopupView(popup: popup).position(popup.point)
@@ -135,7 +146,7 @@ struct BattleSceneView: View {
         let fit = back ? SceneLayout.allyFit : SceneLayout.foeFit
         let toward: CGFloat = back ? 1 : -1
         let lunge: CGFloat = lunging == combatant.id ? 9 * toward : 0
-        return PokeSpriteView(id: combatant.speciesID, pixelSize: 1, back: back, fitHeight: fit)
+        return PokeSpriteView(id: combatant.speciesID, pixelSize: 1, back: back, shiny: back && app.adventure.isShiny(combatant), fitHeight: fit)
             .opacity(struck == combatant.id ? 0.25 : 1)
             .saturation(combatant.isFainted ? 0 : 1)
             .frame(width: 120, height: fit, alignment: .bottom)
@@ -180,6 +191,7 @@ struct BattleSceneView: View {
             let name = name(of: battle.combatant(id))
             if side == .party {
                 say(BattleText.goPartner(name))
+                if let ally = battle.combatant(id), app.adventure.isShiny(ally) { sparkle() }
             } else if let trainer = battle.plan.trainer {
                 say(BattleText.sentOut(trainer, name))
             } else {
@@ -191,6 +203,16 @@ struct BattleSceneView: View {
             say(BattleText.victory)
         case .wiped:
             say(BattleText.defeat)
+        }
+    }
+
+    private func sparkle() {
+        sparkleSerial += 1
+        let serial = sparkleSerial
+        withAnimation(.easeOut(duration: 0.2)) { sparkling = true }
+        Task {
+            guard (try? await Task.sleep(for: .seconds(1.4))) != nil, sparkleSerial == serial else { return }
+            withAnimation(.easeIn(duration: 0.4)) { sparkling = false }
         }
     }
 

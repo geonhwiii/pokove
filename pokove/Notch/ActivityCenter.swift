@@ -89,7 +89,10 @@ struct NotchBanner: Identifiable, Equatable {
     }
 
     /// Legendary and mythical catches get a full celebration.
-    var celebratesCatch: Bool { encounter?.caught == true && encounter?.isSpecial == true }
+    /// The banner's Pokémon is shiny: a ✦ on its icon.
+    var shiny = false
+
+    var celebratesCatch: Bool { encounter?.caught == true && (encounter?.isSpecial == true || encounter?.shiny == true) }
 
     /// Tall banners carry inline actions or a celebration.
     var isTall: Bool { permissionID != nil || celebratesCatch }

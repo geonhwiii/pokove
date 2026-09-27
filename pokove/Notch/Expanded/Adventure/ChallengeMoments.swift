@@ -25,7 +25,7 @@ struct ChallengeIntroView: View {
                 .offset(x: arrived ? 0 : -60)
 
                 if let leader = adventure.leader {
-                    PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, fitHeight: 56)
+                    PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, shiny: leader.shiny, fitHeight: 56)
                         .frame(width: 84, height: 60, alignment: .bottom)
                         .position(x: 46, y: size.height - 34)
                         .offset(x: arrived ? 0 : -110)

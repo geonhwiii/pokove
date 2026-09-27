@@ -109,6 +109,10 @@ nonisolated enum RecapText {
         return korean ? "\(wins) (\(station)까지)" : "\(wins), up to \(station)"
     }
     static var stardust: String { korean ? "별의모래" : "Stardust" }
+    static var shinyLabel: String { korean ? "이로치" : "Shiny" }
+    static func shiny(_ name: String) -> String { korean ? "이로치 \(name.objectParticle) 만났어요" : "Found a shiny \(name)" }
+    static func shinyNow(_ name: String) -> String { korean ? "✦ \(name.subjectParticle) 이로치가 됐어요!" : "✦ \(name) is shiny now!" }
+    static func shinyJoined(_ name: String) -> String { korean ? "✦ 이로치 \(name) 합류!" : "✦ A shiny \(name) joined your team!" }
     /// How long the recap covers, in whole minutes.
     static func span(_ seconds: TimeInterval) -> String {
         let minutes = max(1, Int(seconds / 60))
@@ -179,8 +183,9 @@ nonisolated enum GuideText {
     static var justNow: String { korean ? "방금" : "Just now" }
     static var yesterday: String { korean ? "어제" : "Yesterday" }
     /// The toast's count of what happened: "배지 1 · 진화 2 · 새 동료 3".
-    static func summary(badges: Int, evolved: Int, joined: Int, losses: Int, dungeons: Int) -> String {
+    static func summary(badges: Int, evolved: Int, joined: Int, losses: Int, dungeons: Int, shinies: Int) -> String {
         var parts: [String] = []
+        if shinies > 0 { parts.append(korean ? "이로치 \(shinies)" : "\(shinies) shiny") }
         if badges > 0 { parts.append(korean ? "배지 \(badges)" : badges == 1 ? "1 badge" : "\(badges) badges") }
         if evolved > 0 { parts.append(korean ? "진화 \(evolved)" : "\(evolved) evolved") }
         if joined > 0 { parts.append(korean ? "새 동료 \(joined)" : "\(joined) joined") }

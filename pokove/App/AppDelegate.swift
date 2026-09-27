@@ -104,6 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                                   duration: encounter.isSpecial ? 9 : 7))
                 }
             case "xp": adventure.debugXP(arguments.first ?? 1000)
+            case "shiny": adventure.debugShiny()
             case "stardust": adventure.debugStardust(arguments.first ?? Gacha.price)
             case "ultra": adventure.debugUltraBall()
             case "ultraopen": adventure.openUltraBall()

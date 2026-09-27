@@ -11,6 +11,7 @@ nonisolated struct OwnedPokemon: Codable, Identifiable, Equatable, Sendable {
     var banked = 0
     let caughtAt: Date
     var origin: Origin
+    var shiny = false
 
     var level: Int { PokeMath.level(forXP: xp) }
     /// Progress from this level to the next, 0–1.
@@ -19,6 +20,20 @@ nonisolated struct OwnedPokemon: Codable, Identifiable, Equatable, Sendable {
         guard level < PokeMath.maxLevel else { return 1 }
         let floor = PokeMath.xp(forLevel: level), ceiling = PokeMath.xp(forLevel: level + 1)
         return Double(xp - floor) / Double(max(1, ceiling - floor))
+    }
+}
+
+nonisolated extension OwnedPokemon {
+    /// Tolerant, so Pokémon saved before shinies existed still read.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        speciesID = try container.decode(Int.self, forKey: .speciesID)
+        xp = try container.decode(Int.self, forKey: .xp)
+        banked = try container.decodeIfPresent(Int.self, forKey: .banked) ?? 0
+        caughtAt = try container.decode(Date.self, forKey: .caughtAt)
+        origin = try container.decode(Origin.self, forKey: .origin)
+        shiny = try container.decodeIfPresent(Bool.self, forKey: .shiny) ?? false
     }
 }
 
@@ -32,6 +47,7 @@ nonisolated struct PokeEncounter: Codable, Identifiable, Equatable, Sendable {
     let isNew: Bool
     let isSpecial: Bool
     let date: Date
+    var shiny = false
 }
 
 /// What happened since the adventure page was last looked at.
@@ -76,15 +92,17 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     var stuck: String?
     /// Dungeon tiers cleared.
     var dungeon: [DungeonTier] = []
+    /// Shinies met: newcomers, and ones you had that started to shine.
+    var shinies: [Int] = []
 
     var isEmpty: Bool {
         clears == 0 && growth.isEmpty && discovered.isEmpty && evolutions.isEmpty && badges.isEmpty && losses.isEmpty
-            && stuck == nil && dungeon.isEmpty
+            && stuck == nil && dungeon.isEmpty && shinies.isEmpty
     }
 
     /// Worth a line over the battle when the page opens; the rest waits in the history.
     var isNotable: Bool {
-        !badges.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty
+        !badges.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty || !shinies.isEmpty
     }
 
     init() {}
@@ -111,6 +129,7 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         losses = try container.decodeIfPresent([String: Int].self, forKey: .losses) ?? [:]
         stuck = try container.decodeIfPresent(String.self, forKey: .stuck)
         dungeon = try container.decodeIfPresent([DungeonTier].self, forKey: .dungeon) ?? []
+        shinies = try container.decodeIfPresent([Int].self, forKey: .shinies) ?? []
     }
 }
 
@@ -299,6 +318,12 @@ final class AdventureService {
     }
 
     func isInParty(_ id: UUID) -> Bool { partyIDs.contains(id) }
+
+    /// Shinies in the box.
+    var shinyCount: Int { owned.filter(\.shiny).count }
+
+    /// Whether the party member behind a combatant shines.
+    func isShiny(_ combatant: Combatant) -> Bool { combatant.ownedID.flatMap(pokemon)?.shiny == true }
 
     func moves(of member: OwnedPokemon) -> [PokeMove] {
         guard let data, let species = data.dex[member.speciesID] else { return [] }
@@ -542,9 +567,11 @@ final class AdventureService {
         var levels = SeededRNG(seed: rng.next())
         let partyLevel = partyLevel, cap = levelCap
         // The first pull always brings someone new.
-        offer = Gacha.draw(pool: pool, level: { id in
+        var cards = Gacha.draw(pool: pool, level: { id in
             data.dex[id].map { Discovery.level(of: $0, partyLevel: partyLevel, cap: cap, rng: &levels) } ?? 5
         }, isOwned: { self.owned(family: $0) != nil }, duplicateWeight: pulls == 1 ? 0 : 0.3, floor: floor, rng: &rng)
+        for index in cards.indices { cards[index].shiny = Shiny.roll(&rng) }
+        offer = cards
         saveNow()
     }
 
@@ -554,8 +581,9 @@ final class AdventureService {
         offer = nil
         if let existing = owned(family: card.species), let index = owned.firstIndex(where: { $0.id == existing.id }) {
             grant(Gacha.duplicateXP(level: existing.level), to: index)
+            if card.shiny { makeShiny(at: index, announce: false) }
         } else {
-            receive(species, level: card.level, origin: .gacha)
+            receive(species, level: card.level, origin: .gacha, shiny: card.shiny)
         }
         saveNow()
     }
@@ -761,7 +789,7 @@ final class AdventureService {
             if let spot = data.legend(id) { result = ChallengeResult(kind: .legend(species: spot.species), cleared: cleared, stardust: reward) }
             if cleared, let spot = data.legend(id), let species = dex.species(spot.species) {
                 let isNew = !caught.contains(spot.species)
-                receive(species, level: min(spot.level, levelCap), origin: .legend, announce: false)
+                receive(species, level: min(spot.level, levelCap), origin: .legend)
                 note { $0.discovered.append(spot.species) }
                 let encounter = PokeEncounter(id: UUID(), speciesID: spot.species, level: spot.level, caught: true, isNew: isNew,
                                               isSpecial: true, date: Date())
@@ -886,23 +914,29 @@ final class AdventureService {
         guard let speciesID = Discovery.roll(pool: pool, rng: &rng), let species = dex.species(speciesID) else { return }
         let level = Discovery.level(of: species, partyLevel: partyLevel, cap: levelCap, rng: &rng)
         seen.insert(speciesID)
+        let shiny = Shiny.roll(&rng)
         if let existing = owned(family: speciesID), let index = owned.firstIndex(where: { $0.id == existing.id }) {
             grant(Discovery.duplicateXP(level: level), to: index)
+            if shiny { makeShiny(at: index, announce: true) }
             return
         }
-        receive(species, level: level, origin: .wild)
-        note { $0.discovered.append(speciesID) }
+        receive(species, level: level, origin: .wild, shiny: shiny)
+        note { recap in
+            recap.discovered.append(speciesID)
+            if shiny { recap.shinies.append(speciesID) }
+        }
         let encounter = PokeEncounter(id: UUID(), speciesID: speciesID, level: level, caught: true, isNew: true,
-                                      isSpecial: species.isSpecial, date: Date())
+                                      isSpecial: species.isSpecial, date: Date(), shiny: shiny)
         if turns.isEmpty { announceDiscovery(encounter) } else { pendingDiscoveries.append(encounter) }
         saveNow()
     }
 
     /// A new Pokémon joins the box, and the party if there's room (at the back of the relay).
-    private func receive(_ species: PokeSpecies, level: Int, origin: OwnedPokemon.Origin, announce: Bool = true) {
+    private func receive(_ species: PokeSpecies, level: Int, origin: OwnedPokemon.Origin, shiny: Bool = false) {
         seen.insert(species.id)
         caught.insert(species.id)
-        let newcomer = OwnedPokemon(id: UUID(), speciesID: species.id, xp: PokeMath.xp(forLevel: level), caughtAt: Date(), origin: origin)
+        let newcomer = OwnedPokemon(id: UUID(), speciesID: species.id, xp: PokeMath.xp(forLevel: level), caughtAt: Date(), origin: origin,
+                                    shiny: shiny)
         owned.append(newcomer)
         guard partyIDs.count < Self.maxParty else { return }
         partyIDs.append(newcomer.id)
@@ -911,6 +945,18 @@ final class AdventureService {
             battle = state
         }
         refreshReadiness()
+    }
+
+    /// A shiny duplicate: the one you have starts to shine, at the level it's at.
+    private func makeShiny(at index: Int, announce: Bool) {
+        guard owned.indices.contains(index), !owned[index].shiny else { return }
+        owned[index].shiny = true
+        let species = owned[index].speciesID
+        note { $0.shinies.append(species) }
+        if announce, let name = dex.species(species)?.name {
+            self.announce(title: RecapText.shinyNow(name), detail: nil, pokemonID: species, shiny: true)
+        }
+        saveNow()
     }
 
     // MARK: Forecast
@@ -989,9 +1035,11 @@ final class AdventureService {
 
     private func announceDiscovery(_ encounter: PokeEncounter, title: String? = nil) {
         guard preferences.adventureAnnounceCatches, let species = dex.species(encounter.speciesID) else { return }
-        var banner = NotchBanner(style: .adventure, title: title ?? String(localized: "\(species.name) joined your team!"),
-                                 encounter: encounter, duration: encounter.isSpecial ? 8 : 5)
+        let fallback = encounter.shiny ? RecapText.shinyJoined(species.name) : String(localized: "\(species.name) joined your team!")
+        var banner = NotchBanner(style: .adventure, title: title ?? fallback, encounter: encounter,
+                                 duration: encounter.isSpecial || encounter.shiny ? 8 : 5)
         banner.pokemonID = species.id
+        banner.shiny = encounter.shiny
         activity.post(banner)
         if preferences.adventureSound { NSSound(named: encounter.isSpecial ? "Hero" : "Glass")?.play() }
     }
@@ -1011,10 +1059,11 @@ final class AdventureService {
         if preferences.adventureSound { NSSound(named: "Hero")?.play() }
     }
 
-    private func announce(title: String, detail: String?, pokemonID: Int?) {
+    private func announce(title: String, detail: String?, pokemonID: Int?, shiny: Bool = false) {
         guard preferences.adventureAnnounceCatches else { return }
-        var banner = NotchBanner(style: .adventure, title: title, detail: detail, duration: 5)
+        var banner = NotchBanner(style: .adventure, title: title, detail: detail, duration: shiny ? 8 : 5)
         banner.pokemonID = pokemonID
+        banner.shiny = shiny
         activity.post(banner)
         if preferences.adventureSound { NSSound(named: "Glass")?.play() }
     }
@@ -1063,6 +1112,12 @@ final class AdventureService {
     }
 
     func debugXP(_ amount: Int) { award(amount) }
+
+    /// Makes the party leader shine, as a shiny duplicate would.
+    func debugShiny() {
+        guard let leader, let index = owned.firstIndex(where: { $0.id == leader.id }) else { return }
+        makeShiny(at: index, announce: true)
+    }
 
     func debugBadgeBanner(_ badge: Int) { announceBadge(badge) }
 

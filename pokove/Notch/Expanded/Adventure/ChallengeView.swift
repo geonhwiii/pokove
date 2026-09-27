@@ -551,7 +551,7 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
                 .padding(.top, 2)
 
                 if let leader = adventure.leader {
-                    PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, fitHeight: 52)
+                    PokeSpriteView(id: leader.speciesID, pixelSize: 1, back: true, shiny: leader.shiny, fitHeight: 52)
                         .frame(width: 78, height: 56, alignment: .bottom)
                         .position(x: 42, y: size.height - bar - 30)
                 }

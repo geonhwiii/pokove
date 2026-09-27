@@ -50,7 +50,7 @@ struct BannerView: View {
     private var standardBody: some View {
         HStack(spacing: 12) {
             BannerIcon(style: banner.style, agent: banner.agent, size: 34, filled: true, pokemonID: banner.pokemonID,
-                       badgeNumber: banner.badge)
+                       badgeNumber: banner.badge, shiny: banner.shiny)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(banner.title)
@@ -154,8 +154,8 @@ private struct CatchCelebrationBody: View {
         HStack(spacing: 16) {
             ZStack {
                 RadialGradient(colors: [tint.opacity(0.55), tint.opacity(0.15), .clear], center: .center, startRadius: 2, endRadius: 46)
-                PixelSparkles(color: tint, count: 12, prismatic: species.isMythical)
-                PokeSpriteView(id: species.id, pixelSize: 1)
+                PixelSparkles(color: encounter.shiny ? Color(hex: 0xFFE14D) : tint, count: 12, prismatic: species.isMythical || encounter.shiny)
+                PokeSpriteView(id: species.id, pixelSize: 1, shiny: encounter.shiny)
                     .scaleEffect(appeared ? 1 : 0.4)
                     .opacity(appeared ? 1 : 0)
             }
@@ -163,9 +163,9 @@ private struct CatchCelebrationBody: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(species.isMythical ? "Mythical" : "Legendary")
+                    Text(encounter.shiny ? "✦ \(RecapText.shinyLabel)" : (species.isMythical ? String(localized: "Mythical") : String(localized: "Legendary")))
                         .font(.system(size: 11, weight: .heavy))
-                        .foregroundStyle(tint)
+                        .foregroundStyle(encounter.shiny ? Color(hex: 0xFFE14D) : tint)
                     if encounter.isNew { NewBadge() }
                 }
                 Text(species.name)
@@ -301,6 +301,7 @@ struct BannerIcon: View {
     /// Adventure banners show the Pokémon they're about, or a badge.
     var pokemonID: Int?
     var badgeNumber: Int?
+    var shiny = false
 
     var body: some View {
         Group {
@@ -324,6 +325,7 @@ struct BannerIcon: View {
                         Circle().fill(Color.adventure.opacity(0.16))
                         PokeIconView(id: pokemonID)
                     }
+                    .overlay(alignment: .topTrailing) { if shiny { ShinyMark(size: 10) } }
                 } else if filled {
                     PokeBallGlyph(size: size * 0.46)
                         .foregroundStyle(Color.adventure)

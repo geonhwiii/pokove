@@ -164,17 +164,21 @@ private struct GachaResultView: View {
                         .fill(RadialGradient(colors: [glow.opacity(0.55), glow.opacity(0.12), .clear], center: .center,
                                              startRadius: 2, endRadius: popped ? 56 : 8))
                         .frame(width: 112, height: 112)
-                    PixelSparkles(color: glow, count: result.card.rarity >= .rare ? 14 : 9, prismatic: result.card.rarity == .mythical)
+                    PixelSparkles(color: result.card.shiny ? Color(hex: 0xFFE14D) : glow, count: result.card.rarity >= .rare || result.card.shiny ? 14 : 9,
+                                  prismatic: result.card.rarity == .mythical || result.card.shiny)
                         .frame(width: 120, height: 84)
                         .opacity(popped ? 1 : 0)
-                    PokeSpriteView(id: result.card.species, pixelSize: 1, fitHeight: 64)
+                    PokeSpriteView(id: result.card.species, pixelSize: 1, shiny: result.card.shiny, fitHeight: 64)
                         .scaleEffect(popped ? 1 : 0.1, anchor: .bottom)
                         .offset(y: popped ? 0 : 20)
                 }
                 .frame(height: 84)
-                Text(species?.name ?? "")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white)
+                HStack(spacing: 3) {
+                    if result.card.shiny { ShinyMark(size: 9) }
+                    Text(result.card.shiny ? "\(RecapText.shinyLabel) \(species?.name ?? "")" : species?.name ?? "")
+                }
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(result.card.shiny ? Color(hex: 0xFFE14D) : .white)
                 if let xp = result.xp {
                     let name = result.existingSpecies.flatMap { dex.species($0)?.name } ?? ""
                     Text("\(name) EXP +\(xp)")

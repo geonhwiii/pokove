@@ -13,6 +13,11 @@ nonisolated enum PokeSpriteKind: String, Sendable {
     /// The party's side of a battle: seen from behind.
     case animatedBack
     case stillBack
+    /// Shiny battle sprites. Box icons have no shiny art; those get a `ShinyMark`.
+    case animatedShiny
+    case stillShiny
+    case animatedBackShiny
+    case stillBackShiny
 
     func url(for id: Int) -> URL {
         let path = switch self {
@@ -21,11 +26,30 @@ nonisolated enum PokeSpriteKind: String, Sendable {
         case .still: "versions/generation-v/black-white/\(id).png"
         case .animatedBack: "versions/generation-v/black-white/animated/back/\(id).gif"
         case .stillBack: "versions/generation-v/black-white/back/\(id).png"
+        case .animatedShiny: "versions/generation-v/black-white/animated/shiny/\(id).gif"
+        case .stillShiny: "versions/generation-v/black-white/shiny/\(id).png"
+        case .animatedBackShiny: "versions/generation-v/black-white/animated/back/shiny/\(id).gif"
+        case .stillBackShiny: "versions/generation-v/black-white/back/shiny/\(id).png"
         }
         return URL(string: "\(PokeAPI.spriteBase)/\(path)")!
     }
 
-    var fileExtension: String { self == .animated || self == .animatedBack ? "gif" : "png" }
+    var fileExtension: String {
+        switch self {
+        case .animated, .animatedBack, .animatedShiny, .animatedBackShiny: "gif"
+        default: "png"
+        }
+    }
+
+    /// The animated and still sprites for a side and coloring.
+    static func battle(back: Bool, shiny: Bool) -> (animated: PokeSpriteKind, still: PokeSpriteKind) {
+        switch (back, shiny) {
+        case (false, false): (.animated, .still)
+        case (true, false): (.animatedBack, .stillBack)
+        case (false, true): (.animatedShiny, .stillShiny)
+        case (true, true): (.animatedBackShiny, .stillBackShiny)
+        }
+    }
 }
 
 /// Decoded frames of a sprite, cropped to what's drawn.
@@ -206,6 +230,7 @@ struct PokeSpriteView: View {
     var flipped = false
     var silhouette = false
     var back = false
+    var shiny = false
     /// Big Pokémon shrink to fit this height, in quarter-point steps.
     var fitHeight: CGFloat?
 
@@ -233,14 +258,18 @@ struct PokeSpriteView: View {
                 Color.clear.frame(width: 40 * pixelSize * 2, height: 40 * pixelSize * 2)
             }
         }
-        .task(id: "\(id)-\(back)") {
-            let (animated, still): (PokeSpriteKind, PokeSpriteKind) = back ? (.animatedBack, .stillBack) : (.animated, .still)
-            image = PokeSpriteCache.shared.cached(animated, id) ?? PokeSpriteCache.shared.cached(still, id)
-            guard image == nil else { return }
-            if let loaded = await PokeSpriteCache.shared.image(animated, id) {
-                image = loaded
-            } else {
-                image = await PokeSpriteCache.shared.image(still, id)
+        .task(id: "\(id)-\(back)-\(shiny)") {
+            let cache = PokeSpriteCache.shared
+            // A shiny without art falls back to the usual colors.
+            let plain = PokeSpriteKind.battle(back: back, shiny: false)
+            let kinds = shiny ? [PokeSpriteKind.battle(back: back, shiny: true), plain] : [plain]
+            if let first = kinds.first, let known = cache.cached(first.animated, id) ?? cache.cached(first.still, id) {
+                image = known
+                return
+            }
+            for kind in kinds {
+                if let loaded = await cache.image(kind.animated, id) { image = loaded; return }
+                if let loaded = await cache.image(kind.still, id) { image = loaded; return }
             }
         }
     }
@@ -248,6 +277,19 @@ struct PokeSpriteView: View {
     static func scale(for image: PokeImage, pixelSize: CGFloat, fitHeight: CGFloat?) -> CGFloat {
         guard let fitHeight, image.size.height * pixelSize > fitHeight else { return pixelSize }
         return max(0.5, (fitHeight / image.size.height * 4).rounded(.down) / 4)
+    }
+}
+
+/// The ✦ on a shiny Pokémon's box icon, which has no shiny art of its own.
+struct ShinyMark: View {
+    var size: CGFloat = 8
+
+    var body: some View {
+        Image(systemName: "sparkle")
+            .font(.system(size: size, weight: .black))
+            .foregroundStyle(Color(hex: 0xFFE14D))
+            .shadow(color: .black.opacity(0.85), radius: 0, x: 0.6, y: 0.6)
+            .accessibilityLabel(Text(verbatim: RecapText.shinyLabel))
     }
 }
 
