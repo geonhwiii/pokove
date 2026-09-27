@@ -47,10 +47,23 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
 - **Update check** (`UpdateChecker`): GitHub's latest release at launch and daily; a dot on the gear and
   a button in Settings › About. `defaults write com.geonhwiii.pokove debugLatestVersion 9.9` fakes one in
   Debug. No banner, by the user's choice. First release: v1.0.
-- **Next up, agreed:** shiny Pokémon (1/128 per discovery and gacha ball; a shiny duplicate turns the
-  owned one shiny; ✦ on icons since box icons have no shiny art), status conditions (poison, burn,
-  paralysis, sleep from moves' secondary chances, both sides, then retune), after the Champion a
-  Battle Tower (endless floors, best record) and Pokédex milestone rewards.
+- **Shiny Pokémon** (`Shiny`): 1/128 per discovery and per gacha ball (rolled when dealt). A shiny
+  duplicate makes the owned one shiny at its level. Shiny BW battle sprites (`animated/shiny`,
+  `animated/back/shiny`); box icons have no shiny art, so they get a `ShinyMark` ✦. A shiny partner
+  sparkles when sent out; discoveries get the big celebration banner; the Pokédex counts them.
+- **Status conditions** (`Ailment`): poison, burn and paralysis, from damaging moves' secondary chances
+  (PokéAPI `movemeta.ailment_chance`, Gen 3 value from `movechanges.move_effect_chance` when it changed;
+  cached as `moves-v2.json`). Both sides. Poison and burn take 1/8 max HP at the end of a round, burn
+  halves physical damage, paralysis quarters speed and stops a move 25% of the time. Poison/Steel can't be
+  poisoned, Fire can't be burned. Plates show 독/화상/마비. **Sleep isn't in**: no damaging move in
+  Gens 1–3 puts the target to sleep, and the auto-battle only uses damaging moves. Sim: champion median
+  ~46 h (was ~53 h at HEAD before statuses, which matches the v3 table); dungeon Normal/Hard slightly
+  harder. No retune.
+- **EXP shown:** the card shows experience left to the next level ("869 남음", also on hover over party
+  slots), and a knockout at a station pops "EXP +N" over the party's plate. Challenge EXP only lands on a
+  win, so it isn't shown during the fight.
+- **Next up, agreed:** after the Champion a Battle Tower (endless floors, best record) and Pokédex
+  milestone rewards. Then the README goes Korean-first with screenshots, English in `README.en.md`.
 
 ## v3 direction (agreed with the user, 2026-09-27)
 

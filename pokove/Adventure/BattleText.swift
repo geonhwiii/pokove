@@ -43,6 +43,35 @@ nonisolated enum BattleText {
     static func hits(_ count: Int) -> String { korean ? "\(count)번 맞았다!" : "Hit \(count) times!" }
     static var victory: String { korean ? "승리!" : "Victory!" }
     static var defeat: String { korean ? "눈앞이 캄캄해졌다…" : "The party is out of usable Pokémon…" }
+
+    static func inflicted(_ name: String, _ ailment: Ailment) -> String {
+        switch ailment {
+        case .poison: korean ? "\(name.topicParticle) 독에 걸렸다!" : "\(name) was poisoned!"
+        case .burn: korean ? "\(name.topicParticle) 화상을 입었다!" : "\(name) was burned!"
+        case .paralysis: korean ? "\(name.topicParticle) 마비되어 기술이 나오기 어려워졌다!" : "\(name) is paralyzed! It may be unable to move!"
+        }
+    }
+
+    static func hurt(_ name: String, _ ailment: Ailment) -> String {
+        switch ailment {
+        case .poison: korean ? "\(name.topicParticle) 독의 데미지를 입고 있다!" : "\(name) is hurt by poison!"
+        case .burn: korean ? "\(name.topicParticle) 화상 데미지를 입고 있다!" : "\(name) is hurt by its burn!"
+        case .paralysis: ""
+        }
+    }
+
+    static func immobile(_ name: String) -> String {
+        korean ? "\(name.topicParticle) 몸이 저려서 움직일 수 없다!" : "\(name) is paralyzed! It can't move!"
+    }
+
+    /// The short tag on an HP plate.
+    static func tag(_ ailment: Ailment) -> String {
+        switch ailment {
+        case .poison: korean ? "독" : "PSN"
+        case .burn: korean ? "화상" : "BRN"
+        case .paralysis: korean ? "마비" : "PAR"
+        }
+    }
 }
 
 nonisolated extension String {
@@ -195,6 +224,10 @@ nonisolated enum GuideText {
         if losses > 0 { parts.append(korean ? "패배 \(losses)" : losses == 1 ? "1 loss" : "\(losses) losses") }
         return parts.joined(separator: " · ")
     }
+
+    static func xpLeft(_ amount: Int) -> String { korean ? "\(amount) 남음" : "\(amount) to go" }
+    static func xpLeftLong(_ amount: Int) -> String { korean ? "다음 레벨까지 EXP \(amount)" : "EXP \(amount) to the next level" }
+    static func xpGained(_ amount: Int) -> String { "EXP +\(amount)" }
 
     // The Pokédex.
     static var ownedOnly: String { korean ? "보유만" : "Owned" }

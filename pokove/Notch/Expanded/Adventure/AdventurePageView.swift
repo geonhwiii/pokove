@@ -728,7 +728,7 @@ private struct PartySlot: View {
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
-        .help(species.map { "\($0.name) · Lv \(member.level)" } ?? "")
+        .help(species.map { "\($0.name) · Lv \(member.level) · \(GuideText.xpLeftLong(PokeMath.xpToNext(level: member.level, xp: member.xp)))" } ?? "")
     }
 }
 
@@ -1070,9 +1070,17 @@ private struct OwnedSummary: View {
                     .foregroundStyle(.white)
                 ZStack(alignment: .leading) {
                     Capsule().fill(.white.opacity(0.14))
-                    Capsule().fill(Color(hex: 0x7FC8FF)).frame(width: 50 * (atCap ? 1 : member.levelProgress))
+                    Capsule().fill(Color(hex: 0x7FC8FF)).frame(width: 40 * (atCap ? 1 : member.levelProgress))
                 }
-                .frame(width: 50, height: 3)
+                .frame(width: 40, height: 3)
+                .help(GuideText.xpLeftLong(PokeMath.xpToNext(level: member.level, xp: member.xp)))
+                if !atCap {
+                    Text(GuideText.xpLeft(PokeMath.xpToNext(level: member.level, xp: member.xp)))
+                        .font(.system(size: 8.5, weight: .bold).monospacedDigit())
+                        .foregroundStyle(Color(hex: 0x7FC8FF))
+                        .lineLimit(1)
+                        .fixedSize()
+                }
                 Text(GuideText.cap(cap))
                     .font(.system(size: 8.5, weight: .bold).monospacedDigit())
                     .foregroundStyle(atCap ? Color(hex: 0xFFD35A) : .white.opacity(0.4))

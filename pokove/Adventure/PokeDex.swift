@@ -168,7 +168,8 @@ final class PokeDexStore {
     }
 
     private var cacheURL: URL { directory.appendingPathComponent("dex-v\(Self.cacheVersion).json") }
-    private var movesURL: URL { directory.appendingPathComponent("moves-v1.json") }
+    /// v2 added each move's status effect.
+    private var movesURL: URL { directory.appendingPathComponent("moves-v2.json") }
     private var encountersURL: URL { directory.appendingPathComponent("encounters-v1.json") }
 
     var isReady: Bool { state == .ready }

@@ -95,6 +95,15 @@ struct BattleSceneView: View {
         .animation(.linear(duration: 0.05).repeatCount(3, autoreverses: true), value: shake)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
         .onChange(of: adventure.eventSerial) { handle(adventure.lastEvent, layout: layout) }
+        // What a knockout at a station was worth, over the party's plate once the foe is gone.
+        .onChange(of: adventure.xpSerial) {
+            let plate = CGPoint(x: layout.size.width - 6 - AllyPlate.width / 2, y: layout.size.height - SceneTextBox.height - 34)
+            let xp = adventure.lastXP
+            Task {
+                guard (try? await Task.sleep(for: .seconds(0.8))) != nil else { return }
+                addPopup(ScenePopup(text: GuideText.xpGained(xp), style: .xp, point: plate))
+            }
+        }
         .onChange(of: battle?.foes.first?.id) {
             introduce(adventure.battle)
             if adventure.target?.isChallenge == true, let plan = adventure.battle?.plan { showIntro(plan) }
@@ -199,6 +208,26 @@ struct BattleSceneView: View {
             }
         case .action(let action):
             play(action, battle: battle, layout: layout)
+        case .status(let status):
+            let name = name(of: battle.combatant(status.targetID))
+            let at = status.onParty ? layout.allyCenter : layout.foeCenter
+            switch status.kind {
+            case .inflicted:
+                say(BattleText.inflicted(name, status.ailment))
+            case .immobile:
+                say(BattleText.immobile(name))
+                addPopup(ScenePopup(text: BattleText.tag(status.ailment), style: .note, point: CGPoint(x: at.x, y: at.y - 18)))
+            case .hurt(let amount):
+                say(BattleText.hurt(name, status.ailment))
+                struck = status.targetID
+                addPopup(ScenePopup(text: "\(amount)", style: status.onParty ? .taken : .dealt, point: CGPoint(x: at.x + 10, y: at.y - 10)))
+                Task {
+                    try? await Task.sleep(for: .seconds(0.14))
+                    struck = nil
+                    guard status.fainted, (try? await Task.sleep(for: .seconds(0.5))) != nil else { return }
+                    say(BattleText.fainted(name))
+                }
+            }
         case .cleared:
             say(BattleText.victory)
         case .wiped:
@@ -462,6 +491,7 @@ private struct FoePlate: View {
             HStack(spacing: 3) {
                 Text(app.adventure.dex.species(foe.speciesID)?.name ?? "")
                     .lineLimit(1)
+                if let status = foe.status { StatusTag(ailment: status) }
                 Spacer(minLength: 2)
                 Text("Lv\(foe.level)").monospacedDigit()
             }
@@ -491,6 +521,7 @@ private struct AllyPlate: View {
             HStack(spacing: 3) {
                 Text(app.adventure.dex.species(ally.speciesID)?.name ?? "")
                     .lineLimit(1)
+                if let status = ally.status { StatusTag(ailment: status) }
                 Spacer(minLength: 2)
                 Text("Lv\(ally.level)").monospacedDigit()
             }
@@ -516,6 +547,29 @@ private struct AllyPlate: View {
         .padding(.vertical, 3)
         .frame(width: Self.width)
         .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+}
+
+/// "독", "화상" or "마비" beside a name, in the colors the games use.
+private struct StatusTag: View {
+    let ailment: Ailment
+
+    var body: some View {
+        Text(BattleText.tag(ailment))
+            .font(.system(size: 7, weight: .black))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 3)
+            .frame(height: 10)
+            .background(color, in: RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+            .fixedSize()
+    }
+
+    private var color: Color {
+        switch ailment {
+        case .poison: Color(hex: 0xA040A0)
+        case .burn: Color(hex: 0xE0602C)
+        case .paralysis: Color(hex: 0xC8A818)
+        }
     }
 }
 
@@ -573,7 +627,7 @@ struct PokeBallDot: View {
 }
 
 struct ScenePopup: Identifiable, Equatable {
-    enum Style { case dealt, taken, healed, note }
+    enum Style { case dealt, taken, healed, note, xp }
     let id = UUID()
     let text: String
     let style: Style
@@ -587,7 +641,8 @@ private struct ScenePopupView: View {
 
     var body: some View {
         Text(popup.text)
-            .font(popup.style == .note ? .system(size: 8, weight: .heavy) : .system(size: popup.big ? 13 : 11, weight: .black, design: .rounded).monospacedDigit())
+            .font(popup.style == .note || popup.style == .xp ? .system(size: 8.5, weight: .heavy).monospacedDigit()
+                  : .system(size: popup.big ? 13 : 11, weight: .black, design: .rounded).monospacedDigit())
             .foregroundStyle(color)
             .shadow(color: .black.opacity(0.85), radius: 1, y: 1)
             .fixedSize()
@@ -602,6 +657,7 @@ private struct ScenePopupView: View {
         case .taken: Color(hex: 0xFF8A80)
         case .healed: Color(hex: 0x7CF0A0)
         case .note: Color(hex: 0xFFE14D)
+        case .xp: Color(hex: 0x7FC8FF)
         }
     }
 }

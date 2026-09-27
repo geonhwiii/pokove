@@ -180,6 +180,9 @@ final class AdventureService {
     /// The latest battle event, for the scene; `eventSerial` bumps on every one.
     private(set) var lastEvent: BattleEvent?
     private(set) var eventSerial = 0
+    /// Experience from the last knockout at a station, for the scene; `xpSerial` bumps on every one.
+    private(set) var lastXP = 0
+    private(set) var xpSerial = 0
     /// The last challenge's outcome, for the scene's result card; `resultSerial` bumps on every one.
     private(set) var lastResult: ChallengeResult?
     private(set) var resultSerial = 0
@@ -665,14 +668,26 @@ final class AdventureService {
         case .action(let action):
             // A foe goes down to a hit, or to its own recoil.
             let foeID = action.byParty ? (action.targetFainted ? action.targetID : nil) : (action.attackerFainted ? action.attackerID : nil)
-            if let foeID, let foe = battle?.combatant(foeID), let species = dex.species(foe.speciesID), let plan = battle?.plan {
-                let xp = PokeMath.defeatXP(baseExperience: species.baseExperience, level: foe.level, partyLevel: partyLevel, kind: plan.kind)
-                if target.isChallenge { challengeXP += xp } else { award(xp) }
-            }
+            if let foeID { defeated(foeID, in: target) }
+        case .status(let status):
+            // Or to poison or a burn.
+            if status.fainted, !status.onParty { defeated(status.targetID, in: target) }
         case .cleared:
             finish(cleared: true, data: data)
         case .wiped:
             finish(cleared: false, data: data)
+        }
+    }
+
+    private func defeated(_ foeID: UUID, in target: BattleTarget) {
+        guard let foe = battle?.combatant(foeID), let species = dex.species(foe.speciesID), let plan = battle?.plan else { return }
+        let xp = PokeMath.defeatXP(baseExperience: species.baseExperience, level: foe.level, partyLevel: partyLevel, kind: plan.kind)
+        if target.isChallenge {
+            challengeXP += xp
+        } else {
+            award(xp)
+            lastXP = xp
+            xpSerial &+= 1
         }
     }
 

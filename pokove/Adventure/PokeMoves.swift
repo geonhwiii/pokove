@@ -21,6 +21,31 @@ nonisolated extension PokeType {
     }
 }
 
+/// Status conditions a damaging move can leave behind. Sleep and freeze never come from the
+/// damaging moves Pokémon use here, so they aren't modeled.
+nonisolated enum Ailment: String, Codable, Sendable {
+    case poison, burn, paralysis
+
+    /// PokéAPI's move_meta_ailment ids.
+    init?(apiID: Int?) {
+        switch apiID {
+        case 1: self = .paralysis
+        case 4: self = .burn
+        case 5: self = .poison
+        default: return nil
+        }
+    }
+
+    /// Poison and Steel types can't be poisoned, Fire types can't be burned (Gen 3).
+    func affects(_ types: [PokeType]) -> Bool {
+        switch self {
+        case .poison: !types.contains(.poison) && !types.contains(.steel)
+        case .burn: !types.contains(.fire)
+        case .paralysis: true
+        }
+    }
+}
+
 nonisolated struct PokeMove: Codable, Identifiable, Equatable, Sendable {
     /// How a move decides its damage.
     enum Damage: Codable, Equatable, Sendable {
@@ -48,6 +73,9 @@ nonisolated struct PokeMove: Codable, Identifiable, Equatable, Sendable {
     let drain: Int
     /// 1 for moves with a high critical-hit ratio.
     let critStage: Int
+    /// A status the target may be left with, and the percent chance.
+    let ailment: Ailment?
+    let ailmentChance: Int
 
     var name: String { PokeLanguage.isKorean ? nameKo : nameEn }
     var isPhysical: Bool { type.isPhysical }
@@ -82,7 +110,7 @@ nonisolated struct PokeMove: Codable, Identifiable, Equatable, Sendable {
     /// What anyone uses when nothing else can do damage. Typeless here, so it always lands.
     static let struggle = PokeMove(id: 165, slug: "struggle", nameKo: "발버둥", nameEn: "Struggle", type: .normal,
                                    damage: .power(50), accuracy: nil, priority: 0, minHits: 1, maxHits: 1, drain: -25,
-                                   critStage: 0)
+                                   critStage: 0, ailment: nil, ailmentChance: 0)
 }
 
 /// Every move the 151 learn by leveling up in FireRed/LeafGreen, and when.
@@ -156,8 +184,8 @@ nonisolated extension PokeAPI {
         moves: pokemon_v2_move(where: {pokemon_v2_pokemonmoves: {\(learnFilter)}}, order_by: {id: asc}) { \
         id name power accuracy priority type_id c: move_damage_class_id \
         names: pokemon_v2_movenames(where: {language_id: {_in: [3, 9]}}) { language_id name } \
-        meta: pokemon_v2_movemeta { min_hits max_hits drain crit_rate } \
-        changes: pokemon_v2_movechanges(order_by: {version_group_id: asc}) { version_group_id power accuracy type_id } } }
+        meta: pokemon_v2_movemeta { min_hits max_hits drain crit_rate ailment_chance move_meta_ailment_id } \
+        changes: pokemon_v2_movechanges(order_by: {version_group_id: asc}) { version_group_id power accuracy type_id move_effect_chance } } }
         """
         let data = try await post(query)
         let decoded = try JSONDecoder().decode(MoveResponse.self, from: data)
@@ -190,8 +218,11 @@ nonisolated extension PokeAPI {
         var changes: [Change]
 
         struct Name: Decodable { var language_id: Int; var name: String }
-        struct Meta: Decodable { var min_hits: Int?; var max_hits: Int?; var drain: Int?; var crit_rate: Int? }
-        struct Change: Decodable { var version_group_id: Int; var power: Int?; var accuracy: Int?; var type_id: Int? }
+        struct Meta: Decodable {
+            var min_hits: Int?; var max_hits: Int?; var drain: Int?; var crit_rate: Int?
+            var ailment_chance: Int?; var move_meta_ailment_id: Int?
+        }
+        struct Change: Decodable { var version_group_id: Int; var power: Int?; var accuracy: Int?; var type_id: Int?; var move_effect_chance: Int? }
 
         /// Moves that make no sense in an auto-battle: the user faints, the target must be
         /// asleep, damage depends on things this game doesn't track, or it's a one-hit KO.
@@ -223,13 +254,16 @@ nonisolated extension PokeAPI {
                 damage = .power(power)
             }
             let meta = meta.first
+            let ailment = Ailment(apiID: meta?.move_meta_ailment_id)
+            let ailmentChance = later.first { $0.move_effect_chance != nil }?.move_effect_chance ?? meta?.ailment_chance ?? 0
             let ko = names.first { $0.language_id == 3 }?.name
             let en = names.first { $0.language_id == 9 }?.name
             return PokeMove(
                 id: id, slug: name, nameKo: ko ?? en ?? name, nameEn: en ?? name.capitalized, type: type, damage: damage,
                 accuracy: accuracy, priority: priority ?? 0,
                 minHits: max(1, meta?.min_hits ?? 1), maxHits: max(1, meta?.max_hits ?? meta?.min_hits ?? 1),
-                drain: meta?.drain ?? 0, critStage: meta?.crit_rate ?? 0
+                drain: meta?.drain ?? 0, critStage: meta?.crit_rate ?? 0,
+                ailment: ailment, ailmentChance: ailment == nil ? 0 : ailmentChance
             )
         }
     }

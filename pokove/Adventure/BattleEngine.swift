@@ -64,6 +64,11 @@ nonisolated enum PokeMath {
     /// The medium-fast curve: reaching level L takes L³ experience.
     static func xp(forLevel level: Int) -> Int { level * level * level }
 
+    /// Experience still needed for the next level; 0 at the top.
+    static func xpToNext(level: Int, xp: Int) -> Int {
+        level >= maxLevel ? 0 : max(0, self.xp(forLevel: level + 1) - xp)
+    }
+
     static func level(forXP xp: Int) -> Int {
         var level = max(1, Int(cbrt(Double(max(xp, 1)))))
         while level < maxLevel, xp >= self.xp(forLevel: level + 1) { level += 1 }
@@ -166,8 +171,12 @@ nonisolated struct Combatant: Identifiable, Equatable, Sendable {
     var hpScale: Double = 1
     /// The party member this is, for experience and evolution.
     var ownedID: UUID?
+    /// Poisoned, burned or paralyzed, until the battle ends.
+    var status: Ailment?
 
     var maxHP: Int { stats.hp }
+    /// Paralysis quarters speed.
+    var speed: Int { status == .paralysis ? max(1, stats.speed / 4) : stats.speed }
     var isFainted: Bool { hp <= 0 }
     var hpFraction: Double { maxHP > 0 ? Double(max(0, hp)) / Double(maxHP) : 0 }
 
@@ -272,12 +281,31 @@ nonisolated struct BattleAction: Equatable, Sendable {
     let recoil: Int
     let targetFainted: Bool
     let attackerFainted: Bool
+    /// A status the hit left the target with.
+    var inflicted: Ailment?
+}
+
+/// A status condition at work: just inflicted, hurting at the end of a round, or stopping a move.
+nonisolated struct StatusEvent: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
+        case inflicted
+        case hurt(Int)
+        case immobile
+    }
+
+    let targetID: UUID
+    let ailment: Ailment
+    let kind: Kind
+    /// The Pokémon is the party's.
+    let onParty: Bool
+    let fainted: Bool
 }
 
 nonisolated enum BattleEvent: Equatable, Sendable {
     /// A Pokémon took the field after the one before it fainted.
     case sentOut(BattleSide, UUID)
     case action(BattleAction)
+    case status(StatusEvent)
     case cleared
     case wiped
 }
@@ -302,6 +330,10 @@ nonisolated struct BattleState: Equatable, Sendable {
     private(set) var phase: Phase
     /// Sides still to act this round, with the moves they chose.
     private var round: [(side: BattleSide, move: PokeMove)] = []
+    /// Status messages waiting to be shown, one a step.
+    private var pending: [BattleEvent] = []
+    /// Sides still to take poison or burn damage at the end of the round.
+    private var residual: [BattleSide] = []
     private var actions = 0
     private var rng: SeededRNG
 
@@ -363,6 +395,10 @@ nonisolated struct BattleState: Equatable, Sendable {
     }
 
     private mutating func act() -> BattleEvent? {
+        if !pending.isEmpty { return pending.removeFirst() }
+        while !residual.isEmpty {
+            if let event = hurt(residual.removeFirst()) { return event }
+        }
         actions += 1
         // A stalemate ends as a loss rather than running forever.
         if actions > 400 {
@@ -376,20 +412,56 @@ nonisolated struct BattleState: Equatable, Sendable {
             let allyFirst: Bool
             if allyMove.priority != foeMove.priority {
                 allyFirst = allyMove.priority > foeMove.priority
-            } else if ally.stats.speed != foe.stats.speed {
-                allyFirst = ally.stats.speed > foe.stats.speed
+            } else if ally.speed != foe.speed {
+                allyFirst = ally.speed > foe.speed
             } else {
                 allyFirst = rng.unit() < 0.5
             }
             round = allyFirst ? [(.party, allyMove), (.foe, foeMove)] : [(.foe, foeMove), (.party, allyMove)]
         }
         let (side, move) = round.removeFirst()
+        // Fully paralyzed a quarter of the time.
+        if let mover = active(side), mover.status == .paralysis, rng.unit() < 0.25 {
+            if round.isEmpty { endRound() }
+            return .status(StatusEvent(targetID: mover.id, ailment: .paralysis, kind: .immobile, onParty: side == .party, fainted: false))
+        }
         let action = use(move, by: side)
         if action.targetFainted || action.attackerFainted {
             round = []
+            pending = []
             _ = settle()
+        } else {
+            if let ailment = action.inflicted {
+                pending.append(.status(StatusEvent(targetID: action.targetID, ailment: ailment, kind: .inflicted,
+                                                   onParty: !action.byParty, fainted: false)))
+            }
+            if round.isEmpty { endRound() }
         }
         return .action(action)
+    }
+
+    private func active(_ side: BattleSide) -> Combatant? { side == .party ? partyActive : foeActive }
+
+    /// Both sides have moved: poison and burn take their eighth.
+    private mutating func endRound() {
+        residual = [BattleSide.party, .foe].filter { side in
+            guard let pokemon = active(side), !pokemon.isFainted else { return false }
+            return pokemon.status == .poison || pokemon.status == .burn
+        }
+    }
+
+    private mutating func hurt(_ side: BattleSide) -> BattleEvent? {
+        guard var pokemon = active(side), !pokemon.isFainted, let status = pokemon.status, status != .paralysis else { return nil }
+        let amount = min(pokemon.hp, max(1, pokemon.maxHP / 8))
+        pokemon.hp -= amount
+        if side == .party { party[partyIndex] = pokemon } else { foes[foeIndex] = pokemon }
+        if pokemon.isFainted {
+            residual = []
+            round = []
+            _ = settle()
+        }
+        return .status(StatusEvent(targetID: pokemon.id, ailment: status, kind: .hurt(amount), onParty: side == .party,
+                                   fainted: pokemon.isFainted))
     }
 
     /// After a faint: the next Pokémon comes out, or the stage ends.
@@ -426,6 +498,13 @@ nonisolated struct BattleState: Equatable, Sendable {
                 critical = critical || crit
             }
         }
+        // A status the hit may leave, on a target that has none and isn't immune.
+        var inflicted: Ailment?
+        if damage > 0, !defender.isFainted, defender.status == nil, let ailment = move.ailment, ailment.affects(defender.types),
+           rng.unit() * 100 < Double(move.ailmentChance) {
+            defender.status = ailment
+            inflicted = ailment
+        }
         var healed = 0, recoil = 0
         if damage > 0, move.drain > 0 {
             healed = min(attacker.maxHP - attacker.hp, max(1, damage * move.drain / 100))
@@ -439,7 +518,7 @@ nonisolated struct BattleState: Equatable, Sendable {
         return BattleAction(
             attackerID: attacker.id, targetID: defender.id, move: move, byParty: side == .party, missed: missed,
             hits: hits, damage: damage, effectiveness: effectiveness, critical: critical, healed: healed, recoil: recoil,
-            targetFainted: defender.isFainted, attackerFainted: attacker.isFainted
+            targetFainted: defender.isFainted, attackerFainted: attacker.isFainted, inflicted: inflicted
         )
     }
 
@@ -481,7 +560,9 @@ nonisolated struct BattleState: Equatable, Sendable {
 
     private static func modifier(_ move: PokeMove, attacker: Combatant, effectiveness: Double) -> Double {
         let stab = move.id != PokeMove.struggle.id && attacker.types.contains(move.type) ? 1.5 : 1
-        return stab * effectiveness
+        // A burn halves physical attacks.
+        let burn = attacker.status == .burn && move.isPhysical ? 0.5 : 1
+        return stab * effectiveness * burn
     }
 
     static func damage(_ move: PokeMove, from attacker: Combatant, to defender: Combatant, critical: Bool, rng: inout SeededRNG) -> Int {

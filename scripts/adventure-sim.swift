@@ -35,7 +35,7 @@ struct AdventureSim {
 
         var species = load("dex-v1.json", as: [PokeSpecies].self)
         if species == nil { species = try await PokeAPI.fetchSpecies(maxID: PokeDexStore.maxID) }
-        var moveDex = load("moves-v1.json", as: MoveDex.self)
+        var moveDex = load("moves-v2.json", as: MoveDex.self)
         if moveDex == nil { moveDex = try await PokeAPI.fetchMoves(maxID: PokeDexStore.maxID) }
         var encounters = load("encounters-v1.json", as: EncounterDex.self)
         if encounters == nil { encounters = try await PokeAPI.fetchEncounters(areas: PokeDexStore.journeyAreas) }
@@ -215,6 +215,11 @@ struct AdventureSim {
             switch event {
             case .action(let action) where action.byParty && action.targetFainted:
                 if let foe = battle!.combatant(action.targetID), let species = dex[foe.speciesID] {
+                    let xp = PokeMath.defeatXP(baseExperience: species.baseExperience, level: foe.level, partyLevel: partyLevel(), kind: battle!.plan.kind)
+                    for member in battle!.party { if let id = member.ownedID { grant(xp, to: id) } }
+                }
+            case .status(let status) where !status.onParty && status.fainted:
+                if let foe = battle!.combatant(status.targetID), let species = dex[foe.speciesID] {
                     let xp = PokeMath.defeatXP(baseExperience: species.baseExperience, level: foe.level, partyLevel: partyLevel(), kind: battle!.plan.kind)
                     for member in battle!.party { if let id = member.ownedID { grant(xp, to: id) } }
                 }
