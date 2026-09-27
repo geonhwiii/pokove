@@ -1,0 +1,3832 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "%@ wants to use %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ wants to use %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ 사용 요청"
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "%@ — %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ — %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — %@"
+          }
+        }
+      }
+    },
+    "%@s": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@초"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld / %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld / %2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / %lld"
+          }
+        }
+      }
+    },
+    "%lld done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 완료"
+          }
+        }
+      }
+    },
+    "%lld items": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개"
+          }
+        }
+      }
+    },
+    "%lld percent": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld퍼센트"
+          }
+        }
+      }
+    },
+    "%lld pinned": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정 %lld개"
+          }
+        }
+      }
+    },
+    "%lld turns · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld turns · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld회 · %@"
+          }
+        }
+      }
+    },
+    "%lld waiting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 대기 중"
+          }
+        }
+      }
+    },
+    "%lld working": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 작업 중"
+          }
+        }
+      }
+    },
+    "%lld%%": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
+    "%lld%% remaining": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%% 남음"
+          }
+        }
+      }
+    },
+    "%lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld/%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld"
+          }
+        }
+      }
+    },
+    "%lldd": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일"
+          }
+        }
+      }
+    },
+    "%lldh": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld시간"
+          }
+        }
+      }
+    },
+    "%lldh %lldm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lldh %2$lldm"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld시간 %lld분"
+          }
+        }
+      }
+    },
+    "%lldm": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld분"
+          }
+        }
+      }
+    },
+    "%lldm %llds": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lldm %2$llds"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld분 %lld초"
+          }
+        }
+      }
+    },
+    "%llds": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld초"
+          }
+        }
+      }
+    },
+    "+%lld more": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld개 더"
+          }
+        }
+      }
+    },
+    "?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "?"
+          }
+        }
+      }
+    },
+    "A Dynamic Island for your Mac's notch — with Claude Code built in.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 노치를 위한 다이내믹 아일랜드 — Claude Code까지 한곳에서."
+          }
+        }
+      }
+    },
+    "A page beside the calendar. Click “New To-do” to type; the notch borrows the keyboard only while you type and hands it back when it closes.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더 옆 페이지예요. “새로운 할 일”을 눌러 입력하세요. 노치는 입력하는 동안에만 키보드를 빌리고, 닫히면 원래 앱으로 돌려줘요."
+          }
+        }
+      }
+    },
+    "A spark of inspiration that learned to swim. It only appears when you build something great.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "헤엄치는 법을 배운 영감의 불꽃. 멋진 걸 만들 때만 나타난다."
+          }
+        }
+      }
+    },
+    "API overloaded": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 과부하"
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정보"
+          }
+        }
+      }
+    },
+    "Access": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접근 권한"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "손쉬운 사용"
+          }
+        }
+      }
+    },
+    "Account on hold": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정 보류됨"
+          }
+        }
+      }
+    },
+    "Active sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 중인 세션"
+          }
+        }
+      }
+    },
+    "Agent: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트: %@"
+          }
+        }
+      }
+    },
+    "Agents": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트"
+          }
+        }
+      }
+    },
+    "AirPlay": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirPlay"
+          }
+        }
+      }
+    },
+    "All day": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "종일"
+          }
+        }
+      }
+    },
+    "All done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 끝냈어요"
+          }
+        }
+      }
+    },
+    "All quiet": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 쉬는 중"
+          }
+        }
+      }
+    },
+    "Allow": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용"
+          }
+        }
+      }
+    },
+    "Allow %@?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 허용할까요?"
+          }
+        }
+      }
+    },
+    "Allow Accessibility for dancove to paste straight into apps.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove에 손쉬운 사용을 허용하면 앱에 바로 붙여넣을 수 있어요."
+          }
+        }
+      }
+    },
+    "Allow Calendar Access": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더 접근 허용"
+          }
+        }
+      }
+    },
+    "Allow…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용…"
+          }
+        }
+      }
+    },
+    "Always": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항상 허용"
+          }
+        }
+      }
+    },
+    "Always Allow": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항상 허용"
+          }
+        }
+      }
+    },
+    "Always shows up where you forgot it;": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꼭 빠뜨린 자리에만 나타난다;"
+          }
+        }
+      }
+    },
+    "Anchovy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멸치"
+          }
+        }
+      }
+    },
+    "Anglerfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "초롱아귀"
+          }
+        }
+      }
+    },
+    "Announce headphones and speakers": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "헤드폰·스피커 연결 알림"
+          }
+        }
+      }
+    },
+    "Answer from the notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에서 응답하기"
+          }
+        }
+      }
+    },
+    "Apply": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "적용"
+          }
+        }
+      }
+    },
+    "Audio output": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 출력"
+          }
+        }
+      }
+    },
+    "Authentication failed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "인증 실패"
+          }
+        }
+      }
+    },
+    "Background agent finished": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백그라운드 에이전트 완료"
+          }
+        }
+      }
+    },
+    "Battery": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리"
+          }
+        }
+      }
+    },
+    "Battery %lld percent": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 %lld퍼센트"
+          }
+        }
+      }
+    },
+    "Battery & Devices": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 및 기기"
+          }
+        }
+      }
+    },
+    "Billing issue": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "결제 문제"
+          }
+        }
+      }
+    },
+    "Blue Crab": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꽃게"
+          }
+        }
+      }
+    },
+    "Blue Whale": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "흰수염고래"
+          }
+        }
+      }
+    },
+    "Bluefin Tuna": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참다랑어"
+          }
+        }
+      }
+    },
+    "Bluetooth": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth"
+          }
+        }
+      }
+    },
+    "Bugfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "버그피시"
+          }
+        }
+      }
+    },
+    "Built for speed. Never waits for CI.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "속도를 위해 태어났다. CI를 기다리지 않는다."
+          }
+        }
+      }
+    },
+    "CATCH": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "획득"
+          }
+        }
+      }
+    },
+    "Calendar": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더"
+          }
+        }
+      }
+    },
+    "Calendar & To-dos": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더 및 할 일"
+          }
+        }
+      }
+    },
+    "Can hold eight pull requests at once.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "풀 리퀘스트 여덟 개를 한꺼번에 붙잡는다."
+          }
+        }
+      }
+    },
+    "Casts when Claude starts working": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 일을 시작하면 낚싯대를 던져요"
+          }
+        }
+      }
+    },
+    "Caught a %@!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 획득!"
+          }
+        }
+      }
+    },
+    "Charging": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 중"
+          }
+        }
+      }
+    },
+    "Choose a port between 1024 and 65535.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1024에서 65535 사이의 포트를 고르세요."
+          }
+        }
+      }
+    },
+    "Claude": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        }
+      }
+    },
+    "Claude Code Settings…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code 설정…"
+          }
+        }
+      }
+    },
+    "Claude Code in your notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치 속 Claude Code"
+          }
+        }
+      }
+    },
+    "Claude finished": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 작업 완료"
+          }
+        }
+      }
+    },
+    "Claude is waiting for you": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 답을 기다려요"
+          }
+        }
+      }
+    },
+    "Claude needs permission": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 권한을 요청해요"
+          }
+        }
+      }
+    },
+    "Claude stopped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 멈췄어요"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지우기"
+          }
+        }
+      }
+    },
+    "Clear %lld?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 지울까요?"
+          }
+        }
+      }
+    },
+    "Clear Completed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료 항목 지우기"
+          }
+        }
+      }
+    },
+    "Clear Finished Sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끝난 세션 지우기"
+          }
+        }
+      }
+    },
+    "Clear History": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록 지우기"
+          }
+        }
+      }
+    },
+    "Clear history": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록 지우기"
+          }
+        }
+      }
+    },
+    "Click again to clear. Pinned items stay.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한 번 더 누르면 지워져요. 고정한 항목은 남아요."
+          }
+        }
+      }
+    },
+    "Click the notch to expand it.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치를 클릭하면 펼쳐져요."
+          }
+        }
+      }
+    },
+    "Clicking an item": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항목을 클릭하면"
+          }
+        }
+      }
+    },
+    "Clipboard": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클립보드"
+          }
+        }
+      }
+    },
+    "Clownfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "흰동가리"
+          }
+        }
+      }
+    },
+    "Codex": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        }
+      }
+    },
+    "Codex finished": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex 작업 완료"
+          }
+        }
+      }
+    },
+    "Codex needs approval": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex가 승인을 요청해요"
+          }
+        }
+      }
+    },
+    "Codex stopped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex가 멈췄어요"
+          }
+        }
+      }
+    },
+    "Coelacanth": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실러캔스"
+          }
+        }
+      }
+    },
+    "Collection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감"
+          }
+        }
+      }
+    },
+    "Compacting context…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "컨텍스트 압축 중…"
+          }
+        }
+      }
+    },
+    "Connect Claude Code in Settings to get notified when Claude needs you.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정에서 Claude Code를 연결하면 Claude가 찾을 때 알려 드려요."
+          }
+        }
+      }
+    },
+    "Connected": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결됨"
+          }
+        }
+      }
+    },
+    "Connecting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결 중"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결"
+          }
+        }
+      }
+    },
+    "Connectivity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기 연결"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사됨"
+          }
+        }
+      }
+    },
+    "Copies it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사"
+          }
+        }
+      }
+    },
+    "Copy something and it shows up here.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무언가 복사하면 여기에 쌓여요."
+          }
+        }
+      }
+    },
+    "Crucian Carp": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붕어"
+          }
+        }
+      }
+    },
+    "Curls up whenever someone says “quick fix.”": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "누가 “간단한 수정”이라고 하면 몸을 움츠린다."
+          }
+        }
+      }
+    },
+    "Cuts through spaghetti code in one strike.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스파게티 코드를 단칼에 벤다."
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "삭제"
+          }
+        }
+      }
+    },
+    "Deny": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "거부"
+          }
+        }
+      }
+    },
+    "Detect Claude app, IDE and CLI sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 앱·IDE·CLI 세션 자동 감지"
+          }
+        }
+      }
+    },
+    "Detect Codex sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex 세션 감지"
+          }
+        }
+      }
+    },
+    "Detection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "감지"
+          }
+        }
+      }
+    },
+    "Display": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이"
+          }
+        }
+      }
+    },
+    "Display & Sound": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이 및 사운드"
+          }
+        }
+      }
+    },
+    "Displays": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
+          }
+        }
+      }
+    },
+    "Dragon King": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "용왕"
+          }
+        }
+      }
+    },
+    "Drags whole monoliths down to the deep.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모놀리스를 통째로 심해로 끌고 간다."
+          }
+        }
+      }
+    },
+    "Drifts along with no plan. Somehow ships anyway.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계획 없이 떠다니지만 어쨌든 출시는 한다."
+          }
+        }
+      }
+    },
+    "Each pattern is unique. So are its merge conflicts.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무늬가 저마다 다르다. 머지 충돌도 그렇다."
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "편집"
+          }
+        }
+      }
+    },
+    "Editing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "편집 중"
+          }
+        }
+      }
+    },
+    "Editing %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 편집 중"
+          }
+        }
+      }
+    },
+    "Editing notebook": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노트북 편집 중"
+          }
+        }
+      }
+    },
+    "Eight arms, two tentacles, ten parallel tool calls.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다리 여덟, 촉완 둘. 병렬 도구 호출도 열 개."
+          }
+        }
+      }
+    },
+    "Empty Can": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빈 캔"
+          }
+        }
+      }
+    },
+    "Enable Claude integration": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 연동 사용"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "Every Claude turn casts a line. Tool calls are nibbles, and when Claude finishes you reel in a catch. Longer, busier turns bring rarer fish.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 작업을 시작하면 낚싯대를 던져요. 도구를 쓸 때마다 입질이 오고, 작업이 끝나면 물고기를 낚아 올려요. 오래, 바쁘게 일할수록 희귀한 물고기가 잡혀요."
+          }
+        }
+      }
+    },
+    "Every species and record will be forgotten. This can't be undone.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 어종과 기록이 사라져요. 되돌릴 수 없어요."
+          }
+        }
+      }
+    },
+    "Expand on hover": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마우스를 올리면 펼치기"
+          }
+        }
+      }
+    },
+    "Eyes on top of its head, always watching the logs.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "눈이 머리 위에 달려 있어 늘 로그를 지켜본다."
+          }
+        }
+      }
+    },
+    "Failed — %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실패 — %@"
+          }
+        }
+      }
+    },
+    "Faints if a single test fails. Extremely rare to land alive.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "테스트 하나만 실패해도 기절한다. 살아서 낚기는 하늘의 별 따기."
+          }
+        }
+      }
+    },
+    "Fetching": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가져오는 중"
+          }
+        }
+      }
+    },
+    "Fetching %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 가져오는 중"
+          }
+        }
+      }
+    },
+    "Finding %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 찾는 중"
+          }
+        }
+      }
+    },
+    "Finding files": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일 찾는 중"
+          }
+        }
+      }
+    },
+    "First caught %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "첫 포획 %@"
+          }
+        }
+      }
+    },
+    "Fish landed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚은 물고기"
+          }
+        }
+      }
+    },
+    "Fishing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚시"
+          }
+        }
+      }
+    },
+    "Fishing Collection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚시 도감"
+          }
+        }
+      }
+    },
+    "Fishing spot": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚시터"
+          }
+        }
+      }
+    },
+    "Fishing while Claude works": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 일하는 동안 낚시"
+          }
+        }
+      }
+    },
+    "Fix it once and it comes back in the next release.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한 번 고치면 다음 릴리스에 꼭 다시 나타난다."
+          }
+        }
+      }
+    },
+    "Follows the session files in ~/.claude/projects and ~/.codex/sessions, so working status and finished alerts need no setup. Answering permission requests from the notch needs the hooks.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/projects와 ~/.codex/sessions의 세션 파일을 따라가서, 설정 없이도 작업 상태와 완료 알림을 보여 줘요. 노치에서 권한 요청에 답하려면 훅이 필요해요."
+          }
+        }
+      }
+    },
+    "Forgets everything after three seconds. Unlike Claude's context.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3초면 모든 걸 잊는다. Claude의 컨텍스트와는 다르다."
+          }
+        }
+      }
+    },
+    "Found in every stream. Honest, like a first commit.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어느 개울에나 사는 친구. 첫 커밋처럼 소박하다."
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일반"
+          }
+        }
+      }
+    },
+    "Glides over the reef like a clean abstraction.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잘 만든 추상화처럼 산호초 위를 미끄러진다."
+          }
+        }
+      }
+    },
+    "Go fishing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚시하기"
+          }
+        }
+      }
+    },
+    "Goby": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "망둥어"
+          }
+        }
+      }
+    },
+    "Golden Carp": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "황금 잉어"
+          }
+        }
+      }
+    },
+    "Goldfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "금붕어"
+          }
+        }
+      }
+    },
+    "Granted": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용됨"
+          }
+        }
+      }
+    },
+    "Grant…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용…"
+          }
+        }
+      }
+    },
+    "Haptic feedback": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "햅틱 피드백"
+          }
+        }
+      }
+    },
+    "Hide from screen recordings": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면 녹화에서 숨기기"
+          }
+        }
+      }
+    },
+    "Hide in full screen": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 화면에서 숨기기"
+          }
+        }
+      }
+    },
+    "Hit output limit": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출력 한도 도달"
+          }
+        }
+      }
+    },
+    "Holds the pearl of perfect uptime. Nines without end.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완벽한 가동률의 여의주를 쥐고 있다. 끝없이 이어지는 9."
+          }
+        }
+      }
+    },
+    "Hooks": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "훅"
+          }
+        }
+      }
+    },
+    "Hover delay": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "호버 지연"
+          }
+        }
+      }
+    },
+    "Hover the notch to open it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에 마우스를 올려 열어 보세요"
+          }
+        }
+      }
+    },
+    "Idle": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대기 중"
+          }
+        }
+      }
+    },
+    "Image": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미지"
+          }
+        }
+      }
+    },
+    "In %lld min": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld분 후"
+          }
+        }
+      }
+    },
+    "Inflates when the test suite goes red.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "테스트가 빨갛게 물들면 몸을 부풀린다."
+          }
+        }
+      }
+    },
+    "Inspired by Alcove and NotchNook.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcove와 NotchNook에서 영감을 받았어요."
+          }
+        }
+      }
+    },
+    "Install Hooks": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "훅 설치"
+          }
+        }
+      }
+    },
+    "Installed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설치됨"
+          }
+        }
+      }
+    },
+    "Interaction": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상호작용"
+          }
+        }
+      }
+    },
+    "Invalid request": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잘못된 요청"
+          }
+        }
+      }
+    },
+    "Jot things down without leaving what you're doing.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하던 일을 멈추지 않고 바로 적어 두세요."
+          }
+        }
+      }
+    },
+    "Keep Claude busy to meet this one.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude에게 일을 더 맡기면 만날 수 있어요."
+          }
+        }
+      }
+    },
+    "Keep clipboard history": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클립보드 기록 보관"
+          }
+        }
+      }
+    },
+    "Keep up to": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최대 보관 개수"
+          }
+        }
+      }
+    },
+    "Keeps its secrets like a private repo.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비공개 저장소처럼 입을 꾹 다물고 있다."
+          }
+        }
+      }
+    },
+    "Keyboard": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "키보드"
+          }
+        }
+      }
+    },
+    "Koi": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비단잉어"
+          }
+        }
+      }
+    },
+    "Kraken": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "크라켄"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어"
+          }
+        }
+      }
+    },
+    "Last catch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최근 조과"
+          }
+        }
+      }
+    },
+    "Launch at login": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 시 실행"
+          }
+        }
+      }
+    },
+    "Legendary": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레전더리"
+          }
+        }
+      }
+    },
+    "Level": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레벨"
+          }
+        }
+      }
+    },
+    "Leviathan": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레비아탄"
+          }
+        }
+      }
+    },
+    "Listener": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "리스너"
+          }
+        }
+      }
+    },
+    "Listening on 127.0.0.1:%@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "127.0.0.1:%@에서 수신 중"
+          }
+        }
+      }
+    },
+    "Live Activities": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 현황"
+          }
+        }
+      }
+    },
+    "Lives in an anemone. Rent-free, like tech debt.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "말미잘에 얹혀산다. 기술 부채처럼 월세도 안 낸다."
+          }
+        }
+      }
+    },
+    "Low Battery": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 부족"
+          }
+        }
+      }
+    },
+    "Low battery alerts": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 부족 알림"
+          }
+        }
+      }
+    },
+    "Lures juniors to the deep with a single glowing TODO.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빛나는 TODO 하나로 신입을 심해로 꾀어낸다."
+          }
+        }
+      }
+    },
+    "Mackerel": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고등어"
+          }
+        }
+      }
+    },
+    "Magic": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "매직"
+          }
+        }
+      }
+    },
+    "Manta Ray": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쥐가오리"
+          }
+        }
+      }
+    },
+    "Mark as Done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료로 표시"
+          }
+        }
+      }
+    },
+    "Mark as Not Done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미완료로 표시"
+          }
+        }
+      }
+    },
+    "Mark as done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료로 표시"
+          }
+        }
+      }
+    },
+    "Mark as not done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미완료로 표시"
+          }
+        }
+      }
+    },
+    "Media bridge": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미디어 브리지"
+          }
+        }
+      }
+    },
+    "Model not found": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모델을 찾을 수 없음"
+          }
+        }
+      }
+    },
+    "Moon Jelly": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보름달물해파리"
+          }
+        }
+      }
+    },
+    "Must keep moving or the sprint dies.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멈추면 스프린트가 죽는다. 계속 헤엄쳐야 한다."
+          }
+        }
+      }
+    },
+    "Mythic": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "신화"
+          }
+        }
+      }
+    },
+    "NEW": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NEW"
+          }
+        }
+      }
+    },
+    "Needs permission": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 필요"
+          }
+        }
+      }
+    },
+    "Needs update": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 필요"
+          }
+        }
+      }
+    },
+    "New To-do": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로운 할 일"
+          }
+        }
+      }
+    },
+    "No events": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일정 없음"
+          }
+        }
+      }
+    },
+    "Normal": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노말"
+          }
+        }
+      }
+    },
+    "Not a fish. Someone's bug report from 2019.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물고기가 아니다. 누군가 2019년에 올린 버그 리포트다."
+          }
+        }
+      }
+    },
+    "Not caught yet": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 낚지 못했어요"
+          }
+        }
+      }
+    },
+    "Not granted": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용 안 됨"
+          }
+        }
+      }
+    },
+    "Not installed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설치 안 됨"
+          }
+        }
+      }
+    },
+    "Nothing Playing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재생 중인 항목 없음"
+          }
+        }
+      }
+    },
+    "Nothing yet": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 없어요"
+          }
+        }
+      }
+    },
+    "Notifications": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림"
+          }
+        }
+      }
+    },
+    "Now Playing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 재생 중"
+          }
+        }
+      }
+    },
+    "Now · until %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 중 · %@까지"
+          }
+        }
+      }
+    },
+    "Ocean Sunfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개복치"
+          }
+        }
+      }
+    },
+    "Octopus": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문어"
+          }
+        }
+      }
+    },
+    "Old Boot": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낡은 장화"
+          }
+        }
+      }
+    },
+    "Older than the first line of code. Sleeps beneath every legacy system.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최초의 코드보다 오래된 존재. 모든 레거시 아래에 잠들어 있다."
+          }
+        }
+      }
+    },
+    "On battery": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 사용 중"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "열기"
+          }
+        }
+      }
+    },
+    "Open %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 열기"
+          }
+        }
+      }
+    },
+    "Open Collection in Notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에서 도감 열기"
+          }
+        }
+      }
+    },
+    "Open source app": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재생 중인 앱 열기"
+          }
+        }
+      }
+    },
+    "Passwords and anything an app marks as confidential are never saved. History stays on this Mac.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "암호와 앱이 기밀로 표시한 항목은 저장하지 않아요. 기록은 이 Mac에만 남아요."
+          }
+        }
+      }
+    },
+    "Passwords are never saved.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "암호는 저장하지 않아요."
+          }
+        }
+      }
+    },
+    "Paste": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붙여넣기"
+          }
+        }
+      }
+    },
+    "Pastes it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붙여넣기"
+          }
+        }
+      }
+    },
+    "Pasting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붙여넣기"
+          }
+        }
+      }
+    },
+    "Permission": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한"
+          }
+        }
+      }
+    },
+    "Permission requests": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 요청"
+          }
+        }
+      }
+    },
+    "Pin": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정"
+          }
+        }
+      }
+    },
+    "Play a sound": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소리 재생"
+          }
+        }
+      }
+    },
+    "Play a sound for Unique catches and up": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유니크 이상을 낚으면 효과음 재생"
+          }
+        }
+      }
+    },
+    "Play something in Music, Spotify or a browser": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "음악, Spotify 또는 브라우저에서 재생해 보세요"
+          }
+        }
+      }
+    },
+    "Playing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재생 중"
+          }
+        }
+      }
+    },
+    "Plug in soon or turn on Low Power Mode.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "곧 충전하거나 저전력 모드를 켜 주세요."
+          }
+        }
+      }
+    },
+    "Plugged in": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전원 연결됨"
+          }
+        }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트"
+          }
+        }
+      }
+    },
+    "Power": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전원"
+          }
+        }
+      }
+    },
+    "Preview Charging Activity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Claude Notification": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Connection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결 알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Display HUD": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이 HUD 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Notification": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Sound HUD": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사운드 HUD 미리보기"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보"
+          }
+        }
+      }
+    },
+    "Pufferfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복어"
+          }
+        }
+      }
+    },
+    "Quit dancove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove 종료"
+          }
+        }
+      }
+    },
+    "Rare": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레어"
+          }
+        }
+      }
+    },
+    "Rate limited": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요청 한도 초과"
+          }
+        }
+      }
+    },
+    "Reading": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽는 중"
+          }
+        }
+      }
+    },
+    "Reading %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 읽는 중"
+          }
+        }
+      }
+    },
+    "Recent catches": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최근 조과"
+          }
+        }
+      }
+    },
+    "Relaunch Now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 다시 시작"
+          }
+        }
+      }
+    },
+    "Relaunch dancove to switch languages.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어를 바꾸려면 dancove를 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제거"
+          }
+        }
+      }
+    },
+    "Reopen to the last page": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막으로 본 화면으로 열기"
+          }
+        }
+      }
+    },
+    "Replace system volume & brightness HUD": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 음량·밝기 HUD 대체"
+          }
+        }
+      }
+    },
+    "Reset Collection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감 초기화"
+          }
+        }
+      }
+    },
+    "Reset Collection…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감 초기화…"
+          }
+        }
+      }
+    },
+    "Reset the fishing collection?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚시 도감을 초기화할까요?"
+          }
+        }
+      }
+    },
+    "Running agent": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트 실행 중"
+          }
+        }
+      }
+    },
+    "Running command": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "명령 실행 중"
+          }
+        }
+      }
+    },
+    "Said to grant one wish: a green build on the first try.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소원 하나를 들어준다고 한다. 첫 빌드부터 초록불."
+          }
+        }
+      }
+    },
+    "Salmon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연어"
+          }
+        }
+      }
+    },
+    "Saved": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장된 항목"
+          }
+        }
+      }
+    },
+    "Scallop": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가리비"
+          }
+        }
+      }
+    },
+    "Sea Turtle": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "바다거북"
+          }
+        }
+      }
+    },
+    "Seahorse": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "해마"
+          }
+        }
+      }
+    },
+    "Searching": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검색 중"
+          }
+        }
+      }
+    },
+    "Searching web": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "웹 검색 중"
+          }
+        }
+      }
+    },
+    "Searching web: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "웹 검색: %@"
+          }
+        }
+      }
+    },
+    "Searching “%@”": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” 검색 중"
+          }
+        }
+      }
+    },
+    "See when Claude is working, get notified when it finishes or needs you, and answer permission requests without switching apps.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 일하는 모습을 보고, 끝나거나 도움이 필요할 때 알림을 받고, 앱을 바꾸지 않고도 권한 요청에 답하세요."
+          }
+        }
+      }
+    },
+    "See your events here": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여기서 일정을 확인하세요"
+          }
+        }
+      }
+    },
+    "Semicolon Eel": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "세미콜론 장어"
+          }
+        }
+      }
+    },
+    "Server error": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버 오류"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정…"
+          }
+        }
+      }
+    },
+    "Shark": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상어"
+          }
+        }
+      }
+    },
+    "Show Now Playing live activity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 재생 중 표시"
+          }
+        }
+      }
+    },
+    "Show a live activity while Claude works": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 일하는 동안 표시"
+          }
+        }
+      }
+    },
+    "Show calendar in the notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에 캘린더 표시"
+          }
+        }
+      }
+    },
+    "Show catches on Claude's banners": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 알림에 조과 표시"
+          }
+        }
+      }
+    },
+    "Show charging activity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 상태 표시"
+          }
+        }
+      }
+    },
+    "Show menu bar icon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메뉴 막대 아이콘 표시"
+          }
+        }
+      }
+    },
+    "Show on all displays": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 디스플레이에 표시"
+          }
+        }
+      }
+    },
+    "Show percentage": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "퍼센트 표시"
+          }
+        }
+      }
+    },
+    "Show to-dos in the notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에 할 일 표시"
+          }
+        }
+      }
+    },
+    "Show waveform": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파형 표시"
+          }
+        }
+      }
+    },
+    "Shows the device with its battery when audio switches to AirPods, Bluetooth or AirPlay devices.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오가 AirPods, Bluetooth, AirPlay 기기로 바뀌면 기기와 배터리를 보여 줘요."
+          }
+        }
+      }
+    },
+    "Shrimp": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새우"
+          }
+        }
+      }
+    },
+    "Slow and steady. Its builds take 45 minutes.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "느리지만 꾸준하다. 빌드는 45분 걸린다."
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문제가 발생했어요"
+          }
+        }
+      }
+    },
+    "Sound": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사운드"
+          }
+        }
+      }
+    },
+    "Source": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소스"
+          }
+        }
+      }
+    },
+    "Sparkfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스파크피시"
+          }
+        }
+      }
+    },
+    "Species found": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "발견한 어종"
+          }
+        }
+      }
+    },
+    "Squid": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오징어"
+          }
+        }
+      }
+    },
+    "Start Claude or Codex anywhere — what they're doing shows up here.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어디서든 Claude나 Codex를 시작하세요. 하는 일이 여기에 나타나요."
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태"
+          }
+        }
+      }
+    },
+    "Stay quiet while Claude's app is in front": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 앱이 앞에 있으면 조용히"
+          }
+        }
+      }
+    },
+    "Still fizzing with last night's energy drink.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어젯밤 에너지 드링크가 아직 톡 쏜다."
+          }
+        }
+      }
+    },
+    "Stopped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "중지됨"
+          }
+        }
+      }
+    },
+    "Swims upstream against every code review.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 코드 리뷰를 거슬러 헤엄쳐 오른다."
+          }
+        }
+      }
+    },
+    "Swipe down on the notch to open it or switch activities, swipe up to close, swipe sideways to skip tracks.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에서 아래로 쓸면 열리거나 활동이 바뀌고, 위로 쓸면 닫히고, 옆으로 쓸면 곡이 넘어가요."
+          }
+        }
+      }
+    },
+    "Swordfish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "황새치"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템"
+          }
+        }
+      }
+    },
+    "Tastes best grilled at midnight after a deploy.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배포 끝난 자정에 구워 먹으면 제일 맛있다."
+          }
+        }
+      }
+    },
+    "The father carries the eggs. And the on-call pager.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알은 아빠가 품는다. 온콜 호출기도."
+          }
+        }
+      }
+    },
+    "The fish got away": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물고기가 도망갔어요"
+          }
+        }
+      }
+    },
+    "The largest creature ever. About the size of node_modules.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지구상 가장 큰 생물. node_modules만 하다."
+          }
+        }
+      }
+    },
+    "The line snapped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚싯줄이 끊어졌어요"
+          }
+        }
+      }
+    },
+    "The notch opens to what's going on: music while it plays, Claude while it works.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치를 열면 상황에 맞는 화면이 나와요. 음악이 재생 중이면 음악, Claude가 작업 중이면 Claude."
+          }
+        }
+      }
+    },
+    "The notch opens where you left it. A Claude permission request still comes first.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치를 열면 마지막으로 본 화면이 나와요. Claude 권한 요청은 그래도 먼저 보여줘요."
+          }
+        }
+      }
+    },
+    "Thinking…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "생각 중…"
+          }
+        }
+      }
+    },
+    "This day is clear": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘은 일정이 없어요"
+          }
+        }
+      }
+    },
+    "Thought extinct, like that legacy service still in production.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멸종한 줄 알았다. 아직 운영 중인 그 레거시 서비스처럼."
+          }
+        }
+      }
+    },
+    "Tint with album artwork": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앨범 아트 색으로 물들이기"
+          }
+        }
+      }
+    },
+    "Tiny, but a whole school of them could refactor a codebase.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작지만 떼로 몰려오면 코드베이스 하나쯤은 리팩터링한다."
+          }
+        }
+      }
+    },
+    "To paste into the app you're using, dancove presses ⌘V for you, which needs Accessibility access. Without it, items are copied and you paste them yourself.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 쓰는 앱에 바로 붙여넣으려면 dancove가 ⌘V를 대신 눌러야 해서 손쉬운 사용 권한이 필요해요. 권한이 없으면 복사만 되고 붙여넣기는 직접 하시면 돼요."
+          }
+        }
+      }
+    },
+    "To-dos": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "할 일"
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘"
+          }
+        }
+      }
+    },
+    "Today %lld · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Today %1$lld · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 %lld회 · %@"
+          }
+        }
+      }
+    },
+    "Too quick for a bite": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "입질이 오기엔 너무 짧았어요"
+          }
+        }
+      }
+    },
+    "Trackpad gestures": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "트랙패드 제스처"
+          }
+        }
+      }
+    },
+    "Turn on the Claude integration to fish.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낚시를 하려면 Claude 연동을 켜 주세요."
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용할 수 없음"
+          }
+        }
+      }
+    },
+    "Unique": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유니크"
+          }
+        }
+      }
+    },
+    "Unknown fish": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알 수 없는 물고기"
+          }
+        }
+      }
+    },
+    "Unpin": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정 해제"
+          }
+        }
+      }
+    },
+    "Untitled": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목 없음"
+          }
+        }
+      }
+    },
+    "Update": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트"
+          }
+        }
+      }
+    },
+    "Updating tasks": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "할 일 갱신 중"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "버전 %@"
+          }
+        }
+      }
+    },
+    "Wait for an answer": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응답 대기 시간"
+          }
+        }
+      }
+    },
+    "Waiting for you": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응답 대기 중"
+          }
+        }
+      }
+    },
+    "Walks sideways, like a merge that shouldn't have happened.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "옆으로 걷는다. 하지 말았어야 할 머지처럼."
+          }
+        }
+      }
+    },
+    "Welcome to dancove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove에 오신 걸 환영해요"
+          }
+        }
+      }
+    },
+    "When Claude finishes": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 작업을 마쳤을 때"
+          }
+        }
+      }
+    },
+    "When Claude needs permission or input": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 권한이나 입력이 필요할 때"
+          }
+        }
+      }
+    },
+    "When a turn fails": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작업이 실패했을 때"
+          }
+        }
+      }
+    },
+    "When the app running Claude isn't in front, dancove holds the request and shows Allow / Deny in the notch. If you don't answer in time, or switch to that app, Claude asks in its own window as usual.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude를 실행 중인 앱이 앞에 없으면 dancove가 요청을 잠시 붙잡고 노치에 허용 / 거부를 보여 줘요. 시간 안에 답하지 않거나 그 앱으로 전환하면 평소처럼 Claude 창에서 물어봐요."
+          }
+        }
+      }
+    },
+    "Works with Music, Spotify, browsers and any app that reports to Control Center.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "음악, Spotify, 브라우저 등 제어 센터에 표시되는 모든 앱과 함께 동작해요."
+          }
+        }
+      }
+    },
+    "Writing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작성 중"
+          }
+        }
+      }
+    },
+    "Writing %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 작성 중"
+          }
+        }
+      }
+    },
+    "app": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱"
+          }
+        }
+      }
+    },
+    "dancove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove"
+          }
+        }
+      }
+    },
+    "dancove Settings": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove 설정"
+          }
+        }
+      }
+    },
+    "dancove adds small hooks to ~/.claude/settings.json that forward Claude's events to 127.0.0.1 with curl, and stay silent when dancove isn't running. Your other settings are kept, and the previous file is saved as settings.json.dancove-backup. Sessions that are already running pick up the hooks after a restart.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove는 ~/.claude/settings.json에 작은 훅을 추가해 Claude의 이벤트를 curl로 127.0.0.1에 전달해요. dancove가 꺼져 있으면 아무 일도 하지 않아요. 다른 설정은 그대로 두고, 기존 파일은 settings.json.dancove-backup으로 저장해요. 이미 실행 중인 세션은 다시 시작해야 훅이 적용돼요."
+          }
+        }
+      }
+    },
+    "dancove listens for the volume and brightness keys and draws its own HUD in the notch. Nothing else is read.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dancove는 음량·밝기 키만 감지해 노치에 자체 HUD를 그려요. 그 밖의 입력은 읽지 않아요."
+          }
+        }
+      }
+    },
+    "items": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항목"
+          }
+        }
+      }
+    },
+    "left": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "남았어요"
+          }
+        }
+      }
+    },
+    "now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방금"
+          }
+        }
+      }
+    },
+    "working": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작업 중"
+          }
+        }
+      }
+    },
+    "~/.claude/settings.json could not be parsed: %@. Fix the file and try again.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/settings.json을 읽을 수 없어요: %@. 파일을 고친 뒤 다시 시도하세요."
+          }
+        }
+      }
+    },
+    "· %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        }
+      }
+    },
+    "· %lld nibbles": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "· %lld nibble"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "· %lld nibbles"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· 입질 %lld회"
+          }
+        }
+      }
+    },
+    "· New record": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· 최고 기록"
+          }
+        }
+      }
+    },
+    "· Trophy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· 월척!"
+          }
+        }
+      }
+    },
+    "×%lld · best %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "×%1$lld · best %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "×%lld · 최대 %@"
+          }
+        }
+      }
+    },
+    "한국어": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한국어"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
