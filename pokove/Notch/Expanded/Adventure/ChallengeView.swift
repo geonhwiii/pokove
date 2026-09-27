@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The three ways to take the journey on: the stage line agents push along, the gym bosses, and
-/// the daily dungeon.
+/// The ways to take the journey on: the stage line agents push along, the gyms, the daily dungeon,
+/// and the tower after the Champion.
 enum ChallengeMode: String, CaseIterable {
     case stage, gym, dungeon, tower
 
@@ -69,6 +69,12 @@ private struct ModePicker: View {
                     Text(item.title)
                         .font(.system(size: 9.5, weight: .bold))
                         .foregroundStyle(mode == item ? .white : .white.opacity(0.5))
+                        .overlay(alignment: .topTrailing) {
+                            // A gym is open and waiting.
+                            if item == .gym, gymWaiting {
+                                Circle().fill(Color(hex: 0xFFD35A)).frame(width: 4.5, height: 4.5).offset(x: 5, y: -1)
+                            }
+                        }
                         .frame(maxWidth: .infinity)
                         .frame(height: 15)
                         .background(mode == item ? .white.opacity(0.17) : .clear, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
@@ -80,12 +86,17 @@ private struct ModePicker: View {
         .padding(1.5)
         .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 6.5, style: .continuous))
     }
+
+    private var gymWaiting: Bool {
+        let adventure = app.adventure
+        return adventure.progress.isBossOpen(adventure.chapters) && !adventure.isChallenging
+    }
 }
 
 // MARK: Stage line
 
-/// A chapter as a subway line: ten stations and the boss at the end, the party leader hopping
-/// above the station it's on. A cleared station can be picked to repeat.
+/// A chapter as a subway line: ten stations, the last one a terminus with tougher Pokémon, the party
+/// leader hopping above the station it's on. A cleared station can be picked to repeat.
 private struct StageLineView: View {
     let openLegend: (String) -> Void
     let openGym: () -> Void
@@ -93,7 +104,7 @@ private struct StageLineView: View {
 
     @Environment(AppModel.self) private var app
     @AppStorage("adventurePane") private var pane: AdventurePane = .challenge
-    /// The chapter on screen, when browsing back; nil follows the journey.
+    /// The chapter on screen, when browsing back; nil follows the party.
     @State private var browsing: Int?
     @State private var selected: StationPoint?
 
@@ -103,12 +114,11 @@ private struct StageLineView: View {
     var body: some View {
         let adventure = app.adventure
         let chapters = adventure.chapters
-        let progress = adventure.progress
-        let index = min(browsing ?? progress.chapter, chapters.count - 1)
+        let index = min(browsing ?? current, chapters.count - 1)
         let chapter = chapters[index]
         GeometryReader { proxy in
             let width = proxy.size.width
-            let step = (width - Self.inset * 2) / CGFloat(Chapter.stationCount)
+            let step = (width - Self.inset * 2) / CGFloat(Chapter.stationCount - 1)
             let x = { (station: Int) in Self.inset + CGFloat(station) * step }
             ZStack(alignment: .topLeading) {
                 header(chapter: chapter, index: index)
@@ -121,7 +131,21 @@ private struct StageLineView: View {
                     .position(x: width / 2, y: proxy.size.height - 11)
             }
         }
-        .onChange(of: progress.chapter) { browsing = nil; selected = nil }
+        .onChange(of: current) { browsing = nil; selected = nil }
+    }
+
+    /// Where the party is on the line: a station while it fights one, else the one lined up.
+    private var here: StationPoint {
+        let adventure = app.adventure
+        if case .station(let point) = adventure.target { return point }
+        return adventure.stationPoint
+    }
+
+    /// The chapter the party is on. It can be the one before the line's, while the party works up
+    /// to the next chapter's first station.
+    private var current: Int {
+        let adventure = app.adventure
+        return adventure.isChallenging ? adventure.progress.chapter : min(here.chapter, adventure.progress.chapter)
     }
 
     // MARK: Header
@@ -137,7 +161,7 @@ private struct StageLineView: View {
                 .contentTransition(.numericText())
             chevron("chevron.right", enabled: index < progress.chapter) { browse(index + 1) }
             Spacer(minLength: 4)
-            if chapter.isLeague, index == progress.chapter {
+            if progress.badges >= 8, !progress.isChampion, progress.boss > 0 {
                 Text("Elite Four \(min(progress.boss, 4))/4")
                     .font(.system(size: 9, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
@@ -164,7 +188,7 @@ private struct StageLineView: View {
 
     private func browse(_ index: Int) {
         withAnimation(.smooth(duration: 0.25)) {
-            browsing = index == app.adventure.progress.chapter ? nil : index
+            browsing = index == current ? nil : index
             selected = nil
         }
     }
@@ -176,13 +200,10 @@ private struct StageLineView: View {
         let adventure = app.adventure
         let progress = adventure.progress
         let cleared = progress.cleared(in: index)
-        let here = adventure.target.flatMap { target -> StationPoint? in
-            if case .station(let point) = target { return point }
-            return nil
-        } ?? adventure.stationPoint
+        let here = self.here
         let isHere = here.chapter == index && !adventure.isChallenging
-        let terminal = x(Chapter.stationCount)
-        let doneEnd = cleared >= Chapter.stationCount ? terminal : x(cleared)
+        let terminal = x(Chapter.stationCount - 1)
+        let doneEnd = x(min(cleared, Chapter.stationCount - 1))
 
         // Track, with the cleared part in the line's color.
         Capsule().fill(.white.opacity(0.14))
@@ -204,7 +225,8 @@ private struct StageLineView: View {
                 withAnimation(.smooth(duration: 0.2)) { selected = selected == point ? nil : point }
             } label: {
                 VStack(spacing: 3) {
-                    StationDot(state: state, isHere: isHere && here.station == station, isSelected: selected == point)
+                    StationDot(state: state, isHere: isHere && here.station == station, isSelected: selected == point,
+                               isTerminus: station == Chapter.stationCount - 1)
                         .frame(height: 18)
                     Text("\(station + 1)")
                         .font(.system(size: 9, weight: .heavy, design: .rounded).monospacedDigit())
@@ -217,9 +239,6 @@ private struct StageLineView: View {
             .disabled(state == .ahead)
             .position(x: x(station), y: Self.lineY + 7)
         }
-
-        Terminal(chapter: chapter, index: index) { openGym() }
-            .position(x: terminal, y: Self.lineY + 7)
 
         if isHere, let leader = adventure.leader {
             HoppingIcon(speciesID: leader.speciesID, training: progress.isTraining || progress.repeating != nil)
@@ -237,11 +256,13 @@ private struct StageLineView: View {
     private func footer(chapter: Chapter, index: Int) -> some View {
         let adventure = app.adventure
         let progress = adventure.progress
+        // The line's chapter, or the one before while the party works up to it.
+        let isCurrent = index == progress.chapter || index == current
         HStack(spacing: 5) {
             if let selected, selected.chapter == index {
                 let level = adventure.foeLevel(chapter.stations[selected.station])
                 Text("\(chapter.number)-\(selected.station + 1)").font(.system(size: 9.5, weight: .heavy).monospacedDigit())
-                Text(selected.station == Chapter.stationCount - 1 ? "2 wild Pokémon · Lv \(level)" : "1 wild Pokémon · Lv \(level)")
+                Text(selected.station == Chapter.stationCount - 1 ? "3 wild Pokémon · Lv \(level)" : "1 wild Pokémon · Lv \(level)")
                     .foregroundStyle(.white.opacity(0.5))
                 Spacer(minLength: 2)
                 if progress.repeating == selected {
@@ -258,20 +279,7 @@ private struct StageLineView: View {
                 Image(systemName: "bolt.fill").foregroundStyle(Color(hex: 0xFFD35A))
                 Text("A challenge is underway").foregroundStyle(.white.opacity(0.7))
                 Spacer(minLength: 0)
-            } else if progress.isTraining, let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters) {
-                // Training after a loss: how far along, what level would do it, and a quicker way there.
-                Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(Color(hex: 0x7FC8FF))
-                Text("Training \(AutoChallenge.trainingClears - progress.training)/\(AutoChallenge.trainingClears)")
-                    .foregroundStyle(Color(hex: 0x7FC8FF))
-                    .monospacedDigit()
-                    .fixedSize()
-                Text("· \(shortHint(adventure) ?? GuideText.chance(boss.trainer.name, adventure.readiness ?? 0))")
-                    .foregroundStyle(.white.opacity(0.5))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer(minLength: 2)
-                if let fix = fix(adventure) { fixPill(fix) }
-            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), index == progress.chapter {
+            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), isCurrent {
                 let chance = adventure.readiness ?? 0
                 if chance >= Guidance.goodChance {
                     Image(systemName: "flag.checkered").foregroundStyle(Color(hex: 0xFFD35A))
@@ -292,16 +300,21 @@ private struct StageLineView: View {
                         pill("VS", symbol: "bolt.fill", primary: true) { openGym() }
                     }
                 }
-            } else if index == progress.chapter, adventure.nextBoss == nil {
+            } else if isCurrent, progress.isLooping {
                 Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(.white.opacity(0.6))
                 Text("Looping the last line").foregroundStyle(.white.opacity(0.6))
                 Spacer(minLength: 0)
-            } else if index == progress.chapter, let boss = adventure.nextBoss {
-                // On the line: how far to the boss, or that it waits for an agent; a pull when there's one.
-                let station = chapter.stations[adventure.stationPoint.station]
+            } else if isCurrent {
+                // On the line: the level the next station takes, how far to the line's end (and
+                // whose gym opens there), or that it waits for an agent; a pull when there's one.
+                let point = adventure.stationPoint
+                let station = adventure.chapters[point.chapter].stations[point.station]
+                let gym = adventure.nextBoss.flatMap { $0.chapter == progress.chapter ? $0.trainer.name : nil }
+                let onTheWay = adventure.nextStationLevel.map(GuideText.nextStationAt)
+                    ?? gym.map { GuideText.stationsTo($0, adventure.stationsLeft) } ?? GuideText.stationsLeft(adventure.stationsLeft)
                 Image(systemName: adventure.isBattling ? "play.fill" : "moon.zzz.fill")
                     .foregroundStyle(adventure.isBattling ? Color(hex: 0xFFD35A) : .white.opacity(0.5))
-                Text(adventure.isBattling ? GuideText.stationsTo(boss.trainer.name, adventure.stationsLeft) : GuideText.resting)
+                Text(adventure.isBattling ? onTheWay : GuideText.resting)
                     .foregroundStyle(.white.opacity(adventure.isBattling ? 0.8 : 0.55))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -385,84 +398,36 @@ private struct StationDot: View {
     let state: State
     let isHere: Bool
     let isSelected: Bool
+    /// The line's last station, drawn as a bigger terminus.
+    var isTerminus = false
 
     @State private var pulse = false
 
     var body: some View {
+        let size: CGFloat = isTerminus ? 16 : 12
+        let ring: CGFloat = isTerminus ? 3.5 : 2.5
         ZStack {
             if isHere {
-                Circle().fill(Color(hex: 0xFFD35A).opacity(pulse ? 0.08 : 0.35)).frame(width: pulse ? 22 : 16, height: pulse ? 22 : 16)
-                Circle().fill(Color(hex: 0xFFD35A)).frame(width: 14, height: 14)
-                Circle().strokeBorder(.white, lineWidth: 3).frame(width: 15, height: 15)
+                Circle().fill(Color(hex: 0xFFD35A).opacity(pulse ? 0.08 : 0.35)).frame(width: pulse ? size + 10 : size + 4, height: pulse ? size + 10 : size + 4)
+                Circle().fill(Color(hex: 0xFFD35A)).frame(width: size + 2, height: size + 2)
+                Circle().strokeBorder(.white, lineWidth: 3).frame(width: size + 3, height: size + 3)
             } else {
                 switch state {
                 case .cleared:
-                    Circle().fill(StageLineView.lineColor).frame(width: 12, height: 12)
-                    Circle().strokeBorder(Color(hex: 0x1E7A41), lineWidth: 2.5).frame(width: 12, height: 12)
+                    Circle().fill(StageLineView.lineColor).frame(width: size, height: size)
+                    Circle().strokeBorder(Color(hex: 0x1E7A41), lineWidth: ring).frame(width: size, height: size)
                 case .frontier, .ahead:
-                    Circle().fill(.black).frame(width: 12, height: 12)
-                    Circle().strokeBorder(.white.opacity(state == .frontier ? 0.6 : 0.28), lineWidth: 2.5).frame(width: 12, height: 12)
+                    Circle().fill(.black).frame(width: size, height: size)
+                    Circle().strokeBorder(.white.opacity(state == .frontier ? 0.6 : 0.28), lineWidth: ring).frame(width: size, height: size)
                 }
             }
             if isSelected {
-                Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1).frame(width: 18, height: 18)
+                Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1).frame(width: size + 6, height: size + 6)
             }
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
         }
-    }
-}
-
-/// The end of the line: the gym badge at stake, the League's crown, or a loop after the League.
-private struct Terminal: View {
-    let chapter: Chapter
-    let index: Int
-    let action: () -> Void
-
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let progress = app.adventure.progress
-        let done = index < progress.chapter || (chapter.isLeague && progress.isChampion)
-        let open = index == progress.chapter && progress.isBossOpen(app.adventure.chapters)
-        Button(action: action) {
-            VStack(spacing: 2) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color(hex: 0x2E2819))
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(open ? Color(hex: 0xFFD35A) : Color(hex: 0xB8A038).opacity(0.7), lineWidth: open ? 2 : 1.5)
-                    if let badge = chapter.badge {
-                        BadgeImageView(number: badge, size: 17, earned: done, unearnedColor: .white.opacity(0.3))
-                    } else if chapter.isLeague {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(done ? Color(hex: 0xFFD35A) : .white.opacity(0.4))
-                    } else {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 8.5, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.5))
-                    }
-                }
-                .frame(width: 23, height: 23)
-                Text(label)
-                    .font(.system(size: 7.5, weight: .heavy))
-                    .foregroundStyle(open ? Color(hex: 0xFFD35A) : .white.opacity(0.45))
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-            .offset(y: 4)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(chapter.bosses.isEmpty)
-        .help(chapter.bosses.map(\.name).joined(separator: ", "))
-    }
-
-    private var label: String {
-        if chapter.isLeague { return String(localized: "League") }
-        return chapter.bosses.first?.name ?? String(localized: "Loop")
     }
 }
 
@@ -778,7 +743,8 @@ private struct BossVSView: View {
         let entries = adventure.chapters.enumerated().flatMap { chapter, info in
             info.bosses.enumerated().map { Entry(chapter: chapter, index: $0.offset, trainer: $0.element) }
         }
-        let nextIndex = entries.firstIndex { $0.chapter == progress.chapter && $0.index == progress.boss } ?? entries.count - 1
+        let next = progress.nextBoss(adventure.chapters)
+        let nextIndex = next.flatMap { next in entries.firstIndex { $0.chapter == next.chapter && $0.index == next.index } } ?? entries.count - 1
         let shown = min(browsing ?? nextIndex, entries.count - 1)
         let entry = entries[shown]
         let goal = BattleTarget.boss(chapter: entry.chapter, index: entry.index)

@@ -44,7 +44,6 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
     <div class="left">
       <div class="scene">
         <span class="pill stage" data-stage>2-{start}</span>
-        <span class="pill auto">AUTO</span>
         <div class="plate foe-plate">
           <p><b data-foe-name>{foe.name}</b><span>Lv<b data-foe-level>{foe.level}</b></span></p>
           <div class="hp"><i data-foe-hp></i></div>
@@ -98,7 +97,6 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
           ))
         }
         <img class="rider" src={sprite.icon(lead.id)} alt="" width="40" height="30" />
-        <span class="gym"><Glyph name="star" size={11} /></span>
       </div>
       <p class="next"><Glyph name="adventure" size={12} /><span data-next>{b.toGym(10 - start + 1)}</span></p>
     </div>
@@ -303,11 +301,6 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
 
   .stage {
     left: 6px;
-  }
-
-  .auto {
-    right: 6px;
-    color: #cfd6ff;
   }
 
   .platform {
@@ -582,7 +575,7 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
   }
 
   .line {
-    --gap: calc((100% - 30px) / 10);
+    --gap: calc((100% - 16px) / 9);
     position: relative;
     height: 54px;
   }
@@ -590,7 +583,7 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
   .track {
     position: absolute;
     left: 5px;
-    right: 14px;
+    right: 8px;
     top: 30px;
     height: 3px;
     border-radius: 2px;
@@ -655,18 +648,16 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
     }
   }
 
-  .gym {
-    position: absolute;
-    right: 0;
-    top: 22px;
-    display: grid;
-    place-items: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
-    border: 2px solid #ffd84d;
-    background: #2c2c2e;
-    color: #ffd84d;
+  /* The line's last station is its terminus. */
+  .station[data-station='10'] {
+    top: 23px;
+    width: 16px;
+  }
+
+  .station[data-station='10'] .dot {
+    width: 16px;
+    height: 16px;
+    border-width: 3px;
   }
 
   .next {

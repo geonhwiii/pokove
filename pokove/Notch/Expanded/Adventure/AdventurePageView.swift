@@ -280,7 +280,7 @@ private struct RecapToast: View {
     }
 
     private var summary: String {
-        GuideText.summary(badges: recap.badges.count, evolved: recap.evolutions.count, joined: recap.discovered.count,
+        GuideText.summary(badges: recap.badges.count, gyms: recap.gymsOpened.count, evolved: recap.evolutions.count, joined: recap.discovered.count,
                           losses: recap.losses.values.reduce(0, +), dungeons: recap.dungeon.count, shinies: recap.shinies.count)
     }
 }
@@ -417,6 +417,7 @@ private struct RecapIcon: View {
                 }
             }
         case .badge(let number): BadgeImageView(number: number, size: 14)
+        case .openBadge(let number): BadgeImageView(number: number, size: 14, earned: false, unearnedColor: .white.opacity(0.55))
         case .stardust: StardustIcon(size: 13)
         case .symbol(let name, let color):
             Image(systemName: name).font(.system(size: 10, weight: .bold)).foregroundStyle(color)
@@ -433,6 +434,8 @@ struct RecapLine: Identifiable {
         /// A few Pokémon, overlapping.
         case team([Int])
         case badge(Int)
+        /// A badge still to win, as its outline.
+        case openBadge(Int)
         case stardust
         case symbol(String, Color)
     }
@@ -469,6 +472,15 @@ struct RecapLine: Identifiable {
             let trainer = trainers.first { $0.badge == badge }?.name ?? ""
             lines.append(.init(id: "badge\(badge)", icon: .badge(badge),
                                text: RecapText.beat(trainer, badge: Kanto.badgeName(badge)), isNotable: true))
+        }
+        for chapter in recap.gymsOpened {
+            guard let info = adventure.chapters[safeChapter: chapter], let first = info.bosses.first else { continue }
+            if let badge = info.badge {
+                lines.append(.init(id: "gym\(chapter)", icon: .openBadge(badge), text: RecapText.gymOpened(first.name), isNotable: true))
+            } else {
+                lines.append(.init(id: "gym\(chapter)", icon: .symbol("crown.fill", Color(hex: 0xFFD35A)), text: RecapText.leagueOpened,
+                                   isNotable: true))
+            }
         }
         // A boss that keeps winning comes early: it's the one line with something to do.
         for (trainerID, times) in recap.losses.sorted(by: { $0.key < $1.key }) {

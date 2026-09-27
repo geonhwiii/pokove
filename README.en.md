@@ -17,19 +17,18 @@ It runs on macOS 15 or later. Displays without a notch get a simulated one. When
 
 ## Pokémon adventure
 
-Your party holds up to three Pokémon. It only moves along the line while an agent works, on a journey through FireRed/LeafGreen's gyms and the Pokémon League.
+Your party holds up to three Pokémon. It only moves along the line while an agent works, on a journey through FireRed/LeafGreen's Kanto. Gyms and the Pokémon League are challenges of their own.
 
 - **Starting out:** choose Bulbasaur, Charmander or Squirtle (Lv 5). Your first gacha pull is free.
 - **The Challenge tab**
-  - **Stages:** each chapter is a line of ten stations ending at its gym leader. Chapter 9 is the Elite Four and the Champion, and chapter 10 loops through Mewtwo's cave. Stations hold the real wild Pokémon of their area. Tap a cleared station to go back to it.
-  - **Gym:** the next boss as a VS screen, with their team, the badge at stake, the chance to win and the level that would win.
+  - **Stages:** each chapter is a line of ten stations. The last one has three wild Pokémon, ending with the strongest one around, and then the line goes on to the next chapter. Each station has a level, and the party fights at the one before until it gets there. Chapter 10 opens after the Champion. Stations hold the real wild Pokémon of their area. Tap a cleared station to go back to it.
+  - **Gym:** a chapter's gym leader can be challenged once its line is cleared, and the Elite Four and the Champion after chapter 9. The VS screen shows their team, the badge at stake, the chance to win and the level that would win. You start each challenge yourself.
   - **Dungeon:** a daily dungeon of the day's type, in Easy, Normal and Hard. Each tier pays stardust or an Ultra Ball once a day and resets at 4:00.
   - **Tower:** the Battle Tower opens after the Champion. Climb floor after floor until you lose; your best floor is kept.
   - Gyms, legendaries, the dungeon and the tower play out once started, agent or not. Losing costs nothing.
-- **The line under the tab** says what to do next: stations to the boss, the level that would beat it, and a shortcut (best team, today's dungeon, a pull).
+- **The line under the tab** says what to do next: the next station's level, stations to the gym, the level that would beat it, and a shortcut (best team, today's dungeon, a pull).
 - **Badges raise the level cap.** Experience past the cap is banked and comes back with the next badge.
 - **Legendaries:** Snorlax, Zapdos, Articuno and Moltres wait on ★ branches of the line, and Mewtwo after the Champion. Beat one and it joins.
-- **AUTO** (on by default) swaps in the recommended team and challenges the boss when the line ends. After a loss the party stays on the line, levels up and tries again.
 - **Battles** are a 1:1 relay, like the games: Gen 3 power and accuracy, crits, multi-hits, drain and recoil, plus poison, burns and paralysis. The whole party shares the experience.
 
 ![The gym's VS screen](docs/images/gym.png)
@@ -51,7 +50,7 @@ A Pokémon's card shows its next evolution, its next move, the experience left t
 
 ### While you were away
 
-If something big happened while the page was closed (a badge, an evolution, a newcomer, a lost boss fight), it shows as one line over the battle when you open it again. Everything is kept in the **history** (the clock next to the bell) for today and yesterday.
+If something big happened while the page was closed (a badge, a gym opening, an evolution, a newcomer, a lost boss fight), it shows as one line over the battle when you open it again. Everything is kept in the **history** (the clock next to the bell) for today and yesterday.
 
 ![While you were away](docs/images/away.png)
 
@@ -184,9 +183,9 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
 - **Windows:** `rebuild` (recreates the notch windows).
 - **Adventure:**
   - Setup: `poke starter <id>`, `poke reset`, `poke champion`.
-  - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke shiny` (the leader shines), `poke jump <chapter> <station> <badges>` (1-based; station 11 means the boss is next), `poke tick <n>` (battle actions without an agent or the clock).
+  - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke shiny` (the leader shines), `poke jump <chapter> <station> <badges>` (1-based; station 11 means the line is cleared), `poke tick <n>` (battle actions without an agent or the clock).
   - Gacha: `poke pull`, `poke ultra` (adds an Ultra Ball), `poke ultraopen`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
-  - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon easy|normal|hard`, `poke dungeonreset`, `poke tower`, `poke auto on|off`.
+  - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon easy|normal|hard`, `poke dungeonreset`, `poke tower`.
   - Page: `poke pane challenge|dex|gacha|history|toast` (toast replays the newest history entry), `poke mode stage|gym|dungeon|tower|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/pokove-state.txt`), `select <dex number>`.
 - **Settings:** `settings claude|adventure|about|…`.
 

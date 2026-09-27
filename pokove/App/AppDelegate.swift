@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // poke starter <id> | poke catch [id] | poke xp <n> | poke stardust <n> | poke ultra
             // | poke jump <chapter> <station, 11 = boss> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
             // | poke challenge | poke legend <id> | poke dungeon easy|normal|hard | poke dungeonreset
-            // | poke pane challenge|dex|gacha|history|toast | poke mode stage|gym|dungeon|legend:<id> | poke auto on|off | poke reset
+            // | poke pane challenge|dex|gacha|history|toast | poke mode stage|gym|dungeon|tower|legend:<id> | poke reset
             let arguments = parts.dropFirst(2).compactMap { Int($0) }
             let adventure = app.adventure
             switch parts.count > 1 ? parts[1] : "" {
@@ -129,7 +129,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 try? (old + line).write(to: url, atomically: true, encoding: .utf8)
             case "legend": adventure.challengeLegend(parts.dropFirst(2).first ?? "")
             case "pane": NotificationCenter.default.post(name: .pokoveDebugAdventurePane, object: parts.dropFirst(2).first)
-            case "auto": adventure.autoChallenge = parts.last != "off"
             case "reset": adventure.resetAdventure()
             default: break
             }

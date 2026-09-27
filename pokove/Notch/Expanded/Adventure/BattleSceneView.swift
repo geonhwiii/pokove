@@ -384,20 +384,12 @@ private struct SceneTextBox: View {
     }
 
     private func status(_ adventure: AdventureService) -> String? {
-        let progress = adventure.progress
-        if let repeating = progress.repeating {
-            return String(localized: "Repeating \(repeating.chapter + 1)-\(repeating.station + 1)")
-        }
-        guard let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters) else { return nil }
-        if progress.isTraining {
-            let chance = Int(((adventure.readiness ?? 0) * 100).rounded())
-            return String(localized: "Training for \(boss.trainer.name) · \(chance)% to win")
-        }
-        return adventure.autoChallenge ? nil : String(localized: "\(boss.trainer.name) is waiting · tap Challenge")
+        guard let repeating = adventure.progress.repeating else { return nil }
+        return String(localized: "Repeating \(repeating.chapter + 1)-\(repeating.station + 1)")
     }
 }
 
-/// What the party is fighting at the top left; Challenge and AUTO at the top right.
+/// What the party is fighting at the top left; Challenge at the top right while a gym is open.
 private struct SceneChrome: View {
     @Environment(AppModel.self) private var app
 
@@ -412,7 +404,7 @@ private struct SceneChrome: View {
                 .frame(height: 15)
                 .background(.black.opacity(0.42), in: Capsule())
             Spacer(minLength: 4)
-            if !adventure.isChallenging, adventure.progress.isBossOpen(adventure.chapters), !adventure.autoChallenge || adventure.progress.isTraining {
+            if !adventure.isChallenging, adventure.progress.isBossOpen(adventure.chapters) {
                 Button {
                     withAnimation(.smooth(duration: 0.25)) { adventure.challengeBoss() }
                 } label: {
@@ -431,9 +423,8 @@ private struct SceneChrome: View {
                     .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .help("Take on the boss now")
+                .help(adventure.nextBoss?.trainer.name ?? "")
             }
-            AutoToggle()
         }
         .padding(.horizontal, 6)
         .padding(.top, 5)
@@ -458,28 +449,6 @@ private struct SceneChrome: View {
         case .tower(let floor):
             return "\(ChallengeText.tower) · \(ChallengeText.floor(floor))"
         }
-    }
-}
-
-private struct AutoToggle: View {
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let adventure = app.adventure
-        Button {
-            adventure.autoChallenge.toggle()
-        } label: {
-            Text("AUTO")
-                .font(.system(size: 8, weight: .black, design: .rounded))
-                .foregroundStyle(adventure.autoChallenge ? .black : .white.opacity(0.7))
-                .padding(.horizontal, 6)
-                .frame(height: 15)
-                .background(adventure.autoChallenge ? Color.adventure : Color.black.opacity(0.42), in: Capsule())
-                .overlay(Capsule().strokeBorder(.white.opacity(adventure.autoChallenge ? 0 : 0.25), lineWidth: 1))
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .help(adventure.autoChallenge ? "AUTO: the boss is challenged as soon as the line is cleared, and again after training" : "AUTO is off: the party trains until you tap Challenge")
     }
 }
 

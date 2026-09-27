@@ -3,6 +3,45 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v3.2: stages and gyms apart (agreed with the user, 2026-09-28)
+
+The user found the balance off from the start: the line ran to its 10th station and then hit a gym
+far stronger than anything on it, and the party sat there training. Decided in one Q&A round; where
+this conflicts with v3.1 or v3 below, v3.2 wins.
+
+- **The line never waits for a gym.** Clearing N-10 goes straight on to (N+1)-1, badges or not
+  (`JourneyProgress.recordStation` → `moveOn`). Chapter 10 (Cerulean Cave) still opens with the
+  Champion; until then a cleared chapter 9 loops.
+- **The 10th station is a terminus:** three wild Pokémon in a relay, the last the strongest species
+  in the stretch's pool (base stat total) two levels up (`StagePlan.station`, `lastStationFoes`).
+  Drawn as a bigger dot; the gym terminal at the end of the line is gone.
+- **Stations are level-gated.** Wild Pokémon still stay a level below the party, but the line only
+  moves to the next station once the party's average level reaches that station's own level; until
+  then it fights at the station before, which can be the previous chapter's terminus
+  (`stationTarget(_:partyLevel:)`, `isReady`, `AdventureService.isHoldingBack`). The footer then says
+  "다음 역은 Lv N부터". The line view follows the party, so it can show the chapter before the line's.
+  *Found in the sim, not agreed up front:* with only the old "a level below the party" rule the
+  free line reached 9-10 within 1–8 h and looped there for the rest of the game; with the stations'
+  own levels and no cap the party lost thousands of times. The level gate gives: chapter 2 at ~2 h,
+  4–5 at ~8 h, 6–7 at ~24 h, 8–9 at ~48 h, a handful of losses in total, badge N landing as the line
+  reaches chapter N+1, Champion ~48–67 h with the sim's player (5 seeds). The level cap is what
+  slows a party that skips gyms: chapter N+1's top level is about the cap with N badges.
+- **Gyms are their own challenge.** Badge order is fixed; the next boss comes from the badges
+  (`nextBoss`: first chapter whose badge isn't earned, then the League's five), and it opens once its
+  chapter's line is cleared (`isBossOpen`). The League opens after chapter 9 with eight badges, and
+  a win there goes straight on to the next of the five (`lineUp(goOn:)`).
+- **AUTO is gone** (user: manual only). No training after a gym loss, no auto challenges; the
+  AUTO toggle, its Settings switch and `poke auto` are removed. The save still writes
+  `autoChallenge: false` so an older build can read it. Signals that a gym is waiting: a dot on the
+  체육관 tab, the ⚡ 도전 N% chip on the battle, the footer's chance or level hint, and a history
+  line "X 체육관이 열렸어요" / "포켓몬리그가 열렸어요" (`AdventureRecap.gymsOpened`, notable).
+- **Migration:** on load a save whose line sat at N-10 waiting for its gym moves on to (N+1)-1
+  with its training cleared (`moveOn` in `load()`); `retryLevel` is no longer read.
+- **Sim:** the player takes a gym on at a ≥ 60% forecast, or hourly once the party is stuck at the
+  cap. Run it as before; the knobs used for tuning were removed.
+- **Card:** the level reads "Lv 5/16" (the cap after the slash, yellow at the cap) and the
+  experience "EXP 19 남음", because two bare numbers side by side read alike.
+
 ## v3.1: guidance, history, richer Pokédex card (agreed with the user, 2026-09-27)
 
 The user found the game hard to follow: what to do next, and why a boss keeps winning. The
@@ -38,7 +77,7 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
 
 ### Convenience (agreed 2026-09-28)
 
-- **AUTO fights with the best team.** When AUTO challenges a boss it swaps in `recommendedParty(for:)`
+- *(Removed in v3.2 with AUTO.)* **AUTO fights with the best team.** When AUTO challenges a boss it swaps in `recommendedParty(for:)`
   first, and the team stays afterwards. It judges early retries by that team's chance
   (`bestReadiness`). A boss you start yourself keeps the party you set.
 - **Drag and drop:** party slots reorder by dragging (swap places); an owned Pokémon dragged from the
@@ -234,19 +273,19 @@ Notes on the data:
   - Items (`sprites/items/poke-ball.png` etc., 30×30) and badges (`sprites/badges/1…8.png`) come from the same repo.
   - Trainers come from Showdown: `play.pokemonshowdown.com/sprites/trainers/<name>-gen3.png`.
 
-## Rules (v3; tune with scripts/adventure-sim.swift)
+## Rules (v3.2; tune with scripts/adventure-sim.swift)
 
 - **Journey:** `Kanto.chapters(starter:)` holds 10 chapters of 10 stations (`Chapter.stationCount`).
-  - Stations take their wild pool and backdrop from a `Stretch` (FRLG areas); levels rise evenly across the chapter's range and are capped at the party level −1 when fought. One wild Pokémon a station, two at the 10th (`StagePlan.station`).
-  - Chapters 1–8 end at a gym leader, chapter 9 at the League (Lorelei, Bruno, Agatha, Lance, the rival), chapter 10 (Cerulean Cave) has no boss and loops.
+  - Stations take their wild pool and backdrop from a `Stretch` (FRLG areas); levels rise evenly across the chapter's range and are capped at the party level −1 when fought. One wild Pokémon a station; the 10th is a terminus with three, the last the stretch's strongest species at +2 (`StagePlan.station`).
+  - The line moves to the next station once the party's average level reaches that station's level; until then it fights at the station before (`JourneyProgress.stationTarget(_:partyLevel:)`).
+  - Chapters 1–8 have a gym leader, chapter 9 the League (Lorelei, Bruno, Agatha, Lance, the rival). The line doesn't wait for them: N-10 leads to (N+1)-1. Chapter 10 (Cerulean Cave) has no boss, opens with the Champion and loops.
   - Trainers bring the **last three** of their original team (`Trainer.battleTeam`).
   - **Legendaries** (`Kanto.legends`, `Chapter.legend`) are ★ branches on chapters 5, 6, 7, 9 and 10, open once the chapter is reached. 2.5× HP.
 - **Level cap by badges:** 16, 23, 27, 32, 45, 47, 50, 54, then 65 with 8 badges, and 100 as Champion.
   - XP past the cap goes into `OwnedPokemon.banked`. A badge releases it.
-- **Progress** (`JourneyProgress`): `chapter`, `station` (0–10), `boss` (League index), `training`, `retryLevel`, `repeating`, `losses`.
-  - A station clear advances the line. A loss on the line means 3 clears of the station before.
-  - At the end of the line **AUTO** challenges the boss at once. A loss sets `training = 30` and `retryLevel = partyLevel + 1`; AUTO tries again when training is done, or earlier once the party reaches `retryLevel` with a forecast of at least 15% (`AutoChallenge.earlyRetryChance`). After 3 losses in a row the recap shows the best-team hint.
-  - With AUTO off the party trains at the last station until **Challenge!**.
+- **Progress** (`JourneyProgress`): `chapter`, `station` (0–10; 10 only on the last open line, which loops), `boss` (League index), `training`, `repeating`, `cursor`, `badges`, `losses`.
+  - A frontier clear advances the line. A loss on the line means 3 clears of the station before (`Losses.wildTraining`).
+  - The next boss follows the badges (`nextBoss`) and opens once its chapter's line is cleared (`isBossOpen`). The user starts every gym; a loss costs nothing and changes nothing but `losses`. After 3 losses in a row the recap shows the best-team hint (`Losses.hintAfter`). A League win goes straight on to the next of the five.
 - **Challenges** (`BattleTarget.isChallenge`: boss, legend, dungeon) play at 1 s per action regardless of agents; stations at 1.5 s only while an agent works. The service ticks every 0.5 s. XP from a challenge is held and granted only on a win.
 - **Battle** (`BattleState`, 1:1 relay):
   - Each round both actives choose a move. Order is by priority, then speed.
@@ -292,7 +331,7 @@ Six runs (three starters × two seeds), hours of agent work:
 | `pokove/Adventure/PokeMoves.swift` | `PokeMove` (Gen 3 values, damage kinds, cooldown, rating), `MoveDex` (learnsets, movesets), the moves query |
 | `pokove/Adventure/Kanto.swift` | trainers and teams, `Stretch`, `Station`, `Chapter`, `LegendSpot`, the chapters, level caps, gacha-only list, badge names, `EncounterDex` and its query |
 | `pokove/Adventure/BattleEngine.swift` | `SeededRNG`, `PokeMath` (stats, XP), `GameData`, `DexView`, `Combatant`, `StagePlan` (station, boss, legend), `BattleState` (1:1 relay) |
-| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `AutoChallenge`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend`, `Guidance` (level hint, weaknesses, matchups, habitats, next move) |
+| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `Losses`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend`, `Guidance` (level hint, weaknesses, matchups, habitats, next move) |
 | `pokove/Adventure/BattleText.swift` | battle, recap, challenge and guide (`GuideText`) lines with Korean particles (이/가, 을/를, 은/는, 로/으로, 이면/면) |
 | `pokove/Adventure/AdventureService.swift` | game state, tick loop (stations on agent time, challenges on their own), growth, discovery, gacha and Ultra Balls, dungeon day, recap, banners, save (`adventure-v3.json`, migrating v2) |
 | `pokove/Adventure/PokeSprites.swift` | sprite cache (Pokémon, back sprites, trainers, items, badges) and views |

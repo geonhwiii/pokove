@@ -90,6 +90,8 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     var evolutions: [Evolution] = []
     var learned: [Learned] = []
     var badges: [Int] = []
+    /// Chapters (0-based) whose gym, or the League, opened as their line was cleared.
+    var gymsOpened: [Int] = []
     /// Bosses that won, by trainer ID, and how many times.
     var losses: [String: Int] = [:]
     /// A boss that has won several times in a row, for the best-team hint.
@@ -104,14 +106,14 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     var tower: Int?
 
     var isEmpty: Bool {
-        clears == 0 && growth.isEmpty && discovered.isEmpty && evolutions.isEmpty && badges.isEmpty && losses.isEmpty
+        clears == 0 && growth.isEmpty && discovered.isEmpty && evolutions.isEmpty && badges.isEmpty && gymsOpened.isEmpty && losses.isEmpty
             && stuck == nil && dungeon.isEmpty && shinies.isEmpty && dexMilestones.isEmpty && tower == nil
     }
 
     /// Worth a line over the battle when the page opens; the rest waits in the history.
     var isNotable: Bool {
-        !badges.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty || !shinies.isEmpty
-            || !dexMilestones.isEmpty
+        !badges.isEmpty || !gymsOpened.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty
+            || !shinies.isEmpty || !dexMilestones.isEmpty
     }
 
     init() {}
@@ -138,6 +140,7 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
             ?? (legacy.decodeIfPresent([Int].self, forKey: .evolved) ?? []).map { Evolution(from: $0, to: $0) }
         learned = try container.decodeIfPresent([Learned].self, forKey: .learned) ?? []
         badges = try container.decodeIfPresent([Int].self, forKey: .badges) ?? []
+        gymsOpened = try container.decodeIfPresent([Int].self, forKey: .gymsOpened) ?? []
         losses = try container.decodeIfPresent([String: Int].self, forKey: .losses) ?? [:]
         stuck = try container.decodeIfPresent(String.self, forKey: .stuck)
         dungeon = try container.decodeIfPresent([DungeonTier].self, forKey: .dungeon) ?? []
@@ -172,7 +175,7 @@ nonisolated struct ChallengeResult: Equatable, Sendable {
 
 /// The adventure: a party of up to three rides a line of stations while a coding agent works,
 /// battling wild Pokémon in a 1:1 relay. Gym leaders, the League, legendaries and the daily dungeon
-/// are challenges that play out on their own once started. Pokémon join through discoveries and the
+/// are challenges the user starts, which then play out on their own. Pokémon join through discoveries and the
 /// gacha; badges raise the level cap.
 @Observable
 final class AdventureService {
@@ -224,15 +227,6 @@ final class AdventureService {
     private(set) var levelHint: LevelHint?
     /// The box holds a better party for the next boss than the one out now.
     private(set) var hasBetterTeam = false
-    /// The recommended party's chance against the next boss, which AUTO goes by.
-    @ObservationIgnored private var bestReadiness: Double?
-    /// Take on the boss by itself as soon as the line is cleared, and again after training.
-    var autoChallenge = true {
-        didSet {
-            guard autoChallenge != oldValue else { return }
-            scheduleSave()
-        }
-    }
 
     let dex: PokeDexStore
     /// Set by the app: whether any coding agent is mid-turn right now.
@@ -359,7 +353,18 @@ final class AdventureService {
     var isChallenging: Bool { target?.isChallenge == true && battle.map { !$0.isOver } == true }
 
     /// The station the stage line is on, whether or not it's being fought right now.
-    var stationPoint: StationPoint { progress.stationTarget(chapters) }
+    var stationPoint: StationPoint { progress.stationTarget(chapters, partyLevel: partyLevel) }
+
+    /// The party fights behind the next station until it's up to that station's level.
+    var isHoldingBack: Bool {
+        progress.repeating == nil && !progress.isLooping && !progress.isTraining && stationPoint != progress.frontier
+    }
+
+    /// The level the next station takes, while the party isn't there yet.
+    var nextStationLevel: Int? {
+        guard isHoldingBack else { return nil }
+        return chapters[safeChapter: progress.chapter]?.stations[safe: progress.station]?.level
+    }
 
     /// The next boss and its trainer, once or before the line is cleared.
     var nextBoss: (chapter: Int, index: Int, trainer: Trainer)? {
@@ -370,7 +375,7 @@ final class AdventureService {
     /// The level a station's wild Pokémon are met at: its own, but never above the party.
     func foeLevel(_ station: Station) -> Int { max(2, min(station.level, partyLevel - 1)) }
 
-    /// Stations still to clear before the boss can be challenged.
+    /// Stations still to clear on the current line.
     var stationsLeft: Int { max(0, Chapter.stationCount - progress.station) }
 
     /// Legendaries whose branch the party has reached and hasn't beaten.
@@ -662,7 +667,7 @@ final class AdventureService {
         let today = DailyDungeon.day(of: Date())
         if dungeonDay.day != today { dungeonDay = DungeonDay(day: today) }
         // Something is always lined up, so the scene shows who's next even while agents rest.
-        if battle == nil || battle?.isOver == true { lineUp(data, allowAuto: isAgentWorking()) }
+        if battle == nil || battle?.isOver == true { lineUp(data) }
         guard let target else { return }
         if let holdUntil, Date() < holdUntil { return }
         let working = target.isChallenge || isAgentWorking()
@@ -713,22 +718,15 @@ final class AdventureService {
         }
     }
 
-    /// The next battle: the boss if AUTO wants it, otherwise the station. AUTO goes by the
-    /// recommended team's chance and swaps that team in for the fight; it stays afterwards.
-    private func lineUp(_ data: GameData, allowAuto: Bool) {
+    /// The next battle: the station, unless a tower run or the League is underway.
+    private func lineUp(_ data: GameData, goOn: BattleTarget? = nil) {
         // A tower run climbs on by itself until it ends.
         if let floor = tower.floor {
             start(.tower(floor), data: data)
-            return
-        }
-        let chance = { (self.hasBetterTeam ? self.bestReadiness : nil) ?? self.readiness ?? 0 }
-        if allowAuto, progress.wantsBoss(data.chapters, auto: autoChallenge, partyLevel: partyLevel, chance: chance),
-           let next = progress.nextBoss(data.chapters) {
-            let goal = BattleTarget.boss(chapter: next.chapter, index: next.index)
-            if hasBetterTeam { recommendParty(for: goal) }
-            start(goal, data: data)
+        } else if let goOn {
+            start(goOn, data: data)
         } else {
-            start(.station(progress.stationTarget(data.chapters)), data: data)
+            start(.station(progress.stationTarget(data.chapters, partyLevel: partyLevel)), data: data)
         }
     }
 
@@ -781,7 +779,7 @@ final class AdventureService {
 
     private func finish(cleared: Bool, data: GameData) {
         guard let target, let plan = battle?.plan else { return }
-        var autoNext = true
+        var goOn: BattleTarget?
         let capBefore = levelCap
         var result: ChallengeResult?
         var reward = 0
@@ -800,7 +798,11 @@ final class AdventureService {
         case .station(let point):
             // Only the frontier counts as progress; repeats and training don't move the line.
             let frontier = point == StationPoint(chapter: progress.chapter, station: progress.station) && progress.repeating == nil
+            let wasOpen = progress.isBossOpen(data.chapters)
             progress.recordStation(point, cleared: cleared, chapters: data.chapters)
+            if !wasOpen, progress.isBossOpen(data.chapters), let next = progress.nextBoss(data.chapters) {
+                note { $0.gymsOpened.append(next.chapter) }
+            }
             if cleared {
                 note { recap in
                     if frontier {
@@ -814,22 +816,23 @@ final class AdventureService {
                 }
             }
         case .boss:
-            let outcome = progress.recordBoss(cleared: cleared, chapters: data.chapters, partyLevel: partyLevel)
+            let outcome = progress.recordBoss(cleared: cleared, chapters: data.chapters)
             if let trainer = plan.trainer {
                 if cleared {
                     note { $0.losses[trainer.id] = nil; $0.stuck = nil }
                 } else {
-                    let stuck = progress.losses >= AutoChallenge.hintAfterLosses
+                    let stuck = progress.losses >= Losses.hintAfter
                     note { recap in
                         recap.losses[trainer.id, default: 0] += 1
                         if stuck { recap.stuck = trainer.id }
                     }
                 }
             }
-            // After a loss the party trains first; after a win in the League, AUTO goes straight on.
-            autoNext = cleared
             if let trainer = plan.trainer { result = ChallengeResult(kind: .boss(trainer), cleared: cleared, stardust: reward) }
             switch outcome {
+            case .advanced:
+                // The League's five come one after another.
+                if let next = progress.nextBoss(data.chapters) { goOn = .boss(chapter: next.chapter, index: next.index) }
             case .badge(let badge):
                 releaseBank()
                 note { $0.badges.append(badge) }
@@ -895,7 +898,7 @@ final class AdventureService {
             if isWatching { hold(Self.resultHold) }
         }
         // The next battle lines up at once, so the scene never sits empty.
-        lineUp(data, allowAuto: autoNext && (target.isChallenge || isAgentWorking()))
+        lineUp(data, goOn: goOn)
         saveNow()
     }
 
@@ -984,7 +987,7 @@ final class AdventureService {
 
     private func discover(_ data: GameData) {
         guard rng.unit() < Self.stationInterval / Discovery.meanInterval(boxCount: owned.count) else { return }
-        let pool = Discovery.pool(at: progress.stationTarget(data.chapters), data: data)
+        let pool = Discovery.pool(at: stationPoint, data: data)
         guard let speciesID = Discovery.roll(pool: pool, rng: &rng), let species = dex.species(speciesID) else { return }
         let level = Discovery.level(of: species, partyLevel: partyLevel, cap: levelCap, rng: &rng)
         seen.insert(speciesID)
@@ -1053,7 +1056,7 @@ final class AdventureService {
 
     private func refreshReadiness() {
         guard let next = progress.nextBoss(chapters) else {
-            readiness = nil; bestReadiness = nil; levelHint = nil; hasBetterTeam = false; forecastKey = nil
+            readiness = nil; levelHint = nil; hasBetterTeam = false; forecastKey = nil
             return
         }
         // The box size counts too: a newcomer may make a better team.
@@ -1064,7 +1067,6 @@ final class AdventureService {
         readiness = winChance(goal)
         let picks = recommendedParty(for: goal)
         hasBetterTeam = !picks.isEmpty && picks != partyIDs
-        bestReadiness = hasBetterTeam ? winChance(goal, party: picks) : readiness
         refreshLevelHint(goal)
     }
 
@@ -1223,15 +1225,15 @@ final class AdventureService {
 
     func debugUltraBall() { ultraBalls += 1; saveNow() }
 
-    /// Chapter and station are 1-based, as shown; station 11 means the boss is next.
+    /// Chapter and station are 1-based, as shown; station 11 means the line is cleared.
     func debugJump(chapter: Int, station: Int, badges: Int) {
         progress.chapter = max(0, min(chapter - 1, chapters.count - 1))
         progress.station = max(0, min(station - 1, Chapter.stationCount))
         progress.boss = 0
         progress.badges = badges
         progress.training = 0
-        progress.retryLevel = nil
         progress.repeating = nil
+        progress.moveOn(chapters)
         battle = nil
         target = nil
         releaseBank()
@@ -1245,7 +1247,7 @@ final class AdventureService {
     func debugTicks(_ count: Int) {
         guard let data else { return }
         for _ in 0..<count {
-            if battle == nil || battle?.isOver == true { lineUp(data, allowAuto: true) }
+            if battle == nil || battle?.isOver == true { lineUp(data) }
             step(data)
         }
     }
@@ -1263,7 +1265,8 @@ final class AdventureService {
         var stardust: Int
         var ultraBalls: Int
         var progress: JourneyProgress
-        var autoChallenge: Bool
+        /// AUTO is gone; still written so an older version can read the save.
+        var autoChallenge = false
         var offer: [GachaCard]?
         var recap: AdventureRecap
         var history: [AdventureRecap]?
@@ -1306,11 +1309,12 @@ final class AdventureService {
             do {
                 let file = try JSONDecoder.adventure.decode(SaveFile.self, from: data)
                 apply(starter: file.starter, owned: file.owned, partyIDs: file.partyIDs, seen: file.seen, caught: file.caught,
-                      autoChallenge: file.autoChallenge, offer: file.offer, recap: file.recap, clears: file.clears, wipes: file.wipes,
-                      pulls: file.pulls)
+                      offer: file.offer, recap: file.recap, clears: file.clears, wipes: file.wipes, pulls: file.pulls)
                 stardust = file.stardust
                 ultraBalls = file.ultraBalls
                 progress = file.progress
+                // Lines used to wait at their end for the gym; they now go on to the next chapter.
+                progress.moveOn(chapters)
                 if let day = file.dungeon { dungeonDay = day }
                 history = file.history ?? []
                 historyUnread = file.historyUnread ?? false
@@ -1337,22 +1341,22 @@ final class AdventureService {
         guard let legacyURL, let data = try? Data(contentsOf: legacyURL),
               let file = try? JSONDecoder.adventure.decode(LegacySaveFile.self, from: data) else { return }
         apply(starter: file.starter, owned: file.owned, partyIDs: file.partyIDs, seen: file.seen, caught: file.caught,
-              autoChallenge: file.autoChallenge, offer: file.offer, recap: file.recap, clears: file.clears, wipes: file.wipes, pulls: file.pulls)
+              offer: file.offer, recap: file.recap, clears: file.clears, wipes: file.wipes, pulls: file.pulls)
         stardust = file.coins
         progress = JourneyProgress.migrated(fromNode: file.progress.frontier.node, stage: file.progress.frontier.stage,
                                             badges: file.progress.badges, isChampion: file.progress.isChampion,
                                             beatenLegends: file.progress.beatenLegends)
+        progress.moveOn(chapters)
         saveNow()
     }
 
-    private func apply(starter: Int?, owned: [OwnedPokemon], partyIDs: [UUID], seen: [Int], caught: [Int], autoChallenge: Bool,
+    private func apply(starter: Int?, owned: [OwnedPokemon], partyIDs: [UUID], seen: [Int], caught: [Int],
                        offer: [GachaCard]?, recap: AdventureRecap, clears: Int, wipes: Int, pulls: Int) {
         self.starter = starter
         self.owned = owned
         self.partyIDs = partyIDs.filter { id in owned.contains { $0.id == id } }
         self.seen = Set(seen)
         self.caught = Set(caught)
-        self.autoChallenge = autoChallenge
         self.offer = offer
         self.recap = recap
         self.clears = clears
@@ -1374,7 +1378,7 @@ final class AdventureService {
         saveTask?.cancel()
         saveTask = nil
         let file = SaveFile(starter: starter, owned: owned, partyIDs: partyIDs, seen: seen.sorted(), caught: caught.sorted(),
-                            stardust: stardust, ultraBalls: ultraBalls, progress: progress, autoChallenge: autoChallenge, offer: offer,
+                            stardust: stardust, ultraBalls: ultraBalls, progress: progress, offer: offer,
                             recap: recap, history: history, historyUnread: historyUnread, tower: tower, dexRewards: dexRewards,
                             clears: clears, wipes: wipes, pulls: pulls,
                             dungeon: dungeonDay)

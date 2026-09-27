@@ -13,7 +13,7 @@ nonisolated struct StationPoint: Codable, Hashable, Sendable {
 nonisolated enum BattleTarget: Equatable, Sendable {
     /// A station, while an agent works.
     case station(StationPoint)
-    /// A chapter's boss: its gym leader, or one of the League's five.
+    /// A gym leader, or one of the League's five, by the chapter they belong to.
     case boss(chapter: Int, index: Int)
     case legend(String)
     case dungeon(DungeonTier)
@@ -30,27 +30,27 @@ nonisolated enum BattleTarget: Equatable, Sendable {
     }
 }
 
-/// How far the journey has come, and where on the line the party fights.
+/// How far the journey has come, and where on the line the party fights. The stage line and the
+/// gyms are separate: the line runs on from chapter to chapter, and a chapter's gym opens once its
+/// line is cleared. Badges raise the level cap.
 nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
-    /// The current chapter, 0-based. After the League it stays on the last chapter, which loops.
+    /// The chapter the line is on, 0-based. The one after the League waits for the Champion.
     var chapter = 0
-    /// Stations cleared in the current chapter; `Chapter.stationCount` once its boss is next.
+    /// Stations cleared in the current chapter; `Chapter.stationCount` once the last open line is done.
     var station = 0
-    /// The next of the chapter's bosses (the League has five).
+    /// The next of the League's five, once the eight badges are in.
     var boss = 0
-    /// Clears of an earlier station still to go after a loss, before trying again.
+    /// Clears of the station before still to go after a loss on the line.
     var training = 0
     /// A cleared station the user picked to repeat.
     var repeating: StationPoint?
-    /// Counts clears while looping the last chapter.
+    /// Counts clears while looping the last open line.
     var cursor = 0
     var badges = 0
     var isChampion = false
     var beatenLegends: [String] = []
     /// Losses in a row to the current boss.
     var losses = 0
-    /// After a loss, AUTO tries again once the party reaches this level, even mid-training.
-    var retryLevel: Int?
 
     func hasReached(chapter index: Int) -> Bool { index <= chapter }
 
@@ -61,44 +61,61 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
 
     func isCleared(_ point: StationPoint) -> Bool { point.station < cleared(in: point.chapter) }
 
-    /// The boss waiting at the end of the current line, if it has one.
-    func nextBoss(_ chapters: [Chapter]) -> (chapter: Int, index: Int)? {
-        guard chapters.indices.contains(chapter), chapters[chapter].bosses.indices.contains(boss) else { return nil }
-        return (chapter, boss)
+    /// The furthest chapter the line runs to: the one after the League opens with the Champion.
+    func lastChapter(_ chapters: [Chapter]) -> Int {
+        guard !isChampion, let league = chapters.firstIndex(where: \.isLeague) else { return chapters.count - 1 }
+        return league
     }
 
-    /// The line is cleared, so its boss can be challenged.
-    func isBossOpen(_ chapters: [Chapter]) -> Bool { station >= Chapter.stationCount && nextBoss(chapters) != nil }
+    /// The last open line is cleared, so the party goes round it.
+    var isLooping: Bool { station >= Chapter.stationCount }
 
-    /// AUTO takes the boss on as soon as the line is cleared. After a loss it trains first, and
-    /// tries again sooner if a level gained gives it a fair chance (`chance` is the forecast).
-    func wantsBoss(_ chapters: [Chapter], auto: Bool, partyLevel: Int, chance: () -> Double) -> Bool {
-        guard auto, isBossOpen(chapters) else { return false }
-        if training == 0 { return true }
-        guard let retryLevel, partyLevel >= retryLevel else { return false }
-        return chance() >= AutoChallenge.earlyRetryChance
+    /// The next gym leader in badge order, then the League's five one after another.
+    func nextBoss(_ chapters: [Chapter]) -> (chapter: Int, index: Int)? {
+        guard !isChampion, let index = chapters.firstIndex(where: { $0.isLeague || ($0.badge ?? 0) > badges }) else { return nil }
+        let member = chapters[index].isLeague ? boss : 0
+        guard chapters[index].bosses.indices.contains(member) else { return nil }
+        return (index, member)
+    }
+
+    /// The next boss's chapter is cleared, so it can be challenged.
+    func isBossOpen(_ chapters: [Chapter]) -> Bool {
+        guard let next = nextBoss(chapters) else { return false }
+        return cleared(in: next.chapter) >= Chapter.stationCount
     }
 
     var isTraining: Bool { training > 0 && repeating == nil }
 
-    /// Where the party fights while an agent works.
-    func stationTarget(_ chapters: [Chapter]) -> StationPoint {
+    var frontier: StationPoint { StationPoint(chapter: chapter, station: station) }
+
+    /// The station before a point, across the start of a chapter.
+    func previous(_ point: StationPoint) -> StationPoint? {
+        if point.station > 0 { return StationPoint(chapter: point.chapter, station: point.station - 1) }
+        return point.chapter > 0 ? StationPoint(chapter: point.chapter - 1, station: Chapter.stationCount - 1) : nil
+    }
+
+    /// The party is up to the next station's level, so the line can move on.
+    func isReady(for chapters: [Chapter], partyLevel: Int) -> Bool {
+        guard chapters.indices.contains(chapter), chapters[chapter].stations.indices.contains(station) else { return true }
+        return partyLevel >= chapters[chapter].stations[station].level
+    }
+
+    /// Where the party fights while an agent works: the next station once it's up to that
+    /// station's level, otherwise the one before.
+    func stationTarget(_ chapters: [Chapter], partyLevel: Int) -> StationPoint {
         if let repeating { return repeating }
-        let last = Chapter.stationCount - 1
-        if station < Chapter.stationCount {
-            // After a loss on the line, a few clears of the station before.
-            if training > 0, station > 0 { return StationPoint(chapter: chapter, station: station - 1) }
-            return StationPoint(chapter: chapter, station: station)
-        }
-        // A line with no boss (after the League) loops; otherwise the party trains at its last station.
-        if nextBoss(chapters) == nil { return StationPoint(chapter: chapter, station: cursor % Chapter.stationCount) }
-        return StationPoint(chapter: chapter, station: last)
+        if isLooping { return StationPoint(chapter: chapter, station: cursor % Chapter.stationCount) }
+        // After a loss on the line, a few clears of the station before.
+        if training > 0 || !isReady(for: chapters, partyLevel: partyLevel), let before = previous(frontier) { return before }
+        return frontier
     }
 
     enum Outcome: Equatable, Sendable {
         case none
         /// A new station opened, or the next of the League's five.
         case advanced
+        /// The line went on to the next chapter; the one behind it opened its gym.
+        case chapter
         case badge(Int)
         case champion
         case legend(String)
@@ -106,46 +123,55 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
 
     @discardableResult
     mutating func recordStation(_ point: StationPoint, cleared: Bool, chapters: [Chapter]) -> Outcome {
-        let frontier = StationPoint(chapter: chapter, station: station)
-        if repeating == nil, training == 0, point == frontier, station < Chapter.stationCount {
+        if repeating == nil, training == 0, point == frontier, !isLooping {
             guard cleared else {
-                training = point.station > 0 ? AutoChallenge.wildTraining : 0
+                training = previous(point) != nil ? Losses.wildTraining : 0
                 return .none
             }
             station += 1
-            return .advanced
+            guard isLooping else { return .advanced }
+            return moveOn(chapters) ? .chapter : .advanced
         }
         guard cleared else { return .none }
         if training > 0 { training -= 1 }
-        if station >= Chapter.stationCount, nextBoss(chapters) == nil { cursor += 1 }
+        if isLooping { cursor += 1 }
         return .none
     }
 
+    /// A cleared line leads straight on to the next chapter, unless that one isn't open yet.
     @discardableResult
-    mutating func recordBoss(cleared: Bool, chapters: [Chapter], partyLevel: Int) -> Outcome {
+    mutating func moveOn(_ chapters: [Chapter]) -> Bool {
+        guard isLooping, chapter < lastChapter(chapters) else { return false }
+        chapter += 1
+        station = 0
+        cursor = 0
+        training = 0
+        return true
+    }
+
+    @discardableResult
+    mutating func recordBoss(cleared: Bool, chapters: [Chapter]) -> Outcome {
         guard let next = nextBoss(chapters) else { return .none }
         guard cleared else {
             losses += 1
-            training = AutoChallenge.trainingClears
-            retryLevel = partyLevel + 1
             return .none
         }
         losses = 0
-        training = 0
-        retryLevel = nil
         let current = chapters[next.chapter]
         if current.isLeague, next.index + 1 < current.bosses.count {
             boss += 1
             return .advanced
         }
-        if let badge = current.badge { badges = max(badges, badge) }
-        if current.isLeague { isChampion = true }
-        chapter = min(chapter + 1, chapters.count - 1)
-        station = 0
         boss = 0
-        repeating = nil
-        cursor = 0
-        return current.isLeague ? .champion : (current.badge.map { .badge($0) } ?? .advanced)
+        if let badge = current.badge {
+            badges = max(badges, badge)
+            return .badge(badge)
+        }
+        guard current.isLeague else { return .advanced }
+        isChampion = true
+        // The line past the League opens.
+        moveOn(chapters)
+        return .champion
     }
 
     @discardableResult
@@ -189,18 +215,13 @@ extension JourneyProgress {
     }
 }
 
-// MARK: Challenging bosses
+// MARK: Losing
 
-nonisolated enum AutoChallenge {
-    /// After a loss to a boss, the most clears of the last station before the next try; a level
-    /// gained ends the training sooner.
-    static let trainingClears = 30
+nonisolated enum Losses {
     /// After a rare loss on the line, clears of the station before.
     static let wildTraining = 3
-    /// A level gained mid-training only brings the next try forward with at least this chance.
-    static let earlyRetryChance = 0.15
-    /// Losses in a row before the recap points at the best-team button.
-    static let hintAfterLosses = 3
+    /// Losses in a row to a boss before the recap points at the best-team button.
+    static let hintAfter = 3
 }
 
 /// Plays a stage out many times ahead of time to estimate the chance of winning it.

@@ -31,7 +31,7 @@ const en = {
     tabs: ['Challenge', 'Pokédex', 'Gacha'],
     chapter: 'Chapter 2',
     badges: 'Badges 1/8',
-    toGym: (n: number) => `${n} more to Misty`,
+    toGym: (n: number) => (n === 1 ? "1 station to Misty's gym" : `${n} stations to Misty's gym`),
     party: [
       { id: 4, name: 'Charmander', level: 14 },
       { id: 16, name: 'Pidgey', level: 12 },
@@ -50,9 +50,8 @@ const en = {
     title: 'Kanto, one station at a time',
     body: 'The line only moves while your agent is working.',
     chapter: 'Chapter 5',
-    gym: 'Koga',
     features: [
-      { art: 'badge', name: 'Gym leaders', text: 'A gym leader waits at the end of every line.' },
+      { art: 'badge', name: 'Gym leaders', text: 'Clear a chapter and its gym leader is ready for you.' },
       { art: 'master-ball', name: 'Legendaries', text: 'Beat one on a side branch and it joins your party.' },
       { art: 'escape-rope', name: 'Daily dungeon', text: 'Five floors, a different type every day.' },
       { art: 'poke-ball', name: 'New teammates', text: 'Someone new joins about every 20 minutes of work.' },
@@ -158,7 +157,7 @@ const ko: Strings = {
     tabs: ['도전', '도감', '뽑기'],
     chapter: '2장',
     badges: '배지 1/8',
-    toGym: (n: number) => `이슬까지 ${n}정거장`,
+    toGym: (n: number) => `이슬 체육관까지 역 ${n}개`,
     party: [
       { id: 4, name: '파이리', level: 14 },
       { id: 16, name: '구구', level: 12 },
@@ -177,9 +176,8 @@ const ko: Strings = {
     title: '관동 지방을 한 정거장씩',
     body: '노선은 에이전트가 일할 때만 움직여요.',
     chapter: '5장',
-    gym: '독수',
     features: [
-      { art: 'badge', name: '체육관 관장', text: '노선 끝에서 관장이 기다려요.' },
+      { art: 'badge', name: '체육관 관장', text: '장을 다 지나면 그 장의 관장에게 도전할 수 있어요.' },
       { art: 'master-ball', name: '전설의 포켓몬', text: '갈림길에 숨어 있고, 이기면 동료가 돼요.' },
       { art: 'escape-rope', name: '데일리 던전', text: '매일 타입이 바뀌는 5층짜리 던전이에요.' },
       { art: 'poke-ball', name: '새 동료', text: '에이전트가 20분쯤 일할 때마다 포켓몬이 합류해요.' },

@@ -237,21 +237,24 @@ nonisolated struct StagePlan: Equatable, Sendable {
 
     static let legendHP = 2.5
 
-    /// One wild Pokémon, two at a chapter's last station, different on every visit. Wild
-    /// Pokémon stay a level or more below the party, as in the games, so only the bosses stand in
-    /// the way: the line is for exploring, the gyms for testing the team.
+    /// One wild Pokémon, different on every visit; the chapter's last station has three, ending
+    /// with the strongest one around, two levels up. Wild Pokémon otherwise stay a level below the
+    /// party, and the line only moves on once the party is up to a station's level
+    /// (`JourneyProgress.stationTarget`), so it keeps pace with the party instead of walling it.
     static func station(_ station: Station, isLast: Bool, data: GameData, partyLevel: Int, rng: inout SeededRNG) -> StagePlan {
         let pool = data.encounters.pool(for: station.stretch, dex: data.dex)
         let level = min(station.level, partyLevel - 1)
-        let count = isLast ? 2 : 1
-        let foes = (0..<count).map { index -> Foe in
-            let species = rng.weighted(pool.map(\.share)).map { pool[$0].species } ?? 16
-            // The last one is the toughest.
-            let spread = index == count - 1 ? 0 : rng.pick(-2...(-1))
-            return Foe(species: species, level: max(2, level + spread))
+        let random = { (rng: inout SeededRNG) in rng.weighted(pool.map(\.share)).map { pool[$0].species } ?? 16 }
+        guard isLast else {
+            return StagePlan(kind: .wild, foes: [Foe(species: random(&rng), level: max(2, level))], scenery: station.stretch.scenery)
         }
+        var foes = (0..<lastStationFoes - 1).map { _ in Foe(species: random(&rng), level: max(2, level + rng.pick(-2...(-1)))) }
+        let strongest = pool.max { (data.dex[$0.species]?.stats.total ?? 0) < (data.dex[$1.species]?.stats.total ?? 0) }
+        foes.append(Foe(species: strongest?.species ?? random(&rng), level: max(2, level + 2)))
         return StagePlan(kind: .wild, foes: foes, scenery: station.stretch.scenery)
     }
+
+    static let lastStationFoes = 3
 
     static func boss(_ trainer: Trainer, scenery: Scenery) -> StagePlan {
         StagePlan(kind: .trainer(trainer), foes: trainer.battleTeam.map { Foe(species: $0.species, level: $0.level) }, scenery: scenery)

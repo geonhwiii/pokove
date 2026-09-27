@@ -73,22 +73,22 @@
         }
       }
     },
-    "%@ is waiting · tap Challenge": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다음 상대: %@ · 도전을 눌러요"
-          }
-        }
-      }
-    },
     "%@ joined your team!": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ 합류!"
+          }
+        }
+      }
+    },
+    "%@ next": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 상대 %@"
           }
         }
       }
@@ -467,12 +467,12 @@
         }
       }
     },
-    "2 wild Pokémon · Lv %lld": {
+    "3 wild Pokémon · Lv %lld": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "야생 2마리 · Lv %lld"
+            "value": "야생 3마리 · Lv %lld"
           }
         }
       }
@@ -513,36 +513,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "API 과부하"
-          }
-        }
-      }
-    },
-    "AUTO": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AUTO"
-          }
-        }
-      }
-    },
-    "AUTO is off: the party trains until you tap Challenge": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AUTO 꺼짐: 도전을 누를 때까지 수련해요"
-          }
-        }
-      }
-    },
-    "AUTO: the boss is challenged as soon as the line is cleared, and again after training": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AUTO: 노선을 다 깨면 바로 보스에게 도전하고, 지면 수련 뒤 다시 도전해요"
           }
         }
       }
@@ -1057,16 +1027,6 @@
         }
       }
     },
-    "Challenge bosses automatically (AUTO)": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "보스에게 자동으로 도전 (AUTO)"
-          }
-        }
-      }
-    },
     "Challenge!": {
       "localizations": {
         "ko": {
@@ -1093,22 +1053,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld장"
-          }
-        }
-      }
-    },
-    "Chapter %lld · %@ next": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Chapter %1$lld · %2$@ next"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld장 · 다음 상대 %2$@"
           }
         }
       }
@@ -2271,16 +2215,6 @@
         }
       }
     },
-    "League": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "리그"
-          }
-        }
-      }
-    },
     "Legendary": {
       "localizations": {
         "ko": {
@@ -2347,16 +2281,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "실시간 현황"
-          }
-        }
-      }
-    },
-    "Loop": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "순환"
           }
         }
       }
@@ -3547,16 +3471,6 @@
         }
       }
     },
-    "Take on the boss now": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지금 보스에게 도전"
-          }
-        }
-      }
-    },
     "The adventure starts once the Pokédex downloads.": {
       "localizations": {
         "ko": {
@@ -3699,38 +3613,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "트랙패드 제스처"
-          }
-        }
-      }
-    },
-    "Training %lld/%lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Training %1$lld/%2$lld"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "수련 중 %1$lld/%2$lld"
-          }
-        }
-      }
-    },
-    "Training for %@ · %lld%% to win": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Training for %1$@ · %2$lld%% to win"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ 대비 수련 중 · 이길 확률 %2$lld%%"
           }
         }
       }
@@ -3895,12 +3777,12 @@
         }
       }
     },
-    "While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and a daily dungeon are challenges you (or AUTO) start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.": {
+    "While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and a daily dungeon are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동의 스테이지 노선을 따라 야생 포켓몬과 싸워요. 체육관 관장, 전설 포켓몬, 데일리 던전은 직접(또는 AUTO가) 시작하는 도전이에요. 가는 길에 새 포켓몬이 합류하고, 별의모래로 뽑기를 할 수 있어요. 배지를 따면 레벨 상한이 올라가요."
+            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동의 스테이지 노선을 따라 야생 포켓몬과 싸워요. 체육관 관장, 전설 포켓몬, 데일리 던전은 직접 시작하는 도전이에요. 가는 길에 새 포켓몬이 합류하고, 별의모래로 뽑기를 할 수 있어요. 배지를 따면 레벨 상한이 올라가요."
           }
         }
       }

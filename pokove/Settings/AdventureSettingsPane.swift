@@ -23,7 +23,7 @@ struct AdventureSettingsPane: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Pokémon adventure")
                             .font(.headline)
-                        Text("While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and a daily dungeon are challenges you (or AUTO) start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.")
+                        Text("While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and a daily dungeon are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
@@ -34,8 +34,6 @@ struct AdventureSettingsPane: View {
                         if !enabled { adventure.endAllTurns() }
                     }
                 Toggle("Banners for new Pokémon, evolutions and badges", isOn: $preferences.adventureAnnounceCatches)
-                    .disabled(!preferences.adventureEnabled)
-                Toggle("Challenge bosses automatically (AUTO)", isOn: Bindable(adventure).autoChallenge)
                     .disabled(!preferences.adventureEnabled)
                 Toggle("Play a sound for new Pokémon", isOn: $preferences.adventureSound)
                     .disabled(!preferences.adventureEnabled)
@@ -89,10 +87,9 @@ struct AdventureSettingsPane: View {
 
     private func journey(_ adventure: AdventureService) -> String {
         let progress = adventure.progress
-        if progress.isChampion { return String(localized: "Champion") }
-        if progress.isBossOpen(adventure.chapters), let boss = adventure.nextBoss {
-            return String(localized: "Chapter \(progress.chapter + 1) · \(boss.trainer.name) next")
-        }
-        return String(localized: "Chapter \(progress.chapter + 1) · station \(progress.station + 1)/\(Chapter.stationCount)")
+        let line = String(localized: "Chapter \(progress.chapter + 1) · station \(min(progress.station + 1, Chapter.stationCount))/\(Chapter.stationCount)")
+        if progress.isChampion { return String(localized: "Champion") + " · " + line }
+        guard let boss = adventure.nextBoss else { return line }
+        return line + " · " + String(localized: "\(boss.trainer.name) next")
     }
 }

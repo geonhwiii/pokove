@@ -104,6 +104,8 @@ nonisolated enum RecapText {
     static func beat(_ trainer: String, badge: String) -> String {
         korean ? "\(trainer.objectParticle) 이기고 \(badge.objectParticle) 받았어요" : "Beat \(trainer) and got the \(badge)"
     }
+    static func gymOpened(_ trainer: String) -> String { korean ? "\(trainer) 체육관이 열렸어요" : "\(trainer)'s gym is open" }
+    static var leagueOpened: String { korean ? "포켓몬리그가 열렸어요" : "The Pokémon League is open" }
     static func evolved(_ from: String?, into to: String) -> String {
         guard let from else { return korean ? "\(to.directionParticle) 진화했어요" : "Evolved into \(to)" }
         return korean ? "\(from.subjectParticle) \(to.directionParticle) 진화했어요" : "\(from) evolved into \(to)"
@@ -186,8 +188,14 @@ nonisolated enum GuideText {
     private static var korean: Bool { PokeLanguage.isKorean }
 
     // Next step and VS.
+    /// The stations left on the line, and whose gym opens at its end.
     static func stationsTo(_ boss: String, _ count: Int) -> String {
-        korean ? "\(boss)까지 역 \(count)개" : count == 1 ? "1 station to \(boss)" : "\(count) stations to \(boss)"
+        korean ? "\(boss) 체육관까지 역 \(count)개" : count == 1 ? "1 station to \(boss)'s gym" : "\(count) stations to \(boss)'s gym"
+    }
+    /// The party works up to the next station's level first.
+    static func nextStationAt(_ level: Int) -> String { korean ? "다음 역은 Lv \(level)부터" : "Next station at Lv \(level)" }
+    static func stationsLeft(_ count: Int) -> String {
+        korean ? "남은 역 \(count)개" : count == 1 ? "1 station to go" : "\(count) stations to go"
     }
     static var resting: String { korean ? "에이전트가 일하면 다시 출발해요" : "Moves on when an agent works" }
     /// "Lv 18이면", "Lv 25면".
@@ -222,10 +230,11 @@ nonisolated enum GuideText {
     static var justNow: String { korean ? "방금" : "Just now" }
     static var yesterday: String { korean ? "어제" : "Yesterday" }
     /// The toast's count of what happened: "배지 1 · 진화 2 · 새 동료 3".
-    static func summary(badges: Int, evolved: Int, joined: Int, losses: Int, dungeons: Int, shinies: Int) -> String {
+    static func summary(badges: Int, gyms: Int, evolved: Int, joined: Int, losses: Int, dungeons: Int, shinies: Int) -> String {
         var parts: [String] = []
         if shinies > 0 { parts.append(korean ? "이로치 \(shinies)" : "\(shinies) shiny") }
         if badges > 0 { parts.append(korean ? "배지 \(badges)" : badges == 1 ? "1 badge" : "\(badges) badges") }
+        if gyms > 0 { parts.append(korean ? "새 체육관 \(gyms)" : gyms == 1 ? "1 gym open" : "\(gyms) gyms open") }
         if evolved > 0 { parts.append(korean ? "진화 \(evolved)" : "\(evolved) evolved") }
         if joined > 0 { parts.append(korean ? "새 동료 \(joined)" : "\(joined) joined") }
         if dungeons > 0 { parts.append(korean ? "던전 \(dungeons)" : dungeons == 1 ? "1 dungeon" : "\(dungeons) dungeons") }

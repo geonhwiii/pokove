@@ -5,8 +5,10 @@
 //     pokove/Adventure/Kanto.swift pokove/Adventure/PokeMoves.swift pokove/Adventure/PokeDex.swift
 //   /tmp/adventure-sim [hours] [xpScale] [starter] [seed] [agentHoursPerDay]
 //   /tmp/adventure-sim duel <chapter> <station 1-10 | b1-b5> <level> <species>...
-// Stations run on agent time (1.5 s per action). Bosses (via AUTO), legendaries and the daily
-// dungeon don't need an agent, so they cost no agent time here.
+// Stations run on agent time (1.5 s per action). Gyms, legendaries and the daily dungeon don't need
+// an agent, so they cost no agent time here. The player takes a gym on once the forecast says 60%
+// (SIM_TRY=0.4 for a bolder one), or every hour or so once the party is stuck at the level cap; the
+// League's five run back to back.
 // Data comes from the app's cache (~/Library/Application Support/pokove/pokemon) or PokéAPI.
 import Foundation
 
@@ -147,11 +149,12 @@ struct AdventureSim {
             return false
         }
         var forecasts: [String: Double] = [:]
-        /// The forecast against the next boss, for AUTO's early retry.
+        /// The forecast against the next boss with the suggested party.
         func readiness() -> Double {
             guard let plan = bossPlan() else { return 0 }
             let ids = party()
-            let key = ids.map { "\(box[$0]!.speciesID):\(box[$0]!.level)" }.joined(separator: ",") + "@\(progress.chapter).\(progress.boss)"
+            let next = progress.nextBoss(chapters).map { "\($0.chapter).\($0.index)" } ?? "-"
+            let key = ids.map { "\(box[$0]!.speciesID):\(box[$0]!.level)" }.joined(separator: ",") + "@" + next
             if let known = forecasts[key] { return known }
             let members = ids.map { Combatant(species: dex[box[$0]!.speciesID]!, level: box[$0]!.level, moves: moves, ownedID: $0) }
             let chance = Forecast.winChance(party: members, plan: plan, data: data)
@@ -159,23 +162,35 @@ struct AdventureSim {
             return chance
         }
         func hour(_ tick: Int) -> Double { Double(tick) * secondsPerTick / 3600 }
+        var lastBossTry = -1_000_000
+        let tryAt = Double(ProcessInfo.processInfo.environment["SIM_TRY"] ?? "") ?? Guidance.goodChance
         func fightBoss(_ tick: Int) {
-            guard let plan = bossPlan() else { return }
+            lastBossTry = tick
             bossTries += 1
-            let won = challenge(plan, ids: party())
-            if !won { wipes += 1 }
-            stardust += won ? Rewards.stardust(for: plan.kind) : 0
-            switch progress.recordBoss(cleared: won, chapters: chapters, partyLevel: partyLevel()) {
-            case .badge(let badge):
-                releaseBank()
-                events.append(String(format: "%5.1fh badge %d after %d tries", hour(tick), badge, bossTries))
-                bossTries = 0
-            case .champion:
-                releaseBank()
-                events.append(String(format: "%5.1fh CHAMPION", hour(tick)))
-            default: break
+            while let plan = bossPlan() {
+                let won = challenge(plan, ids: party())
+                if !won { wipes += 1 }
+                stardust += won ? Rewards.stardust(for: plan.kind) : 0
+                switch progress.recordBoss(cleared: won, chapters: chapters) {
+                case .badge(let badge):
+                    releaseBank()
+                    events.append(String(format: "%5.1fh badge %d after %d tries (line at %d-%d)", hour(tick), badge, bossTries,
+                                         progress.chapter + 1, min(progress.station + 1, Chapter.stationCount)))
+                    bossTries = 0
+                    return
+                case .champion:
+                    releaseBank()
+                    events.append(String(format: "%5.1fh CHAMPION after %d tries", hour(tick), bossTries))
+                    return
+                case .advanced:
+                    continue
+                default:
+                    return
+                }
             }
         }
+        /// Every party member at the cap: waiting won't make it stronger.
+        func stuckAtCap() -> Bool { party().allSatisfy { box[$0]!.level >= cap() } }
 
         for tick in 0..<totalTicks {
             // A new day: the dungeon, three tiers, a couple of tries each.
@@ -202,8 +217,11 @@ struct AdventureSim {
                 dungeonDays += 1
             }
             if battle == nil {
-                if progress.wantsBoss(chapters, auto: true, partyLevel: partyLevel(), chance: readiness) { fightBoss(tick) }
-                let point = progress.stationTarget(chapters)
+                if progress.isBossOpen(chapters), tick - lastBossTry >= 400,
+                   readiness() >= tryAt || (stuckAtCap() && tick - lastBossTry >= 2400) {
+                    fightBoss(tick)
+                }
+                let point = progress.stationTarget(chapters, partyLevel: partyLevel())
                 target = .station(point)
                 let ids = party()
                 let plan = StagePlan.station(chapters[point.chapter].stations[point.station], isLast: point.station == Chapter.stationCount - 1,
@@ -253,7 +271,7 @@ struct AdventureSim {
             }
             // Discovery.
             if rng.unit() < secondsPerTick / Discovery.meanInterval(boxCount: box.count) {
-                let pool = Discovery.pool(at: progress.stationTarget(chapters), data: data)
+                let pool = Discovery.pool(at: progress.stationTarget(chapters, partyLevel: partyLevel()), data: data)
                 if let speciesID = Discovery.roll(pool: pool, rng: &rng), let species = dex[speciesID] {
                     let level = Discovery.level(of: species, partyLevel: partyLevel(), cap: cap(), rng: &rng)
                     if receive(speciesID, level: level, duplicateXP: Discovery.duplicateXP(level: level)) { discoveries += 1 }
@@ -278,7 +296,7 @@ struct AdventureSim {
             if let mark = marks.first, hour(tick) >= mark {
                 marks.removeFirst()
                 let names = party().map { "\(dex[box[$0]!.speciesID]!.nameEn) \(box[$0]!.level)" }.joined(separator: ", ")
-                let place = "\(progress.chapter + 1)-\(min(progress.station + 1, Chapter.stationCount))\(progress.station >= Chapter.stationCount ? " boss" : "")"
+                let place = "\(progress.chapter + 1)-\(min(progress.station + 1, Chapter.stationCount))\(progress.isLooping ? " loop" : "")"
                 print(String(format: "%5.1fh  %-10@ badges %d cap %2d  wipes %4d  clears %5d  box %3d  pulls %3d  disc %3d  | %@",
                              mark, place as NSString, progress.badges, cap(), wipes, clears, Set(box.values.map(\.speciesID)).count,
                              pulls, discoveries, names))

@@ -1,5 +1,4 @@
 ---
-import Glyph from './Glyph.astro';
 import { strings, type Lang } from '../i18n';
 import { sprite } from '../config';
 
@@ -26,19 +25,13 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
         <div class="track"></div>
         {
           stations.map((n) => (
-            <div class:list={['station', { cleared: n < current, current: n === current }]} style={`--i: ${n - 1}`}>
+            <div class:list={['station', { cleared: n < current, current: n === current, terminus: n === 10 }]} style={`--i: ${n - 1}`}>
               {n === current && <img class="rider" src={sprite.icon(5)} alt="" width="40" height="30" />}
               <span class="dot" />
               <span class="number">{n}</span>
             </div>
           ))
         }
-        <div class="terminal">
-          <span class="gym">
-            <Glyph name="star" size={16} />
-          </span>
-          <span class="number">{t.gym}</span>
-        </div>
         <div class="branch">
           <span class="stem"></span>
           <span class="legend">
@@ -95,7 +88,7 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
     color: var(--ink-soft);
   }
 
-  /* The stage line, drawn like the app's: ten stations to the gym, a branch after the fifth. */
+  /* The stage line, drawn like the app's: ten stations ending at a bigger terminus, a branch after the fifth. */
   .line-card {
     margin: 0;
     padding: 20px 22px 44px;
@@ -112,7 +105,7 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
   }
 
   .line {
-    --gap: calc((100% - 34px) / 10);
+    --gap: calc((100% - 28px) / 9);
     position: relative;
     height: 116px;
     margin-top: 12px;
@@ -121,15 +114,14 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
   .track {
     position: absolute;
     left: 10px;
-    right: 30px;
+    right: 14px;
     top: 50px;
     height: 6px;
     background: linear-gradient(90deg, #4caf50 0 calc(var(--gap) * 5.2), #3a3a3c calc(var(--gap) * 5.2));
     border-radius: 3px;
   }
 
-  .station,
-  .terminal {
+  .station {
     position: absolute;
     top: 38px;
     left: calc(var(--gap) * var(--i));
@@ -184,26 +176,15 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
     }
   }
 
-  .terminal {
-    left: auto;
-    right: 0;
-    top: 32px;
-    width: 34px;
+  .terminus {
+    top: 35px;
+    width: 28px;
   }
 
-  .gym {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
-    border: 3px solid #ffd84d;
-    background: #2c2c2e;
-    color: #ffd84d;
-  }
-
-  .terminal .number {
-    color: #ffd84d;
+  .terminus .dot {
+    width: 28px;
+    height: 28px;
+    border-width: 4px;
   }
 
   .branch {
