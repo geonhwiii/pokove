@@ -317,7 +317,7 @@ Six runs (three starters × two seeds), hours of agent work:
 
 ## Testing
 
-- Debug channel: `scratchpad/dbg <verb>` posts `com.geonhwiii.pokove.debug`. The verbs are listed in README → Building.
+- Debug channel: `scratchpad/dbg <verb>` posts `com.geonhwiii.pokove.debug`. The verbs are listed in README.en.md → Building.
 - To test the v2 → v3 migration on real data without touching the user's save: copy `adventure-v2.json` over `adventure-v2-debug.json` (back that up first), delete `adventure-v3-debug.json`, launch Debug.
 - `defaults write com.geonhwiii.pokove debugHoldOpen -bool true` keeps the notch open during screenshots. The user keeps working and clicking. Delete the default afterward.
 - While any agent session works, including the one running tests, battles tick for real.
