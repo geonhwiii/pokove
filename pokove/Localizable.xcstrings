@@ -481,16 +481,6 @@
         }
       }
     },
-    "A Dynamic Island for your Mac's notch — with Claude Code built in.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mac 노치를 위한 다이내믹 아일랜드 — Claude Code까지 한곳에서."
-          }
-        }
-      }
-    },
     "A challenge is underway": {
       "localizations": {
         "ko": {
@@ -1613,6 +1603,16 @@
         }
       }
     },
+    "Drag a Pokémon here from the Pokédex.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감에서 포켓몬을 끌어다 놓으세요."
+          }
+        }
+      }
+    },
     "Dragon": {
       "localizations": {
         "ko": {
@@ -1915,6 +1915,16 @@
         }
       }
     },
+    "Get Version %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 버전 받기"
+          }
+        }
+      }
+    },
     "Getting Pokédex data…": {
       "localizations": {
         "ko": {
@@ -2121,16 +2131,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld분 후"
-          }
-        }
-      }
-    },
-    "Inspired by Alcove and NotchNook.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alcove와 NotchNook에서 영감을 받았어요."
           }
         }
       }
@@ -2765,16 +2765,6 @@
         }
       }
     },
-    "Pick a Pokémon in the Pokédex to add it.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "도감에서 포켓몬을 골라 파티에 넣어 보세요."
-          }
-        }
-      }
-    },
     "Pick a ball to open": {
       "localizations": {
         "ko": {
@@ -3247,6 +3237,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "설정"
+          }
+        }
+      }
+    },
+    "Settings · pokove %@ is out": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정 · pokove %@ 버전이 나왔어요"
           }
         }
       }
@@ -3945,6 +3945,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "포켓몬, 도감, 여정이 모두 지워져요. 되돌릴 수 없어요."
+          }
+        }
+      }
+    },
+    "Your party travels in the MacBook notch while your agent works.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 일하는 동안 MacBook 노치 속 파티가 여행해요."
           }
         }
       }

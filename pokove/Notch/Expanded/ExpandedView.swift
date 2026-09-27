@@ -104,10 +104,16 @@ private struct ExpandedHeader: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.55))
                         .frame(width: 24, height: 22)
+                        .overlay(alignment: .topTrailing) {
+                            // A newer version is out; Settings › About has the link.
+                            if app.updates.available != nil {
+                                Circle().fill(Color(hex: 0xFF8A70)).frame(width: 5, height: 5).offset(x: -3, y: 3)
+                            }
+                        }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(HoverHighlightButtonStyle())
-                .help("Settings")
+                .help(app.updates.available.map { String(localized: "Settings · pokove \($0.version) is out") } ?? String(localized: "Settings"))
             }
             .padding(.trailing, 16)
             .frame(width: layout.openSideWidth, alignment: .trailing)
@@ -116,7 +122,8 @@ private struct ExpandedHeader: View {
 
     /// The settings pane that goes with the page on screen.
     private var settingsPane: SettingsPane? {
-        switch viewModel.page {
+        if app.updates.available != nil { return .about }
+        return switch viewModel.page {
         case .media: .nowPlaying
         case .calendar, .todos: .calendar
         case .clipboard: .clipboard

@@ -189,7 +189,8 @@ nonisolated enum GuideText {
         return parts.joined(separator: " · ")
     }
 
-    // The Pokédex card.
+    // The Pokédex.
+    static var ownedOnly: String { korean ? "보유만" : "Owned" }
     static func cap(_ level: Int) -> String { korean ? "상한 \(level)" : "Cap \(level)" }
     static func learns(_ move: String, at level: Int) -> String {
         korean ? "Lv \(level)에 \(move.objectParticle) 배워요" : "Learns \(move) at Lv \(level)"

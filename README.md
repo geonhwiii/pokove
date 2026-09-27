@@ -70,7 +70,8 @@ While Claude or Codex works, your party of up to three Pokémon rides Kanto's st
   - **Gacha:** **stardust** from stations (+1), bosses (+30), legendaries and the dungeon buys three Poké Balls for 400. The kind of ball hints at rarity. Open one and the Pokémon inside joins; a duplicate gives experience instead.
     - The pool is everything met on the journey, plus gacha-only Pokémon: the other starters, Eevee, fossils, Lapras and more. Mew appears after the Champion.
 - **The page:**
-  - The battle and your party are on the left, with a **추천** (best team) button that lights up when the box has a better team for the next boss.
+  - The battle and your party are on the left, with a **추천** (best team) button that lights up when the box has a better team for the next boss. Drag party members to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in. With AUTO on, the recommended team takes over for each boss AUTO challenges.
+  - The Pokédex can show only the Pokémon you have (**보유만**).
   - The right side switches between **Challenge**, the **Pokédex** and the **Gacha**. Below the stage line, one line says what to do next: stations to the boss, the level that would beat it, and a shortcut (best team, today's dungeon, a pull). The gym screen says which level would win.
   - Opening the page after a badge, an evolution, a newcomer or a lost boss fight shows it in one line over the battle for a few seconds. Everything that happened while the page was closed is kept in the **history** (the clock next to the bell) for today and yesterday.
   - A Pokémon's card shows its next evolution, its next move, the level cap, and how it fares against the next boss. Pokémon you don't have yet show where to meet them.
@@ -130,6 +131,8 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
 | Pasting from the clipboard history | Accessibility (pokove presses ⌘V for you). Without it, items are only copied |
 | Calendar page | Calendars (asked the first time you open it) |
 | Now Playing | None: a tiny bridge loaded into `/usr/bin/perl` reads MediaRemote (see below) |
+
+**Updates:** at launch and once a day pokove asks GitHub's API for the latest release (nothing about your Mac is sent). When there's a newer one, the notch's gear gets a dot and Settings › About links to it.
 
 ## How it works
 

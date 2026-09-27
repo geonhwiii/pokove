@@ -602,26 +602,44 @@ private struct DexUnavailable: View {
 private struct PartyBar: View {
     @Binding var selection: Int?
     @Environment(AppModel.self) private var app
+    /// The slot a dragged Pokémon is over.
+    @State private var dropTarget: Int?
 
     var body: some View {
         let adventure = app.adventure
         let party = adventure.party
         HStack(spacing: 4) {
             ForEach(0..<AdventureService.maxParty, id: \.self) { slot in
-                if let member = party[safe: slot] {
-                    PartySlot(member: member, order: slot + 1, isSelected: selection == member.speciesID) {
-                        selection = selection == member.speciesID ? nil : member.speciesID
+                Group {
+                    if let member = party[safe: slot] {
+                        PartySlot(member: member, order: slot + 1, isSelected: selection == member.speciesID) {
+                            selection = selection == member.speciesID ? nil : member.speciesID
+                        }
+                        .draggable(member.id.uuidString) { PokeIconView(id: member.speciesID, pixelSize: 1) }
+                    } else {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(.white.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                            .frame(height: Self.height)
+                            .overlay(
+                                Text("Empty")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(.white.opacity(0.25))
+                            )
+                            .help("Drag a Pokémon here from the Pokédex.")
                     }
-                } else {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(.white.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                        .frame(height: Self.height)
-                        .overlay(
-                            Text("Empty")
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.25))
-                        )
-                        .help("Pick a Pokémon in the Pokédex to add it.")
+                }
+                // Party members swap places; one dragged from the Pokédex takes the slot.
+                .overlay {
+                    if dropTarget == slot {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color(hex: 0xFFD35A), lineWidth: 1.5)
+                    }
+                }
+                .dropDestination(for: String.self) { items, _ in
+                    guard let id = items.first.flatMap(UUID.init(uuidString:)) else { return false }
+                    withAnimation(.smooth(duration: 0.25)) { adventure.place(id, at: slot) }
+                    return true
+                } isTargeted: { targeted in
+                    if targeted { dropTarget = slot } else if dropTarget == slot { dropTarget = nil }
                 }
             }
             // Lit when the box holds a better team for the next boss than the one out now.
@@ -703,6 +721,7 @@ private struct PartySlot: View {
 private struct DexGrid: View {
     @Binding var selection: Int?
     @Environment(AppModel.self) private var app
+    @AppStorage("dexOwnedOnly") private var ownedOnly = false
 
     private let columns = Array(repeating: GridItem(.fixed(40), spacing: 4), count: 5)
     /// A hovered cell scales up; this leaves it room so the scroll view doesn't clip it.
@@ -724,11 +743,26 @@ private struct DexGrid: View {
                     .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
                     .contentTransition(.numericText())
+                Button {
+                    withAnimation(.smooth(duration: 0.2)) { ownedOnly.toggle() }
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: ownedOnly ? "checkmark" : "line.3.horizontal.decrease").font(.system(size: 7, weight: .heavy))
+                        Text(GuideText.ownedOnly).font(.system(size: 8.5, weight: .bold))
+                    }
+                    .foregroundStyle(ownedOnly ? .black : .white.opacity(0.6))
+                    .padding(.horizontal, 6)
+                    .frame(height: 15)
+                    .background(ownedOnly ? Color(hex: 0xFFD35A) : .white.opacity(0.1), in: Capsule())
+                    .contentShape(Capsule())
+                    .fixedSize()
+                }
+                .buttonStyle(.plain)
             }
 
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(1...PokeDexStore.maxID, id: \.self) { id in
+                    ForEach(ownedOnly ? ownedSpecies(adventure) : Array(1...PokeDexStore.maxID), id: \.self) { id in
                         DexCell(id: id, isSelected: selection == id) {
                             selection = selection == id ? nil : id
                         }
@@ -755,6 +789,11 @@ private struct DexGrid: View {
         .onChange(of: adventure.dex.isReady) { _, ready in
             if ready { PokeSpriteCache.shared.prefetchIcons(upTo: PokeDexStore.maxID) }
         }
+    }
+
+    /// Species in the box right now, by number.
+    private func ownedSpecies(_ adventure: AdventureService) -> [Int] {
+        Array(Set(adventure.owned.map(\.speciesID))).sorted()
     }
 }
 
@@ -799,12 +838,26 @@ private struct DexCell: View {
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
         .help(Self.help(species: species, caught: caught, seen: seen, id: id))
+        // One you have can be dragged onto the party bar.
+        .modifier(DragToParty(member: adventure.owned(species: id)))
     }
 
     static func help(species: PokeSpecies?, caught: Bool, seen: Bool, id: Int) -> String {
         let number = String(format: "#%03d", id)
         guard let species, caught || seen else { return number }
         return "\(number) \(species.name)"
+    }
+}
+
+private struct DragToParty: ViewModifier {
+    let member: OwnedPokemon?
+
+    func body(content: Content) -> some View {
+        if let member {
+            content.draggable(member.id.uuidString) { PokeIconView(id: member.speciesID, pixelSize: 1) }
+        } else {
+            content
+        }
     }
 }
 

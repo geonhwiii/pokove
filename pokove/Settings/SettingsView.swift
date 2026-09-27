@@ -578,22 +578,27 @@ private struct BatterySettingsPane: View {
 // MARK: About
 
 private struct AboutSettingsPane: View {
+    @Environment(AppModel.self) private var app
+    @Environment(\.openURL) private var openURL
+
     var body: some View {
+        let updates = app.updates
         VStack(spacing: 14) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .frame(width: 96, height: 96)
             Text("pokove")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
-            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
+            Text("Version \(updates.current)")
                 .foregroundStyle(.secondary)
-            Text("A Dynamic Island for your Mac's notch — with Claude Code built in.")
+            Text("Your party travels in the MacBook notch while your agent works.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 320)
-            Text("Inspired by Alcove and NotchNook.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            if let release = updates.available {
+                Button("Get Version \(release.version)") { openURL(release.page) }
+                    .buttonStyle(.borderedProminent)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()

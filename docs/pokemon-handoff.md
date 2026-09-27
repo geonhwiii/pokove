@@ -36,6 +36,22 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
   bar) / "추천 팀" (footer, history). It turns yellow when the box holds a better team for the next boss
   (`hasBetterTeam`).
 
+### Convenience (agreed 2026-09-28)
+
+- **AUTO fights with the best team.** When AUTO challenges a boss it swaps in `recommendedParty(for:)`
+  first, and the team stays afterwards. It judges early retries by that team's chance
+  (`bestReadiness`). A boss you start yourself keeps the party you set.
+- **Drag and drop:** party slots reorder by dragging (swap places); an owned Pokémon dragged from the
+  Pokédex onto a slot takes it (`place(_:at:)`). Payload is the owned Pokémon's UUID string.
+- **Pokédex "보유만"** shows only species in the box (`@AppStorage("dexOwnedOnly")`).
+- **Update check** (`UpdateChecker`): GitHub's latest release at launch and daily; a dot on the gear and
+  a button in Settings › About. `defaults write com.geonhwiii.pokove debugLatestVersion 9.9` fakes one in
+  Debug. No banner, by the user's choice. First release: v1.0.
+- **Next up, agreed:** shiny Pokémon (1/128 per discovery and gacha ball; a shiny duplicate turns the
+  owned one shiny; ✦ on icons since box icons have no shiny art), status conditions (poison, burn,
+  paralysis, sleep from moves' secondary chances, both sides, then retune), after the Champion a
+  Battle Tower (endless floors, best record) and Pokédex milestone rewards.
+
 ## v3 direction (agreed with the user, 2026-09-27)
 
 After playing v2 the user found the small Kanto map hard to read and the gym challenge unexciting

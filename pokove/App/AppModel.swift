@@ -16,6 +16,7 @@ final class AppModel {
     let clipboard: ClipboardStore
     let audioRoutes: AudioRouteMonitor
     let fullscreen = FullscreenDetector()
+    let updates = UpdateChecker()
 
     init(preferences: Preferences = .shared) {
         let activity = ActivityCenter()
@@ -49,6 +50,7 @@ final class AppModel {
         fullscreen.start()
         clipboard.start()
         adventure.start()
+        updates.start()
     }
 
     func stop() {

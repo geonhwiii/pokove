@@ -180,6 +180,8 @@ final class AdventureService {
     private(set) var levelHint: LevelHint?
     /// The box holds a better party for the next boss than the one out now.
     private(set) var hasBetterTeam = false
+    /// The recommended party's chance against the next boss, which AUTO goes by.
+    @ObservationIgnored private var bestReadiness: Double?
     /// Take on the boss by itself as soon as the line is cleared, and again after training.
     var autoChallenge = true {
         didSet {
@@ -335,12 +337,13 @@ final class AdventureService {
         dungeonDay.day == DailyDungeon.day(of: Date()) && dungeonDay.claimed.contains(tier)
     }
 
-    /// Forecast chance of winning a challenge with the current party, cached per party.
-    func winChance(_ target: BattleTarget) -> Double? {
+    /// Forecast chance of winning a challenge with the current party (or another), cached per party.
+    func winChance(_ target: BattleTarget, party ids: [UUID]? = nil) -> Double? {
         guard let data, let plan = plan(for: target, data: data, forecast: true) else { return nil }
-        let members = combatants(data)
+        let team = ids.map { $0.compactMap(pokemon) } ?? party
+        let members = combatants(team, data)
         guard !members.isEmpty else { return nil }
-        let key = party.map { "\($0.speciesID):\($0.level)" }.joined(separator: ",") + "@" + plan.foes.map { "\($0.species):\($0.level)" }.joined(separator: ",")
+        let key = team.map { "\($0.speciesID):\($0.level)" }.joined(separator: ",") + "@" + plan.foes.map { "\($0.species):\($0.level)" }.joined(separator: ",")
         if let known = forecasts[key] { return known }
         let chance = Forecast.winChance(party: members, plan: plan, data: data)
         if forecasts.count > 64 { forecasts.removeAll() }
@@ -426,6 +429,21 @@ final class AdventureService {
         }
         partyChanged()
         return true
+    }
+
+    /// Puts a Pokémon in a party slot, from a drag: a party member swaps places with whoever is
+    /// there; one from the box takes the slot, or joins at the end when the slot is empty.
+    func place(_ id: UUID, at slot: Int) {
+        guard pokemon(id) != nil, (0..<Self.maxParty).contains(slot) else { return }
+        if let from = partyIDs.firstIndex(of: id) {
+            guard from != slot else { return }
+            if slot < partyIDs.count { partyIDs.swapAt(from, slot) } else { partyIDs.append(partyIDs.remove(at: from)) }
+        } else if slot < partyIDs.count {
+            partyIDs[slot] = id
+        } else {
+            partyIDs.append(id)
+        }
+        partyChanged()
     }
 
     /// Moves a party member to the front, where it battles first.
@@ -623,11 +641,15 @@ final class AdventureService {
         }
     }
 
-    /// The next battle: the boss if AUTO wants it, otherwise the station.
+    /// The next battle: the boss if AUTO wants it, otherwise the station. AUTO goes by the
+    /// recommended team's chance and swaps that team in for the fight; it stays afterwards.
     private func lineUp(_ data: GameData, allowAuto: Bool) {
-        if allowAuto, progress.wantsBoss(data.chapters, auto: autoChallenge, partyLevel: partyLevel, chance: { self.readiness ?? 0 }),
+        let chance = { (self.hasBetterTeam ? self.bestReadiness : nil) ?? self.readiness ?? 0 }
+        if allowAuto, progress.wantsBoss(data.chapters, auto: autoChallenge, partyLevel: partyLevel, chance: chance),
            let next = progress.nextBoss(data.chapters) {
-            start(.boss(chapter: next.chapter, index: next.index), data: data)
+            let goal = BattleTarget.boss(chapter: next.chapter, index: next.index)
+            if hasBetterTeam { recommendParty(for: goal) }
+            start(goal, data: data)
         } else {
             start(.station(progress.stationTarget(data.chapters)), data: data)
         }
@@ -649,8 +671,10 @@ final class AdventureService {
         }
     }
 
-    private func combatants(_ data: GameData) -> [Combatant] {
-        party.compactMap { member in
+    private func combatants(_ data: GameData) -> [Combatant] { combatants(party, data) }
+
+    private func combatants(_ team: [OwnedPokemon], _ data: GameData) -> [Combatant] {
+        team.compactMap { member in
             data.dex[member.speciesID].map { Combatant(species: $0, level: member.level, moves: data.moves, ownedID: member.id) }
         }
     }
@@ -893,7 +917,7 @@ final class AdventureService {
 
     private func refreshReadiness() {
         guard let next = progress.nextBoss(chapters) else {
-            readiness = nil; levelHint = nil; hasBetterTeam = false; forecastKey = nil
+            readiness = nil; bestReadiness = nil; levelHint = nil; hasBetterTeam = false; forecastKey = nil
             return
         }
         // The box size counts too: a newcomer may make a better team.
@@ -904,6 +928,7 @@ final class AdventureService {
         readiness = winChance(goal)
         let picks = recommendedParty(for: goal)
         hasBetterTeam = !picks.isEmpty && picks != partyIDs
+        bestReadiness = hasBetterTeam ? winChance(goal, party: picks) : readiness
         refreshLevelHint(goal)
     }
 
