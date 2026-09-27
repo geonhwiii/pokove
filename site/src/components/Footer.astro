@@ -1,0 +1,74 @@
+---
+import { strings, type Lang } from '../i18n';
+import { repo, url } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].footer;
+const other = strings[lang].otherLang;
+---
+
+<footer class="footer">
+  <div class="waves" aria-hidden="true"></div>
+  <div class="inner">
+    <p class="name">pokove</p>
+    <p class="marks">{t.marks}</p>
+    <p class="links">
+      <a href={repo}>{t.github}</a>
+      <a href={url(other.path)} lang={lang === 'en' ? 'ko' : 'en'}>{other.label}</a>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: clamp(96px, 14vw, 160px);
+    background: #1d1366;
+  }
+
+  .waves {
+    /* A pixel crest where the deep cove meets the sea floor. */
+    height: 12px;
+    background:
+      linear-gradient(90deg, var(--sea-4) 50%, transparent 50%) 0 0 / 24px 6px repeat-x,
+      linear-gradient(var(--sea-4) 6px, transparent 6px);
+  }
+
+  .inner {
+    display: grid;
+    gap: 10px;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 48px var(--gutter) 64px;
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+  }
+
+  .inner p {
+    max-width: 44rem;
+  }
+
+  .name {
+    font-family: var(--font-pixel);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--ink);
+    -webkit-font-smoothing: none;
+  }
+
+  .marks {
+    color: rgba(191, 195, 245, 0.7);
+  }
+
+  .links {
+    display: flex;
+    gap: 20px;
+  }
+
+  a {
+    color: var(--crest);
+    text-underline-offset: 3px;
+  }
+</style>

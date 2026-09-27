@@ -1,0 +1,337 @@
+---
+/** The live notch at the top of the page. It opens on load into the Adventure page, closes into a
+    live activity as you scroll, and follows the section you're reading. */
+import ClaudeSpark from './ClaudeSpark.astro';
+import Glyph from './Glyph.astro';
+import AdventurePage from './AdventurePage.astro';
+import { strings, type Lang } from '../i18n';
+import { sprite } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const lead = strings[lang].battle.party[0];
+---
+
+<div class="live-notch" data-state="compact" data-activity="working">
+  <div class="notch-body shell">
+    <button class="toggle" type="button" aria-expanded="false" aria-controls="notch-open">
+      <span class="visually-hidden">pokove</span>
+      <span class="compact" aria-hidden="true">
+        <span class="activity working">
+          <ClaudeSpark size={16} mode="working" />
+          <span class="partner">
+            <img src={sprite.icon(lead.id)} alt="" width="40" height="30" />
+            <span class="wing-text" data-clock>5:56</span>
+          </span>
+        </span>
+        <span class="activity needs">
+          <ClaudeSpark size={16} mode="attention" />
+          <span class="hand"><Glyph name="hand" size={16} /></span>
+        </span>
+        <span class="activity music">
+          <span class="art"></span>
+          <span class="bars"><i></i><i></i><i></i><i></i></span>
+        </span>
+        <span class="activity finished">
+          <span class="done"><Glyph name="check" size={12} /></span>
+          <span class="wing-text">3m 12s</span>
+        </span>
+      </span>
+    </button>
+
+    <div class="open" id="notch-open" inert>
+      <AdventurePage lang={lang} />
+    </div>
+  </div>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('.live-notch');
+  if (root) setUp(root);
+
+  function setUp(root: HTMLElement) {
+    const toggle = root.querySelector<HTMLButtonElement>('.toggle')!;
+    const panel = root.querySelector<HTMLElement>('.open')!;
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let open = false;
+    /** The visitor closed it themselves, so scrolling back up doesn't reopen it. */
+    let dismissed = false;
+
+    function setOpen(value: boolean) {
+      open = value;
+      root.dataset.state = open ? 'open' : 'compact';
+      toggle.setAttribute('aria-expanded', String(open));
+      panel.inert = !open;
+    }
+
+    // One orchestrated moment: the notch blooms open shortly after the page loads.
+    const atTop = () => window.scrollY < 80;
+    if (atTop()) setTimeout(() => atTop() && !dismissed && setOpen(true), reduceMotion ? 0 : 650);
+
+    toggle.addEventListener('click', () => {
+      dismissed = open;
+      setOpen(!open);
+    });
+    document.addEventListener('click', (event) => {
+      if (open && !root.contains(event.target as Node)) {
+        dismissed = true;
+        setOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && open) {
+        dismissed = true;
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+
+    let lastY = window.scrollY;
+    window.addEventListener(
+      'scroll',
+      () => {
+        const y = window.scrollY;
+        if (open && y > 140 && !root.contains(document.activeElement)) setOpen(false);
+        if (y < 40 && lastY >= 40) {
+          dismissed = false;
+          setOpen(true);
+        }
+        lastY = y;
+      },
+      { passive: true },
+    );
+
+    // The section nearest the middle of the screen picks the live activity.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) root.dataset.activity = (entry.target as HTMLElement).dataset.activitySection;
+        }
+      },
+      { rootMargin: '-45% 0px -45% 0px' },
+    );
+    document.querySelectorAll<HTMLElement>('[data-activity-section]').forEach((s) => observer.observe(s));
+
+    // The working activity's clock counts up like a real turn.
+    const clock = root.querySelector<HTMLElement>('[data-clock]');
+    let seconds = 356;
+    setInterval(() => {
+      seconds += 1;
+      if (clock) clock.textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    }, 1000);
+  }
+</script>
+
+<style>
+  .live-notch {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    z-index: 50;
+    translate: -50% 0;
+  }
+
+  /* Sizes from the app: compact 179 + two wings, open 521 × 212 pt. */
+  .shell {
+    --w: 311px;
+    --h: 32px;
+    --ear: 6px;
+    --radius: 13px;
+    width: var(--w);
+    height: var(--h);
+    transition:
+      width 0.56s var(--spring-close),
+      height 0.56s var(--spring-close),
+      border-radius 0.56s var(--spring-close),
+      scale 0.78s var(--spring-hover);
+    transform-origin: 50% 0;
+  }
+
+  [data-activity='needs'] .shell,
+  [data-activity='music'] .shell,
+  [data-activity='finished'] .shell {
+    --w: 263px;
+  }
+
+  [data-state='open'] .shell {
+    --w: min(521px, calc(100vw - 16px));
+    --h: 212px;
+    --ear: 14px;
+    --radius: 30px;
+    transition-timing-function: var(--spring-open);
+  }
+
+  [data-state='compact'] .shell:hover {
+    scale: 1.075;
+  }
+
+  [data-state='compact'] .shell:active {
+    scale: 0.94;
+  }
+
+  .toggle {
+    all: unset;
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    height: 32px;
+    cursor: pointer;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  [data-state='open'] .toggle {
+    left: 50%;
+    width: 180px;
+    translate: -50% 0;
+  }
+
+  .toggle:focus-visible {
+    outline: 3px solid var(--crest);
+    outline-offset: 2px;
+  }
+
+  /* Compact activities: one wing on each side of the camera housing. */
+  .compact {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.2s, filter 0.2s;
+  }
+
+  [data-state='open'] .compact {
+    opacity: 0;
+    filter: blur(6px);
+  }
+
+  .activity {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 13px;
+    opacity: 0;
+    filter: blur(4px);
+    transition: opacity 0.25s, filter 0.25s;
+  }
+
+  [data-activity='working'] .working,
+  [data-activity='needs'] .needs,
+  [data-activity='music'] .music,
+  [data-activity='finished'] .finished {
+    opacity: 1;
+    filter: none;
+  }
+
+  .partner {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .partner img {
+    width: 30px;
+    height: 22px;
+    object-fit: cover;
+    image-rendering: pixelated;
+    animation: partner-hop 0.6s steps(2) infinite alternate;
+  }
+
+  @keyframes partner-hop {
+    to {
+      translate: 0 -2px;
+    }
+  }
+
+  .wing-text {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hand {
+    color: var(--attention);
+    display: grid;
+  }
+
+  .art {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: linear-gradient(var(--sky-2) 0 30%, var(--sky-4) 30% 50%, var(--sky-6) 50% 65%, var(--sky-8) 65% 72%, var(--sea-2) 72%);
+  }
+
+  .bars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 16px;
+  }
+
+  .bars i {
+    width: 3px;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(var(--sky-6), var(--sky-3));
+    animation: bar 0.9s ease-in-out infinite alternate;
+  }
+
+  .bars i:nth-child(2) {
+    animation-delay: -0.3s;
+  }
+
+  .bars i:nth-child(3) {
+    animation-delay: -0.6s;
+  }
+
+  .bars i:nth-child(4) {
+    animation-delay: -0.15s;
+  }
+
+  @keyframes bar {
+    from {
+      scale: 1 0.3;
+    }
+    to {
+      scale: 1 1;
+    }
+  }
+
+  .done {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--done);
+    color: #000;
+  }
+
+  /* The open page blooms in from a blurred sliver. */
+  .open {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    filter: blur(10px);
+    scale: 0.94 0.6;
+    transform-origin: 50% 0;
+    transition:
+      opacity 0.18s,
+      filter 0.18s,
+      scale 0.3s var(--spring-close);
+    pointer-events: none;
+  }
+
+  [data-state='open'] .open {
+    opacity: 1;
+    filter: none;
+    scale: 1;
+    transition:
+      opacity 0.3s 0.12s,
+      filter 0.3s 0.12s,
+      scale 0.5s 0.06s var(--spring-open);
+    pointer-events: auto;
+  }
+</style>

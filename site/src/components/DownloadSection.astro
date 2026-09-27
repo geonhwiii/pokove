@@ -1,0 +1,171 @@
+---
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+import { downloadURL, releasesURL, repo, url } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].download;
+const clone = `git clone ${repo}.git\ncd pokove\nscripts/install.sh`;
+---
+
+<section class="section" id="download" data-activity-section="finished">
+  <div class="panel">
+    <div class="get">
+      <img src={url('apple-touch-icon.png')} alt="" width="128" height="128" />
+      <h2>{t.title}</h2>
+      <a class="download" href={downloadURL}>
+        <Glyph name="download" size={20} />
+        {t.button}
+      </a>
+      <p class="meta">
+        {t.meta} <a href={releasesURL}>{t.releases}</a>
+      </p>
+    </div>
+
+    <ol class="steps">
+      {t.steps.map((step) => <li>{step}</li>)}
+    </ol>
+  </div>
+
+  <div class="source">
+    <h3>{t.sourceTitle}</h3>
+    <p>{t.sourceText}</p>
+    <pre><code>{clone}</code></pre>
+  </div>
+</section>
+
+<style>
+  .section {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: clamp(96px, 14vw, 160px) var(--gutter) 0;
+  }
+
+  .panel {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 56px;
+    align-items: center;
+    padding: clamp(28px, 5vw, 56px);
+    border-radius: 32px;
+    background: var(--sea-3);
+  }
+
+  .get {
+    display: grid;
+    justify-items: start;
+    gap: 18px;
+  }
+
+  img {
+    width: 128px;
+    height: 128px;
+    margin: -8px 0 0 -10px;
+  }
+
+  h2 {
+    font-size: clamp(33px, 4.4vw, 44px);
+  }
+
+  .download {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 26px 17px;
+    border-radius: 6px 6px 24px 24px;
+    background: var(--notch);
+    color: #fff;
+    font-family: var(--font-mac);
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: scale 0.78s var(--spring-hover);
+  }
+
+  .download:hover {
+    scale: 1.04;
+  }
+
+  .download:active {
+    scale: 0.96;
+  }
+
+  .meta {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .meta a {
+    color: var(--crest);
+    text-underline-offset: 3px;
+  }
+
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+    display: grid;
+    gap: 18px;
+  }
+
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+    align-items: baseline;
+  }
+
+  .steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px 6px 14px 14px;
+    background: var(--notch);
+    font-family: var(--font-pixel);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--crest);
+    -webkit-font-smoothing: none;
+    align-self: start;
+    margin-top: -4px;
+  }
+
+  .source {
+    display: grid;
+    gap: 12px;
+    max-width: var(--measure);
+    margin-top: 56px;
+  }
+
+  h3 {
+    font-size: 22px;
+  }
+
+  .source p {
+    color: var(--ink-soft);
+  }
+
+  pre {
+    margin: 4px 0 0;
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: #000;
+    color: var(--crest);
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 900px) {
+    .panel {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+</style>

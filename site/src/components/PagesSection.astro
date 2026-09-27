@@ -1,0 +1,608 @@
+---
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].pages;
+const tabNames = strings[lang].demo.tabs;
+const glyphs = ['media', 'calendar', 'todos', 'clipboard', 'agents', 'adventure'] as const;
+const live = ['media', 'calendar', 'todos', 'clipboard'];
+
+// A small month grid for September 2026, which starts on a Tuesday.
+const days = Array.from({ length: 30 }, (_, i) => i + 1);
+const lead = 2;
+const today = 27;
+---
+
+<section class="section" id="notch" data-activity-section="music">
+  <div class="intro">
+    <h2>{t.title}</h2>
+    <p>{t.body}</p>
+  </div>
+
+  <div class="stage">
+    <div class="desktop tile">
+      <div class="notch-body open" data-pages>
+        <div class="header">
+          <div class="tabs" role="tablist" aria-label={t.title}>
+            {
+              glyphs.map((glyph, i) =>
+                live.includes(glyph) ? (
+                  <button
+                    type="button"
+                    role="tab"
+                    class="tab"
+                    id={`tab-${glyph}`}
+                    aria-controls={`panel-${glyph}`}
+                    aria-selected={i === 0 ? 'true' : 'false'}
+                    tabindex={i === 0 ? 0 : -1}
+                    title={tabNames[i]}
+                  >
+                    <Glyph name={glyph} size={15} />
+                    <span class="visually-hidden">{tabNames[i]}</span>
+                  </button>
+                ) : (
+                  <span class="tab off" aria-hidden="true">
+                    <Glyph name={glyph} size={15} />
+                  </span>
+                ),
+              )
+            }
+          </div>
+          <div class="status" aria-hidden="true">
+            <span>88%</span>
+            <Glyph name="battery" size={22} />
+          </div>
+        </div>
+
+        <div class="panel media" role="tabpanel" id="panel-media" aria-labelledby="tab-media">
+          <div class="now">
+            <div class="art" aria-hidden="true"></div>
+            <div class="track">
+              <p class="title">{t.track.title}</p>
+              <p class="artist">{t.track.artist}</p>
+            </div>
+            <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="scrubber" aria-hidden="true">
+            <span>{t.track.elapsed}</span>
+            <div class="bar"><div></div></div>
+            <span>{t.track.left}</span>
+          </div>
+          <div class="controls" aria-hidden="true">
+            <Glyph name="back" size={24} />
+            <Glyph name="play" size={28} />
+            <Glyph name="forward" size={24} />
+          </div>
+        </div>
+
+        <div class="panel calendar" role="tabpanel" id="panel-calendar" aria-labelledby="tab-calendar" hidden>
+          <div class="date">
+            <p class="weekday">{t.calendar.weekday}</p>
+            <p class="day">{today}</p>
+            <p class="month">{t.calendar.month}</p>
+          </div>
+          <ol class="events">
+            {t.calendar.events.map(([time, name]) => <li><span>{time}</span>{name}</li>)}
+          </ol>
+          <div class="month-grid" aria-hidden="true">
+            {Array.from({ length: lead }, () => <span />)}
+            {days.map((day) => <span class:list={{ today: day === today }}>{day}</span>)}
+          </div>
+        </div>
+
+        <div class="panel todos" role="tabpanel" id="panel-todos" aria-labelledby="tab-todos" hidden>
+          <div class="date">
+            <p class="weekday">{tabNames[2]}</p>
+            <p class="day" data-todo-count>{t.todos.items.length}</p>
+            <p class="month">{t.todos.count}</p>
+          </div>
+          <ul class="todo-list">
+            {
+              t.todos.items.map((item) => (
+                <li>
+                  <label>
+                    <input type="checkbox" data-todo />
+                    <span>{item}</span>
+                  </label>
+                </li>
+              ))
+            }
+            <li>
+              <label>
+                <input type="checkbox" checked disabled />
+                <span>{t.todos.done}</span>
+              </label>
+            </li>
+          </ul>
+        </div>
+
+        <div class="panel clipboard" role="tabpanel" id="panel-clipboard" aria-labelledby="tab-clipboard" hidden>
+          <ul class="clips">
+            {
+              t.clips.map(([kind, text, app]) => (
+                <li>
+                  {kind === 'color' ? <span class="swatch" style={`background:${text}`} /> : <span class="kind">{kind === 'link' ? '🔗' : 'T'}</span>}
+                  <span class="clip-text">{text}</span>
+                  <span class="clip-app">{app}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="captions">
+      {
+        t.items.map((item, i) => (
+          <div class="caption" data-caption={item.key} hidden={i !== 0}>
+            <h3>{item.name}</h3>
+            <p>{item.text}</p>
+          </div>
+        ))
+      }
+      <p class="more">{t.more}</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pages]').forEach((notch) => {
+    const tabs = [...notch.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const section = notch.closest('section')!;
+
+    function select(tab: HTMLButtonElement, focus = false) {
+      for (const other of tabs) {
+        const on = other === tab;
+        other.setAttribute('aria-selected', String(on));
+        other.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(other.getAttribute('aria-controls')!)!;
+        panel.hidden = !on;
+      }
+      const key = tab.id.replace('tab-', '');
+      section.querySelectorAll<HTMLElement>('[data-caption]').forEach((caption) => {
+        caption.hidden = caption.dataset.caption !== key;
+      });
+      if (focus) tab.focus();
+    }
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(tab));
+      tab.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        event.preventDefault();
+        select(tabs[(i + step + tabs.length) % tabs.length], true);
+      });
+    });
+
+    // Checking a to-do lowers the count, like the real page.
+    const count = notch.querySelector<HTMLElement>('[data-todo-count]');
+    const boxes = [...notch.querySelectorAll<HTMLInputElement>('[data-todo]')];
+    boxes.forEach((box) =>
+      box.addEventListener('change', () => {
+        if (count) count.textContent = String(boxes.filter((b) => !b.checked).length);
+      }),
+    );
+  });
+</script>
+
+<style>
+  .section {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: clamp(96px, 14vw, 160px) var(--gutter) 0;
+  }
+
+  .intro {
+    display: grid;
+    gap: 20px;
+    max-width: var(--measure);
+  }
+
+  h2 {
+    font-size: clamp(33px, 4.4vw, 44px);
+  }
+
+  .intro p,
+  .caption p,
+  .more {
+    color: var(--ink-soft);
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+    margin-top: 56px;
+  }
+
+  .tile {
+    display: grid;
+    justify-items: center;
+    padding-bottom: 48px;
+  }
+
+  .captions {
+    display: grid;
+    gap: 16px;
+    padding-top: 40px;
+    max-width: 26rem;
+  }
+
+  .caption {
+    display: grid;
+    gap: 10px;
+  }
+
+  h3 {
+    font-size: 22px;
+  }
+
+  .more {
+    margin-top: 16px;
+    font-size: 0.9375rem;
+  }
+
+  /* The open notch at the app's size: 521 × 212 pt, radii 14 / 30. */
+  .open {
+    --ear: 14px;
+    --radius: 30px;
+    width: min(521px, calc(100% - 28px));
+    height: 212px;
+    padding: 0 18px 16px;
+    display: grid;
+    grid-template-rows: 32px 1fr;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1px;
+  }
+
+  .tab {
+    all: unset;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 22px;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+  }
+
+  .tab.off {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  button.tab:hover {
+    color: #fff;
+  }
+
+  .tab[aria-selected='true'] {
+    background: #242424;
+    color: #fff;
+  }
+
+  .tab:focus-visible {
+    outline: 2px solid var(--crest);
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .panel {
+    min-height: 0;
+    padding-top: 8px;
+  }
+
+  .panel[hidden],
+  .caption[hidden] {
+    display: none;
+  }
+
+  .panel p {
+    margin: 0;
+  }
+
+  /* Now Playing */
+  .media {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 10px;
+  }
+
+  .now {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .art {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    flex: none;
+    background:
+      radial-gradient(circle at 50% 74%, #fff 0 12%, var(--sun) 12% 20%, transparent 20%),
+      linear-gradient(var(--sky-2) 0 22%, var(--sky-3) 22% 40%, var(--sky-5) 40% 56%, var(--sky-7) 56% 70%, var(--crest-dim) 70% 73%, var(--sea-2) 73%);
+    image-rendering: pixelated;
+  }
+
+  .track {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .title {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .artist {
+    font-size: 15px;
+    color: var(--mac-dim);
+  }
+
+  .wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 22px;
+  }
+
+  .wave i {
+    width: 3px;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(var(--sky-6), var(--sky-3));
+    animation: wave 0.8s ease-in-out infinite alternate;
+  }
+
+  .wave i:nth-child(2n) {
+    animation-delay: -0.4s;
+  }
+
+  .wave i:nth-child(3n) {
+    animation-delay: -0.2s;
+  }
+
+  @keyframes wave {
+    from {
+      scale: 1 0.25;
+    }
+    to {
+      scale: 1 1;
+    }
+  }
+
+  .scrubber {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mac-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #2a2a2a;
+  }
+
+  .bar div {
+    width: 27%;
+    height: 100%;
+    border-radius: 3px;
+    background: #eee;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 34px;
+  }
+
+  /* Calendar and to-dos: a big number on the left, like the app. */
+  .calendar,
+  .todos {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+
+  .todos {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .weekday {
+    color: #ff5a4f;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .todos .weekday {
+    color: #ffd24d;
+  }
+
+  .day {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  .month {
+    color: var(--mac-dim);
+    font-size: 13px;
+  }
+
+  .events,
+  .todo-list,
+  .clips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+    align-content: start;
+    font-size: 13px;
+  }
+
+  .events li {
+    display: flex;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 9px;
+    background: var(--mac-card);
+    border-left: 3px solid #ff5a4f;
+  }
+
+  .events span {
+    color: var(--mac-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 16px);
+    gap: 3px 4px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--mac-dim);
+    text-align: center;
+    align-content: start;
+  }
+
+  .month-grid .today {
+    border-radius: 50%;
+    background: #ff5a4f;
+    color: #fff;
+  }
+
+  .todo-list label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+  }
+
+  .todo-list input {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: scale 0.78s var(--spring-hover);
+  }
+
+  .todo-list input:checked {
+    border-color: #ffd24d;
+    background: #ffd24d;
+    scale: 1;
+  }
+
+  .todo-list input:checked::after {
+    content: '';
+    width: 5px;
+    height: 8px;
+    margin-top: -2px;
+    border: solid #000;
+    border-width: 0 2px 2px 0;
+    rotate: 45deg;
+  }
+
+  .todo-list input:active {
+    scale: 0.85;
+  }
+
+  .todo-list input:checked + span {
+    color: var(--mac-dim);
+    text-decoration: line-through;
+  }
+
+  .todo-list input:disabled {
+    cursor: default;
+  }
+
+  .clips li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    background: var(--mac-card);
+  }
+
+  .kind,
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: #2c2c2e;
+  }
+
+  .clip-text {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .clip-app {
+    font-size: 11px;
+    color: var(--mac-dim);
+  }
+
+  @media (max-width: 900px) {
+    .stage {
+      grid-template-columns: 1fr;
+    }
+
+    .captions {
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .month-grid {
+      display: none;
+    }
+
+    .calendar,
+    .todos {
+      grid-template-columns: 80px minmax(0, 1fr);
+    }
+  }
+</style>

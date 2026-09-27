@@ -1,0 +1,121 @@
+---
+import PixelSky from './PixelSky.astro';
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+import { downloadURL, repo } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].hero;
+---
+
+<section class="hero" data-activity-section="working">
+  <PixelSky />
+  <div class="content">
+    <h1>{t.title}</h1>
+    <p class="lede">{t.lede}</p>
+    <div class="actions">
+      <a class="download" href={downloadURL}>
+        <Glyph name="download" size={18} />
+        {t.download}
+      </a>
+      <a class="source" href={repo}>{t.source}</a>
+    </div>
+    <p class="fine">{t.fine}</p>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: max(100svh, 800px);
+    display: grid;
+    /* Room for the open notch (212 pt) above the words. */
+    padding: 256px var(--gutter) 0;
+    color: #000;
+    isolation: isolate;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 20px;
+    max-width: 46rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: clamp(33px, 6.2vw, 66px);
+    letter-spacing: -0.01em;
+    max-width: 19ch;
+  }
+
+  .lede {
+    max-width: 36rem;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.82);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px 22px;
+    margin-top: 4px;
+  }
+
+  .download {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 24px 15px;
+    /* Flat top, round bottom: the notch's own shape. */
+    border-radius: 6px 6px 22px 22px;
+    background: var(--notch);
+    color: #fff;
+    font-family: var(--font-mac);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: scale 0.78s var(--spring-hover);
+  }
+
+  .download:hover {
+    scale: 1.04;
+  }
+
+  .download:active {
+    scale: 0.96;
+  }
+
+  .source {
+    font-weight: 600;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+
+  .fine {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.68);
+  }
+
+  @media (max-width: 560px) {
+    .hero {
+      padding-top: 236px;
+    }
+
+    .lede {
+      font-size: 1rem;
+    }
+  }
+</style>

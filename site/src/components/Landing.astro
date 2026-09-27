@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import MenuBar from './MenuBar.astro';
+import Notch from './Notch.astro';
+import Hero from './Hero.astro';
+import AgentsSection from './AgentsSection.astro';
+import PagesSection from './PagesSection.astro';
+import AdventureSection from './AdventureSection.astro';
+import DownloadSection from './DownloadSection.astro';
+import Footer from './Footer.astro';
+import type { Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<Base lang={lang}>
+  <MenuBar lang={lang} />
+  <Notch lang={lang} />
+  <main id="main">
+    <Hero lang={lang} />
+    <AdventureSection lang={lang} />
+    <AgentsSection lang={lang} />
+    <PagesSection lang={lang} />
+    <DownloadSection lang={lang} />
+  </main>
+  <Footer lang={lang} />
+</Base>

@@ -1,0 +1,110 @@
+---
+import { strings, type Lang } from '../i18n';
+import { repo, url } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang];
+---
+
+<header class="menubar">
+  <nav class="left" aria-label="pokove">
+    <a class="app" href={url(lang === 'en' ? '' : 'ko/')}>pokove</a>
+    <a href="#adventure">{t.menu.adventure}</a>
+    <a href="#agents">{t.menu.agents}</a>
+    <a href="#notch">{t.menu.notch}</a>
+    <a href="#download">{t.menu.download}</a>
+  </nav>
+  <div class="right">
+    <a class="github" href={repo}>{t.menu.github}</a>
+    <a href={url(t.otherLang.path)} hreflang={lang === 'en' ? 'ko' : 'en'} lang={lang === 'en' ? 'ko' : 'en'}>{t.otherLang.label}</a>
+    <time class="clock" data-lang={t.htmlLang}></time>
+  </div>
+</header>
+
+<script>
+  // The menu bar clock, as macOS writes it for the page's language.
+  const clock = document.querySelector<HTMLTimeElement>('.menubar .clock');
+  if (clock) {
+    const lang = clock.dataset.lang ?? 'en';
+    const format = new Intl.DateTimeFormat(lang, {
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    const tick = () => {
+      const now = new Date();
+      clock.dateTime = now.toISOString();
+      clock.textContent = format.format(now).replace(/,/g, '');
+    };
+    tick();
+    setInterval(tick, 20_000);
+  }
+</script>
+
+<style>
+  .menubar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 40;
+    height: var(--menu-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 14px;
+    font-family: var(--font-mac);
+    font-size: 13px;
+    color: #fff;
+    background: rgba(24, 18, 90, 0.28);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  }
+
+  .left,
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  a,
+  .clock {
+    padding: 3px 9px;
+    border-radius: 5px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  a:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .app {
+    font-weight: 700;
+  }
+
+  .clock {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Leave the middle to the notch. */
+  @media (max-width: 1180px) {
+    .left a:not(.app),
+    .clock {
+      display: none;
+    }
+  }
+
+  /* On a phone the notch takes the whole top edge, like the Dynamic Island. */
+  @media (max-width: 560px) {
+    .menubar {
+      display: none;
+    }
+  }
+</style>

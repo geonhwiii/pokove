@@ -1,0 +1,61 @@
+---
+/** Small line glyphs for the notch replicas: page tabs, battery, playback. */
+export type GlyphName =
+  | 'media'
+  | 'calendar'
+  | 'todos'
+  | 'clipboard'
+  | 'agents'
+  | 'adventure'
+  | 'gear'
+  | 'battery'
+  | 'back'
+  | 'play'
+  | 'forward'
+  | 'laptop'
+  | 'hand'
+  | 'check'
+  | 'download'
+  | 'star';
+interface Props {
+  name: GlyphName;
+  size?: number;
+}
+const { name, size = 16 } = Astro.props;
+---
+
+<svg
+  class="glyph"
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  {name === 'media' && <><path d="M9 18V5l10-2v13" /><circle cx="6.5" cy="18" r="2.5" fill="currentColor" /><circle cx="16.5" cy="16" r="2.5" fill="currentColor" /></>}
+  {name === 'calendar' && <><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M3.5 10h17M8 14h1M11.5 14h1M15 14h1M8 17h1M11.5 17h1" /></>}
+  {name === 'todos' && <><circle cx="6" cy="7" r="2.2" /><circle cx="6" cy="17" r="2.2" /><path d="M11 7h9M11 17h9" /></>}
+  {name === 'clipboard' && <><rect x="5" y="4.5" width="14" height="17" rx="2.5" /><path d="M9 3.5h6v3H9zM9 11h6M9 15h6" /></>}
+  {name === 'agents' && <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />}
+  {name === 'adventure' && <path d="M12 3.5 14 10l6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2z" fill="currentColor" />}
+  {name === 'gear' && <><circle cx="12" cy="12" r="3.2" /><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3 5.5 5.5" /></>}
+  {name === 'battery' && <><rect x="2.5" y="7" width="17" height="10" rx="3" /><rect x="4.5" y="9" width="11" height="6" rx="1.5" fill="currentColor" stroke="none" /><path d="M21.5 10.5v3" /></>}
+  {name === 'back' && <path d="M11 6 3.5 12l7.5 6zM20.5 6 13 12l7.5 6z" fill="currentColor" />}
+  {name === 'play' && <path d="M7 4.5 19.5 12 7 19.5z" fill="currentColor" />}
+  {name === 'forward' && <path d="m13 6 7.5 6-7.5 6zM3.5 6 11 12l-7.5 6z" fill="currentColor" />}
+  {name === 'laptop' && <path d="M5 6.5h14v9H5zM2.5 18.5h19" />}
+  {name === 'hand' && <path d="M8 12V6.5a1.5 1.5 0 0 1 3 0V11m0-5.5V5a1.5 1.5 0 0 1 3 0v6m0-4.5a1.5 1.5 0 0 1 3 0V13c0 4-2.5 7-6.5 7-2.6 0-4.3-1.4-5.6-3.6L3.6 13.7a1.5 1.5 0 0 1 2.5-1.6L8 14.5" />}
+  {name === 'check' && <path d="m5 12.5 4.5 4.5L19 7.5" />}
+  {name === 'download' && <path d="M12 4v11m-5-5 5 5 5-5M5 20h14" />}
+  {name === 'star' && <path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" fill="currentColor" />}
+</svg>
+
+<style>
+  .glyph {
+    flex: none;
+  }
+</style>

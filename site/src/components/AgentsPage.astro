@@ -1,0 +1,375 @@
+---
+/** The notch's Agents page, open, with a permission request you can answer. */
+import ClaudeSpark from './ClaudeSpark.astro';
+import CodexMark from './CodexMark.astro';
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const d = strings[lang].demo;
+const first = d.requests[0];
+const tabGlyphs = ['media', 'calendar', 'todos', 'clipboard', 'agents', 'adventure'] as const;
+---
+
+<div
+  class="notch-body agents-page"
+  data-agents
+  data-strings={JSON.stringify({
+    requests: d.requests.map((r) => ({ ...r, title: d.wantsToUse(r.project, r.tool) })),
+    working: d.working,
+    waiting: d.waiting(1),
+    allowed: d.allowed,
+    denied: d.denied,
+  })}
+>
+  <div class="header">
+    <div class="tabs" aria-hidden="true">
+      {tabGlyphs.map((g) => <span class:list={['tab', { on: g === 'agents' }]}><Glyph name={g} size={15} /></span>)}
+    </div>
+    <div class="status" aria-hidden="true">
+      <span>{d.battery}</span>
+      <Glyph name="battery" size={22} />
+    </div>
+  </div>
+
+  <div class="agents">
+    <div class="summary">
+      <p class="label">{d.agents}</p>
+      <p class="count">2</p>
+      <p class="state" data-state-label>{d.waiting(1)}</p>
+      <p class="today">{d.today}</p>
+    </div>
+
+    <div class="rows">
+      <div class="request" data-request>
+        <p class="request-title" data-request-title>{d.wantsToUse(first.project, first.tool)}</p>
+        <p class="request-detail" data-request-detail>{first.detail}</p>
+        <div class="answers">
+          <button type="button" data-answer="deny">{d.deny}</button>
+          <button type="button" data-answer="always">{d.always}</button>
+          <button type="button" class="allow" data-answer="allow">{d.allow}</button>
+        </div>
+        <p class="answered" data-answered aria-live="polite"></p>
+      </div>
+
+      <div class="row">
+        <ClaudeSpark size={18} mode="working" />
+        <div class="row-text">
+          <p class="row-title">{d.sessions[0].title}</p>
+          <p class="row-step" data-claude-step>{d.sessions[0].step}</p>
+        </div>
+        <span class="row-time" data-timer="356">5:56</span>
+      </div>
+
+      <div class="row codex-row">
+        <CodexMark size={18} working />
+        <div class="row-text">
+          <p class="row-title">{d.sessions[1].title}</p>
+          <p class="row-step">{d.sessions[1].step}</p>
+        </div>
+        <span class="row-time" data-timer="72">1:12</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-agents]').forEach((root) => {
+    type Request = { title: string; detail: string; after: string };
+    const s = JSON.parse(root.dataset.strings ?? '{}') as {
+      requests: Request[];
+      working: string;
+      waiting: string;
+      allowed: string;
+      denied: string;
+    };
+    const request = root.querySelector<HTMLElement>('[data-request]')!;
+    const answered = root.querySelector<HTMLElement>('[data-answered]')!;
+    const stateLabel = root.querySelector<HTMLElement>('[data-state-label]')!;
+    const step = root.querySelector<HTMLElement>('[data-claude-step]')!;
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let pending = true;
+    let index = 0;
+
+    root.querySelectorAll<HTMLButtonElement>('[data-answer]').forEach((button) =>
+      button.addEventListener('click', () => {
+        if (!pending) return;
+        const allow = button.dataset.answer !== 'deny';
+        pending = false;
+        root.dataset.answered = '';
+        answered.textContent = allow ? s.allowed : s.denied;
+        request.dataset.phase = 'answered';
+        stateLabel.textContent = s.working;
+        step.textContent = allow ? s.requests[index].after : s.denied;
+        setTimeout(() => (request.dataset.phase = 'gone'), reduceMotion ? 0 : 700);
+        setTimeout(nextRequest, 5200);
+      }),
+    );
+
+    function nextRequest() {
+      if (document.hidden) {
+        setTimeout(nextRequest, 3000);
+        return;
+      }
+      index = (index + 1) % s.requests.length;
+      const next = s.requests[index];
+      request.querySelector('[data-request-title]')!.textContent = next.title;
+      request.querySelector('[data-request-detail]')!.textContent = next.detail;
+      answered.textContent = '';
+      request.dataset.phase = '';
+      stateLabel.textContent = s.waiting;
+      pending = true;
+    }
+
+    // Session timers count up like the real ones.
+    const timers = [...root.querySelectorAll<HTMLElement>('[data-timer]')];
+    const format = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    setInterval(() => {
+      timers.forEach((timer) => {
+        const seconds = Number(timer.dataset.timer) + 1;
+        timer.dataset.timer = String(seconds);
+        timer.textContent = format(seconds);
+      });
+    }, 1000);
+  });
+</script>
+
+<style>
+  /* The open notch at the app's size: 521 × 212 pt, radii 14 / 30. */
+  .agents-page {
+    --ear: 14px;
+    --radius: 30px;
+    width: min(521px, calc(100% - 28px));
+    height: 212px;
+    padding: 0 18px 16px;
+    display: grid;
+    grid-template-rows: 32px 1fr;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1px;
+  }
+
+  .tab {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 22px;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .tab.on {
+    background: #242424;
+    color: var(--claude);
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .agents {
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 14px;
+    padding-top: 8px;
+    min-height: 0;
+  }
+
+  .label {
+    color: var(--claude);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .count {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.05;
+  }
+
+  .state {
+    color: var(--mac-dim);
+    font-size: 13px;
+  }
+
+  .today {
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .request {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    max-height: 120px;
+    padding: 9px 11px;
+    border-radius: 12px;
+    background: #1d1a14;
+    box-shadow: inset 0 0 0 1px rgba(255, 158, 61, 0.35);
+    transition:
+      opacity 0.25s,
+      margin 0.35s var(--spring-close),
+      max-height 0.35s var(--spring-close),
+      padding 0.35s var(--spring-close);
+  }
+
+  .request-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .request-detail {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--mac-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .answers {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .answers button {
+    all: unset;
+    padding: 3px 11px;
+    border-radius: 999px;
+    background: var(--mac-button);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .answers button:hover {
+    background: #3a3a3c;
+  }
+
+  .answers button:focus-visible {
+    outline: 2px solid var(--crest);
+    outline-offset: 2px;
+  }
+
+  .answers .allow {
+    background: #fff;
+    color: #000;
+  }
+
+  .answers .allow:hover {
+    background: #e6e6e6;
+  }
+
+  .answered {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--done);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  [data-phase='answered'] > :not(.answered) {
+    opacity: 0;
+  }
+
+  [data-phase='answered'] .answered {
+    opacity: 1;
+  }
+
+  [data-phase='gone'] {
+    opacity: 0;
+    max-height: 0;
+    padding-block: 0;
+    margin-bottom: -6px;
+    pointer-events: none;
+  }
+
+  /* The Codex row waits below a pending request. */
+  .request:not([data-phase='gone']) ~ .codex-row {
+    display: none;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 11px;
+    border-radius: 12px;
+    background: var(--mac-card);
+  }
+
+  .row-text {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .row-text p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .row-step {
+    font-size: 12px;
+    color: var(--mac-dim);
+  }
+
+  .row-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mac-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 560px) {
+    .agents {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .summary,
+    .status span {
+      display: none;
+    }
+  }
+</style>

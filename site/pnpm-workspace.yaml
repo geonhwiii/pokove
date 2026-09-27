@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+# pnpm 10 and older (Vercel picks pnpm from the lockfile) read this instead.
+onlyBuiltDependencies:
+  - esbuild

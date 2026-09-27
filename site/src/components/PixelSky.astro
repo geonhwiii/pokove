@@ -1,0 +1,185 @@
+---
+/** The app icon's pixel scene, redrawn to fill the hero: dusk bands, the sun on the horizon,
+    a sail, two waves and a stardust glint. Without scripts, the bands alone show. */
+---
+
+<div class="pixel-sky" aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<script>
+  const sky = ['#2446e0', '#3d5cff', '#6a5cff', '#9a5ef6', '#cb68ec', '#ff7fc4', '#ffa2b6', '#ffcba8'];
+  const sea = { top: '#5a86ff', mid: '#5a48ec', deep: '#3a26b8', deepest: '#2a1c8a' };
+  const crest = '#c8f4ff';
+  const crestDim = '#8fdcff';
+
+  const host = document.querySelector<HTMLElement>('.pixel-sky');
+  const canvas = host?.querySelector('canvas');
+  const context = canvas?.getContext('2d');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /** A fixed pseudo-random sequence, so the stars don't move between visits. */
+  function random(seed: number) {
+    return () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+  }
+
+  let glint: { x: number; y: number; under: ImageData } | null = null;
+
+  function draw() {
+    if (!host || !canvas || !context) return;
+    const width = host.clientWidth;
+    const height = host.clientHeight;
+    const cell = Math.max(8, Math.min(12, Math.round(width / 130)));
+    const cols = Math.ceil(width / cell);
+    const rows = Math.ceil(height / cell);
+    canvas.width = cols;
+    canvas.height = rows;
+    canvas.style.width = `${cols * cell}px`;
+    canvas.style.height = `${rows * cell}px`;
+
+    const put = (x: number, y: number, color: string) => {
+      context.fillStyle = color;
+      context.fillRect(x, y, 1, 1);
+    };
+    const horizon = Math.round(rows * 0.74);
+
+    // Sky: flat bands that thin toward the horizon, one checkered row between each pair.
+    const bounds = sky.slice(1).map((_, i) => Math.round(horizon * (1 - Math.pow(1 - (i + 1) / sky.length, 1.35))));
+    for (let y = 0; y < horizon; y++) {
+      let band = bounds.findIndex((b) => y < b);
+      if (band < 0) band = bounds.length;
+      context.fillStyle = sky[band];
+      context.fillRect(0, y, cols, 1);
+      if (band < bounds.length && y === bounds[band] - 1) {
+        for (let x = y % 2; x < cols; x += 2) put(x, y, sky[band + 1]);
+      }
+    }
+
+    // The sun, a half disc sitting on the horizon.
+    const center = cols / 2;
+    const radius = Math.max(5, Math.round(rows * 0.16));
+    for (let y = horizon - radius - 1; y < horizon; y++) {
+      for (let x = Math.floor(center - radius - 1); x <= center + radius + 1; x++) {
+        const d = Math.hypot(x + 0.5 - center, y + 0.5 - horizon);
+        if (d <= radius) put(x, y, d <= radius * 0.58 ? '#ffffff' : '#fff1c9');
+      }
+    }
+
+    // A small sail on the horizon, a fifth of the way in.
+    const sail = Math.round(cols * 0.2);
+    const sailHeight = Math.max(5, Math.round(radius * 0.8));
+    for (let i = 0; i < sailHeight; i++) {
+      const w = 1 + Math.floor((i / sailHeight) * 3);
+      for (let x = sail; x < sail + w; x++) put(x, horizon - sailHeight + i, '#fff6ee');
+    }
+
+    // The sea: a flat crest at the horizon, then the front wave.
+    const seaRows = rows - horizon;
+    const frontBase = horizon + Math.round(seaRows * 0.5);
+    const front = (x: number) => Math.round(frontBase + 1.4 * Math.sin((x / cols) * 2.4 * 2 * Math.PI + 2.4));
+    for (let x = 0; x < cols; x++) {
+      const f = front(x);
+      for (let y = horizon; y < rows; y++) {
+        let color: string;
+        if (y === horizon) color = crestDim;
+        else if (y < f) color = y < horizon + (f - horizon) / 2 ? sea.top : sea.mid;
+        else if (y === f) color = crest;
+        else if (y === f + 1) color = crestDim;
+        else color = y > f + Math.max(3, seaRows * 0.18) ? sea.deepest : sea.deep;
+        put(x, y, color);
+      }
+    }
+
+    // The sun's path on the water.
+    const mid = Math.floor(cols / 2);
+    for (let y = horizon + 1, i = 0; y < front(mid) - 1; y += 2, i++) {
+      const half = Math.max(1, Math.round(radius * (1.05 - 0.22 * i)));
+      const inset = i % 2;
+      for (let x = mid - half + inset; x < mid + half - inset; x++) put(x, y, i === 0 ? '#ffe3c4' : '#e9d8ff');
+    }
+
+    // Stars in the upper sky, away from the notch in the middle.
+    const next = random(44);
+    const count = Math.round((cols * horizon) / 420);
+    for (let i = 0; i < count; i++) {
+      const x = Math.floor(next() * cols);
+      const y = 1 + Math.floor(next() * horizon * 0.42);
+      if (Math.abs(x - center) < 22) continue;
+      put(x, y, next() > 0.7 ? '#ffffff' : '#bfc8ff');
+    }
+
+    const gx = Math.round(cols * 0.78), gy = Math.max(4, Math.round(rows * 0.16));
+    glint = { x: gx, y: gy, under: context.getImageData(gx - 2, gy - 2, 5, 5) };
+    drawGlint(true);
+  }
+
+  /** The four-point stardust glint, with long or short arms, drawn over the sky saved beneath it. */
+  function drawGlint(long: boolean) {
+    if (!context || !glint) return;
+    const { x, y, under } = glint;
+    context.putImageData(under, x - 2, y - 2);
+    context.fillStyle = '#ffffff';
+    context.fillRect(x, y, 1, 1);
+    context.fillStyle = '#bfc8ff';
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) context.fillRect(x + dx, y + dy, 1, 1);
+    if (long) {
+      context.fillStyle = '#8fa0ff';
+      for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) context.fillRect(x + dx, y + dy, 1, 1);
+    }
+  }
+
+  if (host && context) {
+    draw();
+    host.dataset.ready = '';
+    let pending = 0;
+    new ResizeObserver(() => {
+      cancelAnimationFrame(pending);
+      pending = requestAnimationFrame(draw);
+    }).observe(host);
+    if (!reduceMotion) {
+      let long = true;
+      setInterval(() => {
+        if (document.hidden) return;
+        long = !long;
+        drawGlint(long);
+      }, 1100);
+    }
+  }
+</script>
+
+<style>
+  .pixel-sky {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: linear-gradient(
+      var(--sky-1) 0 16%,
+      var(--sky-2) 16% 31%,
+      var(--sky-3) 31% 44%,
+      var(--sky-4) 44% 54%,
+      var(--sky-5) 54% 61%,
+      var(--sky-6) 61% 66%,
+      var(--sky-7) 66% 69%,
+      var(--sky-8) 69% 70%,
+      var(--sea-1) 70% 80%,
+      var(--sea-3) 80% 88%,
+      var(--sea-4) 88%
+    );
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    translate: -50% 0;
+    image-rendering: pixelated;
+    opacity: 0;
+  }
+
+  [data-ready] canvas {
+    opacity: 1;
+  }
+</style>

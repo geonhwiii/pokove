@@ -1,0 +1,219 @@
+/* The pixel cove from the app icon, and the pure black of the notch. */
+@font-face {
+  font-family: 'Galmuri11';
+  font-weight: 700;
+  font-display: swap;
+  src: url('../assets/fonts/Galmuri11-Bold.woff2') format('woff2');
+}
+
+:root {
+  --notch: #000;
+
+  /* Sky, top to horizon (the icon's bands). */
+  --sky-1: #2446e0;
+  --sky-2: #3d5cff;
+  --sky-3: #6a5cff;
+  --sky-4: #9a5ef6;
+  --sky-5: #cb68ec;
+  --sky-6: #ff7fc4;
+  --sky-7: #ffa2b6;
+  --sky-8: #ffcba8;
+  --sun: #fff1c9;
+
+  /* Sea, surface to deep. The page below the hero is the deep cove. */
+  --sea-1: #5a86ff;
+  --sea-2: #5a48ec;
+  --sea-3: #3a26b8;
+  --sea-4: #2a1c8a;
+  --crest: #c8f4ff;
+  --crest-dim: #8fdcff;
+
+  --ink: #eef0ff;
+  --ink-soft: #bfc3f5;
+  --claude: #d97757;
+  --attention: #ff9e3d;
+  --done: #4cd964;
+
+  /* Inside the notch replicas: the Mac's own UI. */
+  --mac-text: #fff;
+  --mac-dim: rgba(255, 255, 255, 0.55);
+  --mac-card: #161616;
+  --mac-button: #2c2c2e;
+
+  --font-pixel: 'Galmuri11', 'Pretendard Variable', system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mac: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Pretendard Variable', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Springs converted from the app's SwiftUI values (response, damping). */
+  --spring-open: linear(0, 0.018, 0.064, 0.129, 0.206, 0.289, 0.374, 0.457, 0.537, 0.611, 0.678, 0.738, 0.792, 0.837, 0.877, 0.91, 0.937, 0.959, 0.977, 0.99, 1.001, 1.008, 1.014, 1.017, 1.019, 1.02, 1.02, 1.019, 1.018, 1.016, 1.015, 1.013, 1.011, 1.01, 1.008, 1.007, 1.006, 1.005, 1.004, 1.003, 1);
+  --spring-close: linear(0, 0.018, 0.063, 0.127, 0.202, 0.282, 0.363, 0.441, 0.516, 0.585, 0.648, 0.705, 0.755, 0.799, 0.836, 0.869, 0.896, 0.919, 0.938, 0.953, 0.966, 0.976, 0.984, 0.99, 0.995, 0.998, 1.001, 1.003, 1.004, 1.005, 1.005, 1.005, 1.005, 1.005, 1.004, 1.004, 1.004, 1.003, 1.003, 1.002, 1);
+  --spring-hover: linear(0, 0.042, 0.15, 0.297, 0.462, 0.626, 0.777, 0.906, 1.009, 1.083, 1.132, 1.157, 1.163, 1.154, 1.136, 1.111, 1.084, 1.057, 1.033, 1.013, 0.997, 0.985, 0.978, 0.974, 0.974, 0.975, 0.978, 0.983, 0.987, 0.991, 0.995, 0.998, 1.001, 1.003, 1.004, 1.004, 1.004, 1.004, 1.003, 1.003, 1);
+
+  --gutter: clamp(16px, 5vw, 56px);
+  --measure: 38rem;
+  --menu-height: 36px;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--menu-height) + 24px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--sea-4);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-pixel);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  text-wrap: balance;
+  /* Bitmap-style glyphs stay crisp without extra smoothing. */
+  -webkit-font-smoothing: none;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* Korean wraps between words, not syllables. */
+:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--crest);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--notch);
+  color: #fff;
+  transform: translateY(-150%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The notch shape the app draws: flat top, concave "ears" into the menu bar, round bottom. */
+.notch-body {
+  --ear: 6px;
+  --radius: 13px;
+  position: relative;
+  background: var(--notch);
+  border-radius: 0 0 var(--radius) var(--radius);
+  color: var(--mac-text);
+  font-family: var(--font-mac);
+  line-height: 1.3;
+}
+
+.notch-body::before,
+.notch-body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: var(--ear);
+  height: var(--ear);
+  transition: inherit;
+}
+
+.notch-body::before {
+  right: 100%;
+  background: radial-gradient(circle at 0 100%, transparent calc(var(--ear) - 0.5px), var(--notch) var(--ear));
+}
+
+.notch-body::after {
+  left: 100%;
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--ear) - 0.5px), var(--notch) var(--ear));
+}
+
+/* A strip of the desktop under a notch replica: the pixel sky bands. */
+.desktop {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(
+    var(--sky-1) 0 18%,
+    var(--sky-2) 18% 38%,
+    var(--sky-3) 38% 58%,
+    var(--sky-4) 58% 76%,
+    var(--sky-5) 76%
+  );
+}
+
+.desktop::before {
+  /* The menu bar the notch hangs from. */
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 32px;
+  background: rgba(24, 18, 90, 0.28);
+}

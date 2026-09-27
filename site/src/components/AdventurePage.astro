@@ -1,0 +1,701 @@
+---
+/** The notch's Adventure page as the app lays it out: the battle and party on the left, the
+    Challenge tab's stage line on the right. A scripted wild battle plays at the app's pace. */
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+import { sprite } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang];
+const b = t.battle;
+const lead = b.party[0];
+const foe = b.foes[0];
+const start = 6;
+const stations = Array.from({ length: 10 }, (_, i) => i + 1);
+const tabGlyphs = ['media', 'calendar', 'todos', 'clipboard', 'agents', 'adventure'] as const;
+const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages', 'Gym', 'Dungeon'];
+---
+
+<div
+  class="adventure"
+  data-battle={JSON.stringify({
+    lead: lead.name,
+    moves: b.moves,
+    foes: b.foes.map((f) => ({ ...f, front: sprite.front(f.id), used: b.used(f.name, f.move) })),
+    leadMoves: b.moves.map((m) => b.used(lead.name, m)),
+    toGym: Array.from({ length: 11 }, (_, n) => b.toGym(n)),
+    start,
+  })}
+>
+  <div class="header">
+    <div class="tabs" aria-hidden="true">
+      {tabGlyphs.map((g) => <span class:list={['tab', { on: g === 'adventure' }]}><Glyph name={g} size={15} /></span>)}
+    </div>
+    <div class="status" aria-hidden="true">
+      <span>{t.demo.battery}</span>
+      <Glyph name="battery" size={22} />
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="left">
+      <div class="scene">
+        <span class="pill stage" data-stage>2-{start}</span>
+        <span class="pill auto">AUTO</span>
+        <div class="plate foe-plate">
+          <p><b data-foe-name>{foe.name}</b><span>Lv<b data-foe-level>{foe.level}</b></span></p>
+          <div class="hp"><i data-foe-hp></i></div>
+        </div>
+        <span class="platform foe-ground"></span>
+        <img class="foe" data-foe src={sprite.front(foe.id)} alt="" width="56" height="56" />
+        <span class="platform our-ground"></span>
+        <img class="ours" data-ours src={sprite.back(lead.id)} alt="" width="72" height="72" />
+        <div class="plate our-plate">
+          <p><b>{lead.name}</b><span>Lv{lead.level}</span></p>
+          <div class="hp"><i data-our-hp style="--hp: 0.9"></i></div>
+          <small data-our-hp-text>38/42</small>
+        </div>
+        <p class="textbox" data-text aria-live="off">{foe.appeared}</p>
+      </div>
+      <div class="party">
+        {
+          b.party.map((member, i) => (
+            <div class:list={['member', { lead: i === 0 }]}>
+              <img src={sprite.icon(member.id)} alt="" width="40" height="30" />
+              <div>
+                <p>Lv {member.level}</p>
+                <div class="xp"><i data-xp={i === 0 ? '' : undefined} style={`--xp: ${[0.35, 0.6, 0.2][i]}`}></i></div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="pane-tabs">
+        {b.tabs.map((tab, i) => <span class:list={{ on: i === 0 }}>{tab}</span>)}
+        <span class="dust"><img src={sprite.item('stardust')} alt="" width="16" height="16" /><b data-dust>214</b></span>
+      </div>
+      <div class="modes">
+        {modes.map((mode, i) => <span class:list={{ on: i === 0 }}>{mode}</span>)}
+      </div>
+      <div class="chapter">
+        <b>{b.chapter}</b>
+        <span>{b.badges}</span>
+      </div>
+      <div class="line" data-line style={`--current: ${start - 1}`}>
+        <span class="track"></span>
+        {
+          stations.map((n) => (
+            <span class="station" data-station={n} style={`--i: ${n - 1}`}>
+              <span class="dot" />
+              <span class="number">{n}</span>
+            </span>
+          ))
+        }
+        <img class="rider" src={sprite.icon(lead.id)} alt="" width="40" height="30" />
+        <span class="gym"><Glyph name="star" size={11} /></span>
+      </div>
+      <p class="next"><Glyph name="adventure" size={12} /><span data-next>{b.toGym(10 - start + 1)}</span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('.adventure[data-battle]').forEach(run);
+
+  function run(root: HTMLElement) {
+    type Foe = { name: string; level: number; front: string; used: string; appeared: string; fainted: string };
+    const data = JSON.parse(root.dataset.battle!) as {
+      foes: Foe[];
+      leadMoves: string[];
+      toGym: string[];
+      start: number;
+    };
+    const $ = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
+    const text = $('[data-text]');
+    const foeImage = $<HTMLImageElement>('[data-foe]');
+    const ours = $('[data-ours]');
+    const foeHP = $('[data-foe-hp]');
+    const ourHP = $('[data-our-hp]');
+    const ourHPText = $('[data-our-hp-text]');
+    const xp = $('[data-xp]');
+    const dust = $('[data-dust]');
+    const line = $('[data-line]');
+    const stage = $('[data-stage]');
+    const next = $('[data-next]');
+
+    // Preload every foe so swaps don't flash.
+    data.foes.forEach((foe) => (new Image().src = foe.front));
+
+    let station = data.start;
+    let foeIndex = 0;
+    let beat = 0;
+    let hp = 38;
+    let exp = 0.35;
+    let stardust = 214;
+
+    const setStation = (n: number) => {
+      station = n;
+      line.style.setProperty('--current', String(n - 1));
+      stage.textContent = `2-${n}`;
+      next.textContent = data.toGym[10 - n + 1];
+      line.querySelectorAll<HTMLElement>('[data-station]').forEach((dot) => {
+        const k = Number(dot.dataset.station);
+        dot.dataset.state = k < n ? 'cleared' : k === n ? 'current' : '';
+      });
+    };
+    setStation(station);
+
+    const flash = (el: HTMLElement) => {
+      el.classList.remove('hit');
+      void el.offsetWidth;
+      el.classList.add('hit');
+    };
+
+    function step() {
+      const foe = data.foes[foeIndex];
+      switch (beat) {
+        case 0:
+          foeImage.src = foe.front;
+          foeImage.classList.remove('fainted');
+          root.querySelector('[data-foe-name]')!.textContent = foe.name;
+          root.querySelector('[data-foe-level]')!.textContent = String(foe.level);
+          foeHP.style.setProperty('--hp', '1');
+          text.textContent = foe.appeared;
+          break;
+        case 1:
+          text.textContent = data.leadMoves[0];
+          foeHP.style.setProperty('--hp', '0.42');
+          flash(foeImage);
+          break;
+        case 2:
+          text.textContent = foe.used;
+          hp = Math.max(24, hp - 4);
+          ourHP.style.setProperty('--hp', String(hp / 42));
+          ourHPText.textContent = `${hp}/42`;
+          flash(ours);
+          break;
+        case 3:
+          text.textContent = data.leadMoves[1];
+          foeHP.style.setProperty('--hp', '0');
+          flash(foeImage);
+          break;
+        case 4:
+          text.textContent = foe.fainted;
+          foeImage.classList.add('fainted');
+          exp = exp >= 0.95 ? 0.1 : Math.min(1, exp + 0.2);
+          xp.style.setProperty('--xp', String(exp));
+          stardust += 1;
+          dust.textContent = String(stardust);
+          break;
+        case 5:
+          setStation(station >= 9 ? data.start : station + 1);
+          if (station === data.start) {
+            hp = 38;
+            ourHP.style.setProperty('--hp', String(hp / 42));
+            ourHPText.textContent = `${hp}/42`;
+          }
+          foeIndex = (foeIndex + 1) % data.foes.length;
+          break;
+      }
+      beat = (beat + 1) % 6;
+    }
+
+    // One action every 1.5 s, as stations run in the app, and only while it can be seen.
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    setInterval(() => {
+      const notch = root.closest('.live-notch') as HTMLElement | null;
+      if (document.hidden || (notch && notch.dataset.state !== 'open')) return;
+      step();
+    }, 1500);
+  }
+</script>
+
+<style>
+  /* Kept clear of the 30 pt bottom corners. */
+  .adventure {
+    position: absolute;
+    inset: 0;
+    padding: 0 18px 16px;
+    display: grid;
+    grid-template-rows: 32px 1fr;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1px;
+  }
+
+  .tab {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 22px;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .tab.on {
+    background: #242424;
+    color: #ffd84d;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 14px;
+    min-height: 0;
+  }
+
+  .left {
+    display: grid;
+    grid-template-rows: 130px 28px;
+    gap: 6px;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  /* The battle: the foe up right, yours from behind, info plates and a text box. */
+  .scene {
+    position: relative;
+    overflow: hidden;
+    border-radius: 13px;
+    background:
+      linear-gradient(#9fd8ff 0 18%, #b8e3ff 18% 34%, #cdeeff 34% 50%, transparent 50%),
+      repeating-linear-gradient(180deg, #8ad35f 0 6px, #7cc653 6px 12px);
+  }
+
+  .pill {
+    position: absolute;
+    top: 6px;
+    z-index: 2;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(20, 22, 60, 0.7);
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    font-weight: 700;
+    -webkit-font-smoothing: none;
+  }
+
+  .stage {
+    left: 6px;
+  }
+
+  .auto {
+    right: 6px;
+    color: #cfd6ff;
+  }
+
+  .platform {
+    position: absolute;
+    border-radius: 50%;
+    background: #b6e98f;
+    box-shadow: inset 0 -4px 0 #93cf6d;
+  }
+
+  .foe-ground {
+    right: 8px;
+    top: 70px;
+    width: 96px;
+    height: 18px;
+  }
+
+  .our-ground {
+    left: -12px;
+    bottom: 6px;
+    width: 124px;
+    height: 24px;
+  }
+
+  .foe,
+  .ours {
+    position: absolute;
+    image-rendering: pixelated;
+    object-fit: contain;
+    object-position: bottom;
+  }
+
+  .foe {
+    right: 28px;
+    top: 24px;
+    width: 56px;
+    height: 56px;
+    transition: opacity 0.35s, translate 0.35s;
+  }
+
+  .foe.fainted {
+    opacity: 0;
+    translate: 0 10px;
+  }
+
+  .ours {
+    left: 18px;
+    bottom: 10px;
+    width: 72px;
+    height: 72px;
+  }
+
+  .hit {
+    animation: hit 0.45s steps(2) 1;
+  }
+
+  @keyframes hit {
+    0%,
+    50% {
+      opacity: 0.25;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .plate {
+    position: absolute;
+    z-index: 2;
+    width: 108px;
+    padding: 4px 7px 5px;
+    border-radius: 8px;
+    background: rgba(20, 22, 60, 0.72);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .plate p {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .plate span {
+    font-weight: 600;
+  }
+
+  .foe-plate {
+    top: 28px;
+    left: 6px;
+  }
+
+  .our-plate {
+    right: 6px;
+    bottom: 21px;
+  }
+
+  .our-plate small {
+    display: block;
+    margin-top: 1px;
+    text-align: right;
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hp {
+    height: 4px;
+    margin-top: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+  }
+
+  .hp i {
+    display: block;
+    height: 100%;
+    width: calc(var(--hp, 1) * 100%);
+    background: #58d858;
+    transition: width 0.5s ease-out;
+  }
+
+  .textbox {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 3;
+    padding: 12px 10px 5px;
+    background: linear-gradient(transparent, rgba(10, 12, 40, 0.75) 45%);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The party bar. */
+  .party {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .member {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px 0 0;
+    border-radius: 8px;
+    background: #141428;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    min-width: 0;
+  }
+
+  .member.lead {
+    box-shadow: inset 0 0 0 1px rgba(255, 216, 77, 0.6);
+  }
+
+  .member img {
+    width: 32px;
+    height: 24px;
+    object-fit: cover;
+    image-rendering: pixelated;
+    flex: none;
+  }
+
+  .member div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .member p {
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .xp {
+    height: 3px;
+    margin-top: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+  }
+
+  .xp i {
+    display: block;
+    height: 100%;
+    width: calc(var(--xp) * 100%);
+    background: #6ab0ff;
+    transition: width 0.5s;
+  }
+
+  /* The Challenge tab. */
+  .right {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 22px 22px 18px 1fr auto;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .pane-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--mac-dim);
+  }
+
+  .pane-tabs span {
+    padding: 3px 5px;
+    border-radius: 7px;
+    white-space: nowrap;
+  }
+
+  .pane-tabs .on {
+    background: #2c2c2e;
+    color: #fff;
+  }
+
+  .dust {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: #fff;
+  }
+
+  .dust img {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+  }
+
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 2px;
+    border-radius: 7px;
+    background: #1c1c1e;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--mac-dim);
+  }
+
+  .modes span {
+    padding: 2px 0;
+    border-radius: 5px;
+  }
+
+  .modes .on {
+    background: #3a3a3c;
+    color: #fff;
+  }
+
+  .chapter {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+  }
+
+  .chapter b {
+    font-size: 13px;
+  }
+
+  .chapter span {
+    color: var(--mac-dim);
+    font-weight: 600;
+  }
+
+  .line {
+    --gap: calc((100% - 30px) / 10);
+    position: relative;
+    height: 54px;
+  }
+
+  .track {
+    position: absolute;
+    left: 5px;
+    right: 14px;
+    top: 30px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #4caf50 0 calc(var(--gap) * var(--current) + 5px), #3a3a3c 0);
+    transition: background 0.4s;
+  }
+
+  .station {
+    position: absolute;
+    top: 25px;
+    left: calc(var(--gap) * var(--i));
+    display: grid;
+    justify-items: center;
+    width: 12px;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2c2c2e;
+    border: 2px solid #3a3a3c;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  [data-state='cleared'] .dot {
+    background: #4caf50;
+    border-color: #2e7d32;
+  }
+
+  [data-state='current'] .dot {
+    background: #ffd84d;
+    border-color: #fff;
+  }
+
+  .number {
+    margin-top: 3px;
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  [data-state='current'] .number {
+    color: #ffd84d;
+  }
+
+  .rider {
+    position: absolute;
+    top: -2px;
+    left: calc(var(--gap) * var(--current) - 10px);
+    width: 32px;
+    height: 24px;
+    object-fit: cover;
+    image-rendering: pixelated;
+    transition: left 0.5s var(--spring-open);
+    animation: ride 0.5s steps(2) infinite alternate;
+  }
+
+  @keyframes ride {
+    to {
+      translate: 0 -2px;
+    }
+  }
+
+  .gym {
+    position: absolute;
+    right: 0;
+    top: 22px;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 2px solid #ffd84d;
+    background: #2c2c2e;
+    color: #ffd84d;
+  }
+
+  .next {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: #1c1c1e;
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffd84d;
+  }
+
+  .next span {
+    color: #fff;
+  }
+
+  @media (max-width: 560px) {
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .right {
+      display: none;
+    }
+
+    .status span {
+      display: none;
+    }
+  }
+</style>

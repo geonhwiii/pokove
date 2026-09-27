@@ -1,0 +1,67 @@
+---
+/** The app's Codex mark: a soft eight-lobed gradient cloud with a `>_` prompt. While Codex works
+    the cloud turns and the cursor blinks. */
+interface Props {
+  size?: number;
+  working?: boolean;
+}
+const { size = 16, working = false } = Astro.props;
+
+const steps = 96;
+const points = Array.from({ length: steps }, (_, step) => {
+  const angle = (step / steps) * 2 * Math.PI - Math.PI / 2;
+  const r = 12 * (1 - 0.065 + 0.065 * Math.cos(8 * angle));
+  return `${(12 + r * Math.cos(angle)).toFixed(2)},${(12 + r * Math.sin(angle)).toFixed(2)}`;
+});
+const cloud = `M${points.join('L')}Z`;
+const id = `codex-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<span class:list={['codex', { working }]} style={`--size: ${size}px`} aria-hidden="true">
+  <svg viewBox="0 0 24 24" width={size} height={size}>
+    <defs>
+      <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ccb8ff" />
+        <stop offset="0.5" stop-color="#7a8cff" />
+        <stop offset="1" stop-color="#3b52f5" />
+      </linearGradient>
+    </defs>
+    <path class="cloud" d={cloud} fill={`url(#${id})`} />
+    <path d="M7.2 8.4 10.56 12 7.2 15.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+    <path class="cursor" d="M12.72 15.36h4.32" stroke="#fff" stroke-width="2.4" stroke-linecap="round" />
+  </svg>
+</span>
+
+<style>
+  .codex {
+    display: inline-grid;
+    place-items: center;
+    width: var(--size);
+    height: var(--size);
+    flex: none;
+  }
+
+  .cloud {
+    transform-origin: 12px 12px;
+  }
+
+  .working .cloud {
+    animation: cloud-turn 9s linear infinite;
+  }
+
+  .working .cursor {
+    animation: cursor-blink 0.9s steps(1) infinite;
+  }
+
+  @keyframes cloud-turn {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  @keyframes cursor-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+</style>

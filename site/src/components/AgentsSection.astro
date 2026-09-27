@@ -1,0 +1,121 @@
+---
+import AgentsPage from './AgentsPage.astro';
+import { strings, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].agents;
+const tryIt = strings[lang].demo.try;
+---
+
+<section class="section" id="agents" data-activity-section="needs">
+  <div class="intro">
+    <h2>{t.title}</h2>
+    <p>{t.body}</p>
+  </div>
+
+  <div class="stage">
+    <figure class="demo">
+      <div class="desktop tile">
+        <AgentsPage lang={lang} />
+      </div>
+      <figcaption>{tryIt}</figcaption>
+    </figure>
+
+    <ul class="states">
+      {
+        t.states.map((state) => (
+          <li>
+            <h3>{state.name}</h3>
+            <p>{state.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <p class="note">{t.hooks}</p>
+</section>
+
+<style>
+  .section {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: clamp(96px, 12vw, 140px) var(--gutter) 0;
+  }
+
+  .intro {
+    display: grid;
+    gap: 20px;
+    max-width: var(--measure);
+  }
+
+  h2 {
+    font-size: clamp(33px, 4.4vw, 44px);
+  }
+
+  .intro p,
+  .states p,
+  figcaption {
+    color: var(--ink-soft);
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 600px) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+    margin-top: 56px;
+  }
+
+  .demo {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .tile {
+    display: grid;
+    justify-items: center;
+    padding-bottom: 48px;
+  }
+
+  figcaption {
+    font-size: 0.875rem;
+  }
+
+  .states {
+    list-style: none;
+    margin: 0;
+    padding: 16px 0 0;
+    display: grid;
+    gap: 26px;
+    max-width: 26rem;
+  }
+
+  .states li {
+    display: grid;
+    gap: 8px;
+  }
+
+  h3 {
+    font-size: 22px;
+  }
+
+  .note {
+    margin-top: 48px;
+    max-width: var(--measure);
+    padding-left: 16px;
+    border-left: 3px solid var(--sea-2);
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 900px) {
+    .stage {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

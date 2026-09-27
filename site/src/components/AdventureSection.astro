@@ -1,0 +1,290 @@
+---
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+import { sprite } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].adventure;
+const stations = Array.from({ length: 10 }, (_, i) => i + 1);
+const current = 6;
+const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(key));
+---
+
+<section class="section" id="adventure" data-activity-section="working">
+  <div class="layout">
+    <div class="copy">
+      <h2>{t.title}</h2>
+      <p>{t.body}</p>
+      <p class="no-loss">{t.noLoss}</p>
+    </div>
+
+    <figure class="line-card" aria-hidden="true">
+      <p class="chapter">{t.chapter}</p>
+      <div class="line">
+        <div class="track"></div>
+        {
+          stations.map((n) => (
+            <div class:list={['station', { cleared: n < current, current: n === current }]} style={`--i: ${n - 1}`}>
+              {n === current && <img class="rider" src={sprite.icon(5)} alt="" width="40" height="30" />}
+              <span class="dot" />
+              <span class="number">{n}</span>
+            </div>
+          ))
+        }
+        <div class="terminal">
+          <span class="gym">
+            <Glyph name="star" size={16} />
+          </span>
+          <span class="number">{t.gym}</span>
+        </div>
+        <div class="branch">
+          <span class="stem"></span>
+          <span class="legend">
+            <img src={sprite.icon(143)} alt="" width="40" height="30" />
+          </span>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <ul class="features">
+    {
+      t.features.map((feature) => (
+        <li>
+          <img src={art(feature.art)} alt="" width="32" height="32" />
+          <h3>{feature.name}</h3>
+          <p>{feature.text}</p>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="fine">
+    <p>{t.off}</p>
+    <p>{t.disclaimer}</p>
+  </div>
+</section>
+
+<style>
+  .section {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: clamp(96px, 12vw, 140px) var(--gutter) 0;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: center;
+  }
+
+  .copy {
+    display: grid;
+    gap: 20px;
+    max-width: var(--measure);
+  }
+
+  h2 {
+    font-size: clamp(33px, 4.4vw, 44px);
+  }
+
+  .copy p {
+    color: var(--ink-soft);
+  }
+
+  .copy .no-loss {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* The stage line, drawn like the app's: ten stations to the gym, a branch after the fifth. */
+  .line-card {
+    margin: 0;
+    padding: 20px 22px 44px;
+    border-radius: 22px;
+    background: #000;
+    font-family: var(--font-mac);
+    color: #fff;
+  }
+
+  .chapter {
+    font-family: var(--font-pixel);
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .line {
+    --gap: calc((100% - 34px) / 10);
+    position: relative;
+    height: 116px;
+    margin-top: 12px;
+  }
+
+  .track {
+    position: absolute;
+    left: 10px;
+    right: 30px;
+    top: 50px;
+    height: 6px;
+    background: linear-gradient(90deg, #4caf50 0 calc(var(--gap) * 5.2), #3a3a3c calc(var(--gap) * 5.2));
+    border-radius: 3px;
+  }
+
+  .station,
+  .terminal {
+    position: absolute;
+    top: 38px;
+    left: calc(var(--gap) * var(--i));
+    display: grid;
+    justify-items: center;
+    width: 22px;
+  }
+
+  .dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #2c2c2e;
+    border: 3px solid #3a3a3c;
+  }
+
+  .cleared .dot {
+    background: #4caf50;
+    border-color: #2e7d32;
+  }
+
+  .current .dot {
+    background: #ffd84d;
+    border-color: #fff;
+  }
+
+  .number {
+    margin-top: 6px;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+  }
+
+  .current .number {
+    color: #ffd84d;
+  }
+
+  .rider {
+    position: absolute;
+    bottom: 100%;
+    width: 40px;
+    height: 30px;
+    image-rendering: pixelated;
+    animation: ride 0.5s steps(2) infinite alternate;
+  }
+
+  @keyframes ride {
+    to {
+      translate: 0 -3px;
+    }
+  }
+
+  .terminal {
+    left: auto;
+    right: 0;
+    top: 32px;
+    width: 34px;
+  }
+
+  .gym {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 3px solid #ffd84d;
+    background: #2c2c2e;
+    color: #ffd84d;
+  }
+
+  .terminal .number {
+    color: #ffd84d;
+  }
+
+  .branch {
+    position: absolute;
+    top: 56px;
+    left: calc(var(--gap) * 4.5 + 11px);
+    display: grid;
+    justify-items: center;
+    translate: -50% 0;
+  }
+
+  .stem {
+    width: 4px;
+    height: 22px;
+    background: #4caf50;
+  }
+
+  .legend {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 3px solid #ffd84d;
+    background: #3a2f10;
+    overflow: hidden;
+  }
+
+  .legend img {
+    width: 40px;
+    height: 30px;
+    image-rendering: pixelated;
+  }
+
+  .features {
+    list-style: none;
+    margin: 72px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 36px 28px;
+  }
+
+  .features li {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+  }
+
+  .features img {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+
+  h3 {
+    font-size: 22px;
+  }
+
+  .features p {
+    color: var(--ink-soft);
+  }
+
+  .fine {
+    display: grid;
+    gap: 8px;
+    margin-top: 56px;
+    max-width: 48rem;
+    font-size: 0.8125rem;
+    color: rgba(191, 195, 245, 0.72);
+  }
+
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
