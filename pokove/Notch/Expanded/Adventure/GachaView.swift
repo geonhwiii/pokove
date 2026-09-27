@@ -26,11 +26,7 @@ struct GachaView: View {
                     }
                 }
                 .frame(height: 96)
-                .padding(.top, 8)
-                Text("Pick a ball to open")
-                    .font(.system(size: 9.5, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.55))
-                    .opacity(chosen == nil ? 1 : 0)
+                .padding(.top, 22)
             } else {
                 PullPanel()
             }

@@ -2771,16 +2771,6 @@
         }
       }
     },
-    "Pick a ball to open": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "열어 볼 볼을 하나 골라 주세요"
-          }
-        }
-      }
-    },
     "Pin": {
       "localizations": {
         "ko": {

@@ -56,7 +56,8 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
   cached as `moves-v2.json`). Both sides. Poison and burn take 1/8 max HP at the end of a round, burn
   halves physical damage, paralysis quarters speed and stops a move 25% of the time. Poison/Steel can't be
   poisoned, Fire can't be burned. Plates show 독/화상/마비. **Sleep isn't in**: no damaging move in
-  Gens 1–3 puts the target to sleep, and the auto-battle only uses damaging moves. Sim: champion median
+  Gens 1–3 puts the target to sleep, and the auto-battle only uses damaging moves. The user decided
+  (2026-09-28) it isn't needed, so status moves stay out. Sim: champion median
   ~46 h (was ~53 h at HEAD before statuses, which matches the v3 table); dungeon Normal/Hard slightly
   harder. No retune.
 - **EXP shown:** the card shows experience left to the next level ("869 남음", also on hover over party
@@ -72,7 +73,7 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
   every 10th, trainer-rate EXP on each floor won. AUTO never starts it; a run doesn't resume after
   relaunch.
 - **Copy trimmed** at the user's request: no rules lines (the dungeon's floors, how to repeat a
-  station, "수련하고 다시 도전해요" on the loss card and in the history); the history says where the party got to ("4-3에서 4-10까지 갔어요",
+  station, "수련하고 다시 도전해요" on the loss card and in the history, the gacha's "pick a ball" prompt); the history says where the party got to ("4-3에서 4-10까지 갔어요",
   "2-10에 머물렀어요") instead of battle counts.
 
 ## v3 direction (agreed with the user, 2026-09-27)
