@@ -1,110 +1,95 @@
 import Foundation
 
-// Progress along the journey, discoveries, the gacha and rewards. Pure rules, shared with the
-// simulation script.
+// Progress along the journey, discoveries, the gacha, the daily dungeon and rewards. Pure rules,
+// shared with the simulation script.
 
-/// A stage on the main journey: the node's index and the stage within it.
-nonisolated struct StagePoint: Codable, Hashable, Comparable, Sendable {
-    var node: Int
-    var stage: Int
-
-    static let start = StagePoint(node: 0, stage: 0)
-
-    static func < (lhs: StagePoint, rhs: StagePoint) -> Bool {
-        (lhs.node, lhs.stage) < (rhs.node, rhs.stage)
-    }
+/// A station on a chapter's line; both indexes are 0-based.
+nonisolated struct StationPoint: Codable, Hashable, Sendable {
+    var chapter: Int
+    var station: Int
 }
 
-/// What the party takes on next.
+/// What the party is fighting.
 nonisolated enum BattleTarget: Equatable, Sendable {
-    case stage(StagePoint)
+    /// A station, while an agent works.
+    case station(StationPoint)
+    /// A chapter's boss: its gym leader, or one of the League's five.
+    case boss(chapter: Int, index: Int)
     case legend(String)
+    case dungeon(DungeonTier)
+
+    /// Everything but stations is a challenge, which plays out whether or not an agent works.
+    var isChallenge: Bool { if case .station = self { false } else { true } }
 }
 
-/// How far the journey has come, and where the party is fighting.
+/// How far the journey has come, and where on the line the party fights.
 nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
-    /// The first stage not yet cleared. Past the last node once everything is done.
-    var frontier = StagePoint.start
-    /// Clears of an earlier stage still to go after a loss, before trying the frontier again.
+    /// The current chapter, 0-based. After the League it stays on the last chapter, which loops.
+    var chapter = 0
+    /// Stations cleared in the current chapter; `Chapter.stationCount` once its boss is next.
+    var station = 0
+    /// The next of the chapter's bosses (the League has five).
+    var boss = 0
+    /// Clears of an earlier station still to go after a loss, before trying again.
     var training = 0
-    /// A stretch already reached that the user chose to stay on.
-    var stay: Int?
-    /// Counts clears while staying (or after the journey is done), to cycle through the stages.
+    /// A cleared station the user picked to repeat.
+    var repeating: StationPoint?
+    /// Counts clears while looping the last chapter.
     var cursor = 0
     var badges = 0
     var isChampion = false
     var beatenLegends: [String] = []
-    /// A legendary the user is taking on right now.
-    var legend: String?
-    /// The user asked to take on the trainer at the frontier while AUTO is off.
-    var challenge = false
-    /// Clears spent waiting in front of a trainer, for AUTO's patience.
-    var waited = 0
+    /// Losses in a row to the current boss.
+    var losses = 0
+    /// After a loss, AUTO tries again once the party reaches this level, even mid-training.
+    var retryLevel: Int?
 
-    static let trainingClears = 3
+    func hasReached(chapter index: Int) -> Bool { index <= chapter }
 
-    func isComplete(_ nodes: [JourneyNode]) -> Bool { frontier.node >= nodes.count }
-
-    /// Whether the party has reached this node, so the map shows it and it can be revisited.
-    func hasReached(_ index: Int) -> Bool { index <= frontier.node }
-
-    /// Stages cleared on a node.
-    func clearedStages(of index: Int, in nodes: [JourneyNode]) -> Int {
-        guard nodes.indices.contains(index) else { return 0 }
-        if index < frontier.node { return nodes[index].stageCount }
-        return index == frontier.node ? frontier.stage : 0
+    /// Stations cleared on a chapter's line.
+    func cleared(in index: Int) -> Int {
+        index < chapter ? Chapter.stationCount : (index == chapter ? min(station, Chapter.stationCount) : 0)
     }
 
-    func isReached(legend node: JourneyNode, in nodes: [JourneyNode]) -> Bool {
-        guard case .legend(_, _, let after) = node.kind, let index = nodes.firstIndex(where: { $0.id == after }) else { return false }
-        return hasReached(index)
+    func isCleared(_ point: StationPoint) -> Bool { point.station < cleared(in: point.chapter) }
+
+    /// The boss waiting at the end of the current line, if it has one.
+    func nextBoss(_ chapters: [Chapter]) -> (chapter: Int, index: Int)? {
+        guard chapters.indices.contains(chapter), chapters[chapter].bosses.indices.contains(boss) else { return nil }
+        return (chapter, boss)
     }
 
-    /// The party waits on the stage before a trainer until it's likely to win (AUTO) or the user
-    /// taps Challenge, so the same loss doesn't replay over and over.
-    /// `readiness` is the forecast chance of beating the trainer at the frontier.
-    func isHolding(_ nodes: [JourneyNode], auto: Bool, readiness: Double) -> Bool {
-        guard legend == nil, stay == nil, !challenge, !isComplete(nodes), !nodes[frontier.node].isRoute,
-              previousWild(before: frontier, in: nodes) != nil else { return false }
-        guard auto else { return true }
-        return !AutoChallenge.shouldTry(readiness: readiness, waited: waited)
+    /// The line is cleared, so its boss can be challenged.
+    func isBossOpen(_ chapters: [Chapter]) -> Bool { station >= Chapter.stationCount && nextBoss(chapters) != nil }
+
+    /// AUTO takes the boss on as soon as the line is cleared. After a loss it trains first, and
+    /// tries again sooner if a level gained gives it a fair chance (`chance` is the forecast).
+    func wantsBoss(_ chapters: [Chapter], auto: Bool, partyLevel: Int, chance: () -> Double) -> Bool {
+        guard auto, isBossOpen(chapters) else { return false }
+        if training == 0 { return true }
+        guard let retryLevel, partyLevel >= retryLevel else { return false }
+        return chance() >= AutoChallenge.earlyRetryChance
     }
 
-    func target(_ nodes: [JourneyNode], auto: Bool, readiness: Double = 1) -> BattleTarget {
-        if let legend { return .legend(legend) }
-        if let stay, nodes.indices.contains(stay) {
-            let cleared = max(1, clearedStages(of: stay, in: nodes))
-            return .stage(StagePoint(node: stay, stage: cursor % cleared))
+    var isTraining: Bool { training > 0 && repeating == nil }
+
+    /// Where the party fights while an agent works.
+    func stationTarget(_ chapters: [Chapter]) -> StationPoint {
+        if let repeating { return repeating }
+        let last = Chapter.stationCount - 1
+        if station < Chapter.stationCount {
+            // After a loss on the line, a few clears of the station before.
+            if training > 0, station > 0 { return StationPoint(chapter: chapter, station: station - 1) }
+            return StationPoint(chapter: chapter, station: station)
         }
-        if isComplete(nodes) {
-            let last = nodes.count - 1
-            return .stage(StagePoint(node: last, stage: cursor % nodes[last].stageCount))
-        }
-        if training > 0 || isHolding(nodes, auto: auto, readiness: readiness), let previous = previousWild(before: frontier, in: nodes) {
-            return .stage(previous)
-        }
-        return .stage(frontier)
-    }
-
-    /// The closest wild stage before `point`, for training and holding.
-    func previousWild(before point: StagePoint, in nodes: [JourneyNode]) -> StagePoint? {
-        var node = point.node, stage = point.stage - 1
-        while node >= 0 {
-            if stage >= 0, nodes.indices.contains(node), nodes[node].isRoute { return StagePoint(node: node, stage: stage) }
-            node -= 1
-            stage = nodes.indices.contains(node) ? nodes[node].stageCount - 1 : -1
-        }
-        return nil
-    }
-
-    func point(after point: StagePoint, in nodes: [JourneyNode]) -> StagePoint {
-        if point.stage + 1 < nodes[point.node].stageCount { return StagePoint(node: point.node, stage: point.stage + 1) }
-        return StagePoint(node: point.node + 1, stage: 0)
+        // A line with no boss (after the League) loops; otherwise the party trains at its last station.
+        if nextBoss(chapters) == nil { return StationPoint(chapter: chapter, station: cursor % Chapter.stationCount) }
+        return StationPoint(chapter: chapter, station: last)
     }
 
     enum Outcome: Equatable, Sendable {
         case none
-        /// A new stage opened.
+        /// A new station opened, or the next of the League's five.
         case advanced
         case badge(Int)
         case champion
@@ -112,53 +97,102 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
     }
 
     @discardableResult
-    mutating func record(_ target: BattleTarget, cleared: Bool, nodes: [JourneyNode]) -> Outcome {
-        switch target {
-        case .legend(let id):
-            legend = nil
-            guard cleared else { return .none }
-            if !beatenLegends.contains(id) { beatenLegends.append(id) }
-            return .legend(id)
-        case .stage(let point):
-            if point == frontier, !isComplete(nodes), stay == nil {
-                challenge = false
-                waited = 0
-                guard cleared else {
-                    // Trainers are held back by the forecast; a rare loss on a route trains first.
-                    let isRoute = nodes[point.node].isRoute
-                    training = isRoute && previousWild(before: frontier, in: nodes) != nil ? Self.trainingClears : 0
-                    return .none
-                }
-                let node = nodes[point.node]
-                frontier = self.point(after: point, in: nodes)
-                if let badge = node.trainers.first?.badge, node.isGym {
-                    badges = max(badges, badge)
-                    return .badge(badge)
-                }
-                if node.trainers.count > 1, point.stage == node.stageCount - 1 {
-                    isChampion = true
-                    return .champion
-                }
-                return .advanced
+    mutating func recordStation(_ point: StationPoint, cleared: Bool, chapters: [Chapter]) -> Outcome {
+        let frontier = StationPoint(chapter: chapter, station: station)
+        if repeating == nil, training == 0, point == frontier, station < Chapter.stationCount {
+            guard cleared else {
+                training = point.station > 0 ? AutoChallenge.wildTraining : 0
+                return .none
             }
-            guard cleared else { return .none }
-            if stay != nil || isComplete(nodes) { cursor += 1 } else if training > 0 { training -= 1 } else { waited += 1 }
+            station += 1
+            return .advanced
+        }
+        guard cleared else { return .none }
+        if training > 0 { training -= 1 }
+        if station >= Chapter.stationCount, nextBoss(chapters) == nil { cursor += 1 }
+        return .none
+    }
+
+    @discardableResult
+    mutating func recordBoss(cleared: Bool, chapters: [Chapter], partyLevel: Int) -> Outcome {
+        guard let next = nextBoss(chapters) else { return .none }
+        guard cleared else {
+            losses += 1
+            training = AutoChallenge.trainingClears
+            retryLevel = partyLevel + 1
             return .none
         }
+        losses = 0
+        training = 0
+        retryLevel = nil
+        let current = chapters[next.chapter]
+        if current.isLeague, next.index + 1 < current.bosses.count {
+            boss += 1
+            return .advanced
+        }
+        if let badge = current.badge { badges = max(badges, badge) }
+        if current.isLeague { isChampion = true }
+        chapter = min(chapter + 1, chapters.count - 1)
+        station = 0
+        boss = 0
+        repeating = nil
+        cursor = 0
+        return current.isLeague ? .champion : (current.badge.map { .badge($0) } ?? .advanced)
+    }
+
+    @discardableResult
+    mutating func recordLegend(_ id: String, cleared: Bool) -> Outcome {
+        guard cleared else { return .none }
+        if !beatenLegends.contains(id) { beatenLegends.append(id) }
+        return .legend(id)
     }
 }
 
-// MARK: Challenging trainers
+extension JourneyProgress {
+    /// v2 walked 28 map nodes. Each maps onto a chapter; stations are in proportion to the stages
+    /// cleared there, and a node with a trainer means the line is done and its boss is next.
+    static func migrated(fromNode node: Int, stage: Int, badges: Int, isChampion: Bool, beatenLegends: [String]) -> JourneyProgress {
+        // (chapter, wild stages) per v2 node; 0 stages marks a gym or the League.
+        let legacy: [(chapter: Int, stages: Int)] = [
+            (0, 3), (0, 3), (0, 0), (1, 3), (1, 3), (1, 3), (1, 0), (2, 3), (2, 2), (2, 0), (3, 2), (3, 3), (3, 3), (3, 2), (3, 0),
+            (4, 3), (4, 3), (4, 3), (4, 0), (5, 0), (6, 3), (6, 3), (6, 0), (7, 2), (7, 0), (8, 3), (8, 0), (9, 3),
+        ]
+        var progress = JourneyProgress()
+        progress.badges = badges
+        progress.isChampion = isChampion
+        progress.beatenLegends = beatenLegends
+        guard legacy.indices.contains(node) else {
+            progress.chapter = 9
+            progress.station = Chapter.stationCount
+            return progress
+        }
+        let entry = legacy[node]
+        progress.chapter = entry.chapter
+        if entry.stages == 0 {
+            progress.station = Chapter.stationCount
+            progress.boss = max(0, stage)
+            return progress
+        }
+        let routes = legacy.indices.filter { legacy[$0].chapter == entry.chapter && legacy[$0].stages > 0 }
+        let total = routes.reduce(0) { $0 + legacy[$1].stages }
+        let before = routes.filter { $0 < node }.reduce(0) { $0 + legacy[$1].stages }
+        progress.station = min(Chapter.stationCount - 1, (before + max(0, stage)) * Chapter.stationCount / max(1, total))
+        return progress
+    }
+}
+
+// MARK: Challenging bosses
 
 nonisolated enum AutoChallenge {
-    /// AUTO takes on a trainer once it's likely to win, or after a long wait if it at least has a shot.
-    static let confident = 0.5
-    static let hopeful = 0.2
-    static let patience = 30
-
-    static func shouldTry(readiness: Double, waited: Int) -> Bool {
-        readiness >= confident || (readiness >= hopeful && waited >= patience)
-    }
+    /// After a loss to a boss, the most clears of the last station before the next try; a level
+    /// gained ends the training sooner.
+    static let trainingClears = 30
+    /// After a rare loss on the line, clears of the station before.
+    static let wildTraining = 3
+    /// A level gained mid-training only brings the next try forward with at least this chance.
+    static let earlyRetryChance = 0.15
+    /// Losses in a row before the recap points at the best-team button.
+    static let hintAfterLosses = 3
 }
 
 /// Plays a stage out many times ahead of time to estimate the chance of winning it.
@@ -189,20 +223,12 @@ nonisolated enum Discovery {
         boxCount < 3 ? 6 * 60 : 20 * 60
     }
 
-    /// Where discoveries come from: the stretch being fought, or the last one before a trainer.
-    static func pool(for target: BattleTarget, progress: JourneyProgress, data: GameData) -> [(species: Int, share: Double)] {
-        var node: JourneyNode?
-        switch target {
-        case .stage(let point):
-            if data.nodes[point.node].isRoute {
-                node = data.nodes[point.node]
-            } else if let previous = progress.previousWild(before: point, in: data.nodes) {
-                node = data.nodes[previous.node]
-            }
-        case .legend:
-            if let previous = progress.previousWild(before: progress.frontier, in: data.nodes) { node = data.nodes[previous.node] }
+    /// Where discoveries come from: the stretch of the station being fought.
+    static func pool(at point: StationPoint, data: GameData) -> [(species: Int, share: Double)] {
+        guard data.chapters.indices.contains(point.chapter), data.chapters[point.chapter].stations.indices.contains(point.station) else {
+            return []
         }
-        return node.map { data.encounters.pool(for: $0, dex: data.dex) } ?? []
+        return data.encounters.pool(for: data.chapters[point.chapter].stations[point.station].stretch, dex: data.dex)
     }
 
     static func roll(pool: [(species: Int, share: Double)], rng: inout SeededRNG) -> Int? {
@@ -247,22 +273,28 @@ nonisolated struct GachaCard: Codable, Identifiable, Equatable, Sendable {
 
 /// Three face-up cards; the user keeps one. Nothing can go wrong.
 nonisolated enum Gacha {
+    /// In stardust.
     static let price = 400
     static let cardCount = 3
     /// A new journey starts with one pull's worth.
-    static let startingCoins = price
+    static let startingStardust = price
 
     /// Every species met so far on the journey, plus gacha-only ones unlocked along the way.
     static func pool(progress: JourneyProgress, data: GameData) -> [(species: Int, rarity: GachaCard.Rarity)] {
         var best: [Int: Double] = [:]
-        for (index, node) in data.nodes.enumerated() where node.isRoute && progress.hasReached(index) {
-            for entry in data.encounters.pool(for: node, dex: data.dex) { best[entry.species] = max(best[entry.species] ?? 0, entry.share) }
+        var stretches: Set<String> = []
+        for (index, chapter) in data.chapters.enumerated() where progress.hasReached(chapter: index) {
+            let reached = index < progress.chapter ? chapter.stations.count : min(progress.station + 1, chapter.stations.count)
+            for station in chapter.stations.prefix(reached) where stretches.insert(station.stretch.id).inserted {
+                for entry in data.encounters.pool(for: station.stretch, dex: data.dex) {
+                    best[entry.species] = max(best[entry.species] ?? 0, entry.share)
+                }
+            }
         }
         var pool: [(species: Int, rarity: GachaCard.Rarity)] = best.map { species, share in
             (species, share >= 15 ? .common : (share >= 5 ? .uncommon : .rare))
         }
-        for (species, after) in Kanto.gachaOnly {
-            guard let index = data.nodeIndex(after), progress.hasReached(index), best[species] == nil else { continue }
+        for (species, chapter) in Kanto.gachaOnly where progress.hasReached(chapter: chapter) && best[species] == nil {
             pool.append((species, .rare))
         }
         if progress.isChampion { pool.append((Kanto.mew, .mythical)) }
@@ -270,10 +302,16 @@ nonisolated enum Gacha {
     }
 
     /// Three different species, weighted by rarity. Lines you already have come up less often
-    /// (`duplicateWeight`), and not at all when it's 0.
+    /// (`duplicateWeight`), and not at all when it's 0. With a `floor` (the dungeon's Ultra Ball),
+    /// only that rarity and up, topped up with the next rarest if there aren't three.
     static func draw(pool: [(species: Int, rarity: GachaCard.Rarity)], level: (Int) -> Int, isOwned: (Int) -> Bool,
-                     duplicateWeight: Double = 0.3, rng: inout SeededRNG) -> [GachaCard] {
-        var remaining = pool.filter { duplicateWeight > 0 || !isOwned($0.species) }
+                     duplicateWeight: Double = 0.3, floor: GachaCard.Rarity = .common, rng: inout SeededRNG) -> [GachaCard] {
+        let allowed = pool.filter { duplicateWeight > 0 || !isOwned($0.species) }
+        var remaining = allowed.filter { $0.rarity >= floor }
+        if remaining.count < cardCount {
+            let below = allowed.filter { $0.rarity < floor }.sorted { $0.rarity > $1.rarity }
+            remaining += below.prefix(cardCount - remaining.count)
+        }
         var cards: [GachaCard] = []
         while cards.count < cardCount,
               let index = rng.weighted(remaining.map { $0.rarity.weight * (isOwned($0.species) ? duplicateWeight : 1) }) {
@@ -290,12 +328,126 @@ nonisolated enum Gacha {
 // MARK: Rewards
 
 nonisolated enum Rewards {
-    static func coins(for kind: StagePlan.Kind) -> Int {
+    /// Stardust for winning. The dungeon pays per tier instead (`DailyDungeon.stardust`).
+    static func stardust(for kind: StagePlan.Kind) -> Int {
         switch kind {
-        case .wild: 2
+        case .wild: 1
         case .trainer: 30
         case .legend: 60
+        case .dungeon: 0
         }
+    }
+}
+
+// MARK: Daily dungeon
+
+nonisolated enum DungeonTier: String, Codable, CaseIterable, Comparable, Sendable {
+    case easy, normal, hard
+
+    static func < (lhs: DungeonTier, rhs: DungeonTier) -> Bool {
+        allCases.firstIndex(of: lhs)! < allCases.firstIndex(of: rhs)!
+    }
+
+    /// Levels from the party's.
+    var levelOffset: Int {
+        switch self {
+        case .easy: -6
+        case .normal: -2
+        case .hard: 3
+        }
+    }
+
+    /// The last floor's boss has this much more HP than its level gives.
+    var bossHP: Double {
+        switch self {
+        case .easy: 1.5
+        case .normal, .hard: 2
+        }
+    }
+}
+
+/// Which tiers have paid out on a dungeon day.
+nonisolated struct DungeonDay: Codable, Equatable, Sendable {
+    var day: String
+    var claimed: [DungeonTier] = []
+}
+
+/// Five floors of the day's type, the last a boss; each tier pays once a day.
+nonisolated enum DailyDungeon {
+    static let resetHour = 4
+    static let floors = 5
+    static let bossLevels = 1
+    static let stardust: [DungeonTier: Int] = [.easy: 60, .normal: 120]
+
+    /// The dungeon day a moment belongs to: days turn over at 04:00 local time.
+    static func day(of date: Date, calendar: Calendar = .current) -> String {
+        let parts = calendar.dateComponents([.year, .month, .day], from: shifted(date))
+        return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+    }
+
+    static func nextReset(after date: Date, calendar: Calendar = .current) -> Date {
+        let start = calendar.startOfDay(for: shifted(date))
+        let next = calendar.date(byAdding: .day, value: 1, to: start) ?? start.addingTimeInterval(86_400)
+        return calendar.date(bySettingHour: resetHour, minute: 0, second: 0, of: next) ?? next
+    }
+
+    private static func shifted(_ date: Date) -> Date { date.addingTimeInterval(-Double(resetHour) * 3600) }
+
+    /// The type of the day, by weekday.
+    static func types(on date: Date, calendar: Calendar = .current) -> [PokeType] {
+        switch calendar.component(.weekday, from: shifted(date)) {
+        case 1: [.dragon, .ghost]
+        case 2: [.grass]
+        case 3: [.fire]
+        case 4: [.water]
+        case 5: [.electric]
+        case 6: [.psychic, .fighting]
+        default: [.rock, .ground]
+        }
+    }
+
+    static func scenery(for types: [PokeType]) -> Scenery {
+        switch types.first {
+        case .grass: .forest
+        case .fire: .volcano
+        case .water: .sea
+        case .electric: .plant
+        case .rock: .cave
+        default: .tower
+        }
+    }
+
+    static func level(_ tier: DungeonTier, partyLevel: Int, cap: Int) -> Int {
+        max(2, min(partyLevel + tier.levelOffset, cap))
+    }
+
+    /// Species of the day's types that could be met at a level, legendaries aside. `evolved`
+    /// keeps each line only in the most evolved form it would have by then, for the boss.
+    static func species(types: [PokeType], level: Int, evolved: Bool, dex: DexView) -> [PokeSpecies] {
+        let matching = dex.species.filter { species in
+            !species.isSpecial && !Set(species.types).isDisjoint(with: types) && (species.evolveLevel ?? 0) <= level
+                && (!evolved || !dex.evolutions(species.id).contains { (dex[$0]?.evolveLevel ?? .max) <= level })
+        }
+        return matching.isEmpty ? dex.species.filter { !$0.isSpecial && ($0.evolveLevel ?? 0) <= level } : matching
+    }
+
+    /// The same floors all day for a tier, so a retry faces what beat you.
+    static func plan(_ tier: DungeonTier, on date: Date, partyLevel: Int, cap: Int, data: GameData) -> StagePlan {
+        let day = day(of: date)
+        var rng = SeededRNG(seed: (day + tier.rawValue).unicodeScalars.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1.value)) &* 1099511628211 })
+        let types = types(on: date)
+        let level = level(tier, partyLevel: partyLevel, cap: cap)
+        let foes = (0..<floors).map { floor -> StagePlan.Foe in
+            let isBoss = floor == floors - 1
+            // Floors climb to the tier's level; the boss stands a little above it.
+            let floorLevel = isBoss ? level + bossLevels : max(2, level - (floors - 2) + floor)
+            var candidates = species(types: types, level: floorLevel, evolved: isBoss, dex: data.dex)
+            // The boss is one of the strongest of the day.
+            if isBoss { candidates = Array(candidates.sorted { $0.stats.total > $1.stats.total }.prefix(3)) }
+            let pick = candidates.isEmpty ? 19 : candidates[Int(rng.next() % UInt64(candidates.count))].id
+            return StagePlan.Foe(species: pick, level: floorLevel, hpScale: isBoss ? tier.bossHP : 1)
+        }
+        return StagePlan(kind: .dungeon(tier), foes: foes, scenery: scenery(for: types))
     }
 }
 

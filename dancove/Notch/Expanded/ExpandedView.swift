@@ -128,7 +128,7 @@ private struct ExpandedHeader: View {
     private func badge(for page: NotchPage) -> Bool {
         switch page {
         case .claude: app.claude.needsAttention
-        case .adventure: app.adventure.isBattling || app.adventure.canPull || app.adventure.offer != nil
+        case .adventure: app.adventure.isBattling || app.adventure.hasGachaWaiting
         default: false
         }
     }
@@ -144,7 +144,7 @@ private struct PageButton: View {
 
     /// Gold when a gacha pull is waiting, orange while battling.
     private var badgeColor: Color {
-        app.adventure.canPull || app.adventure.offer != nil ? Color(hex: 0xFFD35A) : .adventure
+        app.adventure.hasGachaWaiting ? Color(hex: 0xFFD35A) : .adventure
     }
 
     var body: some View {

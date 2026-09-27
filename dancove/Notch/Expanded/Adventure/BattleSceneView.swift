@@ -20,7 +20,7 @@ struct BattleSceneView: View {
         let battle = adventure.battle
         let layout = SceneLayout(size: size)
         ZStack(alignment: .topLeading) {
-            StageBackdrop(scenery: adventure.currentNode?.scenery ?? .meadow)
+            StageBackdrop(scenery: adventure.scenery)
             ScenePlatforms(layout: layout)
 
             if let battle {
@@ -107,7 +107,7 @@ struct BattleSceneView: View {
         switch battle.plan.kind {
         case .trainer(let trainer): say(BattleText.challenged(trainer))
         case .legend: say(BattleText.legendAppeared(name(of: battle.foeActive)))
-        case .wild: say(BattleText.wildAppeared(name(of: battle.foeActive)))
+        case .wild, .dungeon: say(BattleText.wildAppeared(name(of: battle.foeActive)))
         }
     }
 
@@ -259,7 +259,7 @@ private struct SceneTextBox: View {
                 Text(caption)
             } else if !adventure.isBattling {
                 Image(systemName: "moon.zzz.fill").foregroundStyle(.white.opacity(0.6))
-                Text("Battles go on while an agent works")
+                Text("Stages move on while an agent works")
             } else if let status = status(adventure) {
                 Text(status)
             }
@@ -278,25 +278,27 @@ private struct SceneTextBox: View {
     }
 
     private func status(_ adventure: AdventureService) -> String? {
-        if let stay = adventure.progress.stay, adventure.nodes.indices.contains(stay) {
-            return String(localized: "Staying at \(adventure.nodes[stay].name)")
+        let progress = adventure.progress
+        if let repeating = progress.repeating {
+            return String(localized: "Repeating \(repeating.chapter + 1)-\(repeating.station + 1)")
         }
-        if adventure.isHolding, let trainer = adventure.frontierTrainer {
+        guard let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters) else { return nil }
+        if progress.isTraining {
             let chance = Int(((adventure.readiness ?? 0) * 100).rounded())
-            return String(localized: "Getting ready for \(trainer.name) · \(chance)% to win")
+            return String(localized: "Training for \(boss.trainer.name) · \(chance)% to win")
         }
-        return nil
+        return adventure.autoChallenge ? nil : String(localized: "\(boss.trainer.name) is waiting · tap Challenge")
     }
 }
 
-/// Stage name at the top left; AUTO and Challenge at the top right.
+/// What the party is fighting at the top left; Challenge and AUTO at the top right.
 private struct SceneChrome: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
         HStack(spacing: 4) {
-            Text(stageLabel(adventure))
+            Text(label(adventure))
                 .font(.system(size: 9, weight: .heavy, design: .rounded).monospacedDigit())
                 .foregroundStyle(.white)
                 .lineLimit(1)
@@ -304,12 +306,12 @@ private struct SceneChrome: View {
                 .frame(height: 15)
                 .background(.black.opacity(0.42), in: Capsule())
             Spacer(minLength: 4)
-            if adventure.frontierTrainer != nil, adventure.isHolding || !adventure.autoChallenge {
+            if !adventure.isChallenging, adventure.progress.isBossOpen(adventure.chapters), !adventure.autoChallenge || adventure.progress.isTraining {
                 Button {
-                    withAnimation(.smooth(duration: 0.25)) { adventure.challengeTrainer() }
+                    withAnimation(.smooth(duration: 0.25)) { adventure.challengeBoss() }
                 } label: {
                     HStack(spacing: 2) {
-                        Image(systemName: "flag.checkered")
+                        Image(systemName: "bolt.fill")
                         Text("Challenge")
                         if let readiness = adventure.readiness {
                             Text("\(Int((readiness * 100).rounded()))%").monospacedDigit().opacity(0.8)
@@ -323,7 +325,7 @@ private struct SceneChrome: View {
                     .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .help("Take on the next trainer now")
+                .help("Take on the boss now")
             }
             AutoToggle()
         }
@@ -331,15 +333,23 @@ private struct SceneChrome: View {
         .padding(.top, 5)
     }
 
-    private func stageLabel(_ adventure: AdventureService) -> String {
-        guard let node = adventure.currentNode else { return "" }
-        if let point = adventure.currentPoint, adventure.nodes.indices.contains(point.node) {
-            if let trainer = node.trainers[safe: point.stage] {
-                return node.trainers.count > 1 ? "\(node.name) \(point.stage + 1)/\(node.stageCount) · \(trainer.name)" : "\(node.name) · \(trainer.name)"
-            }
-            return "\(node.name) \(point.stage + 1)/\(node.stageCount)"
+    private func label(_ adventure: AdventureService) -> String {
+        guard let target = adventure.target else { return "" }
+        let chapters = adventure.chapters
+        switch target {
+        case .station(let point):
+            let text = "\(point.chapter + 1)-\(point.station + 1)"
+            return adventure.progress.isTraining || adventure.progress.repeating != nil ? "↻ " + text : text
+        case .boss(let chapter, let index):
+            guard let info = chapters[safeChapter: chapter], info.bosses.indices.contains(index) else { return "" }
+            let trainer = info.bosses[index]
+            return info.isLeague && !trainer.isChampion ? "\(trainer.title) \(index + 1)/4 · \(trainer.name)" : "\(trainer.title) · \(trainer.name)"
+        case .legend(let id):
+            return "★ " + (adventure.data?.legend(id).flatMap { adventure.dex.species($0.species)?.name } ?? "")
+        case .dungeon(let tier):
+            let floor = min((adventure.battle?.foeIndex ?? 0) + 1, DailyDungeon.floors)
+            return String(localized: "Dungeon \(tier.title) · \(floor)/\(DailyDungeon.floors)F")
         }
-        return node.name
     }
 }
 
@@ -361,7 +371,7 @@ private struct AutoToggle: View {
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .help(adventure.autoChallenge ? "AUTO: gyms are challenged once the party is likely to win" : "AUTO is off: tap Challenge to take on gyms")
+        .help(adventure.autoChallenge ? "AUTO: the boss is challenged as soon as the line is cleared, and again after training" : "AUTO is off: the party trains until you tap Challenge")
     }
 }
 

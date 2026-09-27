@@ -80,8 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "airpods":
             app.audioRoutes.previewConnection()
         case "poke":
-            // poke starter <id> | poke catch [id] | poke xp <n> | poke coins <n> | poke jump <node> <stage> <badges>
-            // | poke tick <n> | poke pull | poke pane map|dex|gacha|recap | poke auto on|off | poke reset
+            // poke starter <id> | poke catch [id] | poke xp <n> | poke stardust <n> | poke ultra
+            // | poke jump <chapter> <station, 11 = boss> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
+            // | poke challenge | poke legend <id> | poke dungeon easy|normal|hard | poke dungeonreset
+            // | poke pane challenge|dex|gacha|recap | poke mode stage|gym|dungeon|legend:<id> | poke auto on|off | poke reset
             let arguments = parts.dropFirst(2).compactMap { Int($0) }
             let adventure = app.adventure
             switch parts.count > 1 ? parts[1] : "" {
@@ -95,15 +97,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                                   duration: encounter.isSpecial ? 9 : 7))
                 }
             case "xp": adventure.debugXP(arguments.first ?? 1000)
-            case "coins": adventure.debugCoins(arguments.first ?? Gacha.price)
+            case "stardust": adventure.debugStardust(arguments.first ?? Gacha.price)
+            case "ultra": adventure.debugUltraBall()
+            case "ultraopen": adventure.openUltraBall()
             case "jump":
-                adventure.debugJump(node: arguments.first ?? 0, stage: arguments.dropFirst().first ?? 0,
+                adventure.debugJump(chapter: arguments.first ?? 1, station: arguments.dropFirst().first ?? 1,
                                     badges: arguments.dropFirst(2).first ?? 0)
             case "tick": adventure.debugTicks(arguments.first ?? 10)
             case "pull": adventure.pull()
             case "pick": if let card = adventure.offer?[safe: arguments.first ?? 0] { adventure.pick(card.id) }
             case "open": NotificationCenter.default.post(name: .dancoveDebugOpenBall, object: arguments.first ?? 0)
-            case "challenge": adventure.challengeTrainer()
+            case "challenge": adventure.challengeBoss()
+            case "dungeon": if let tier = DungeonTier(rawValue: parts.dropFirst(2).first ?? "") { adventure.enterDungeon(tier) }
+            case "dungeonreset": adventure.debugResetDungeon()
+            case "mode": NotificationCenter.default.post(name: .dancoveDebugChallengeMode, object: parts.dropFirst(2).first)
             case "badgebanner": adventure.debugBadgeBanner(arguments.first ?? 1)
             case "state":
                 let line = "watching=\(adventure.isWatching) recap=\(adventure.recap)\n"

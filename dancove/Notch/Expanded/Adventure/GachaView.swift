@@ -200,18 +200,19 @@ private struct GachaResultView: View {
     }
 }
 
-/// Coins, the price and the button, before the balls are handed out.
+/// Stardust, the price and the button, before the balls are handed out; and any Ultra Balls
+/// won in the dungeon.
 private struct PullPanel: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
-        let fraction = min(1, Double(adventure.coins) / Double(Gacha.price))
+        let fraction = min(1, Double(adventure.stardust) / Double(Gacha.price))
         VStack(spacing: 7) {
             HStack(spacing: 10) {
                 ForEach(["poke-ball", "great-ball", "ultra-ball"], id: \.self) { slug in
                     ItemSpriteView(slug: slug, pixelSize: 1.5)
-                        .opacity(adventure.canPull ? 1 : 0.45)
+                        .opacity(adventure.canPull || adventure.canOpenUltraBall ? 1 : 0.45)
                 }
             }
             .frame(height: 52)
@@ -224,45 +225,53 @@ private struct PullPanel: View {
                 }
                 .frame(width: 150, height: 4)
                 HStack(spacing: 3) {
-                    CoinIcon()
-                    Text("\(adventure.coins) / \(Gacha.price)")
+                    StardustIcon(size: 11)
+                    Text("\(adventure.stardust) / \(Gacha.price)")
                         .font(.system(size: 9.5, weight: .bold).monospacedDigit())
                         .foregroundStyle(.white.opacity(0.75))
                 }
             }
 
-            Button {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { adventure.pull() }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "sparkles")
-                    Text("Get 3 Poké Balls")
+            HStack(spacing: 5) {
+                Button {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { adventure.pull() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles")
+                        Text("Get 3 Poké Balls")
+                    }
+                    .font(.system(size: 10.5, weight: .bold))
+                    .foregroundStyle(adventure.canPull ? .black : .white.opacity(0.35))
+                    .padding(.horizontal, 12)
+                    .frame(height: 22)
+                    .background(adventure.canPull ? Color(hex: 0xFFD35A) : .white.opacity(0.08), in: Capsule())
+                    .contentShape(Capsule())
                 }
-                .font(.system(size: 10.5, weight: .bold))
-                .foregroundStyle(adventure.canPull ? .black : .white.opacity(0.35))
-                .padding(.horizontal, 14)
-                .frame(height: 22)
-                .background(adventure.canPull ? Color(hex: 0xFFD35A) : .white.opacity(0.08), in: Capsule())
-                .contentShape(Capsule())
+                .buttonStyle(.plain)
+                .disabled(!adventure.canPull)
+                .help(adventure.canPull ? "" : "Clear stations and beat bosses to earn stardust.")
+
+                if adventure.ultraBalls > 0 {
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { adventure.openUltraBall() }
+                    } label: {
+                        HStack(spacing: 2) {
+                            ItemSpriteView(slug: "ultra-ball", pixelSize: 0.6)
+                            Text("×\(adventure.ultraBalls)").font(.system(size: 10, weight: .heavy).monospacedDigit())
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 7)
+                        .frame(height: 22)
+                        .background(Color(hex: 0x3A3A20), in: Capsule())
+                        .overlay(Capsule().strokeBorder(Color(hex: 0xFFD35A).opacity(0.8), lineWidth: 1))
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!adventure.canOpenUltraBall)
+                    .help("An Ultra Ball from the dungeon: three balls, all rare or better")
+                }
             }
-            .buttonStyle(.plain)
-            .disabled(!adventure.canPull)
-            .help(adventure.canPull ? "" : "Clear stages to earn coins.")
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-/// A little gold coin.
-struct CoinIcon: View {
-    var size: CGFloat = 9
-
-    var body: some View {
-        ZStack {
-            Circle().fill(Color(hex: 0xF2B83A))
-            Circle().strokeBorder(Color(hex: 0xB07A18), lineWidth: 1)
-            Circle().fill(Color(hex: 0xFFE38A)).frame(width: size * 0.36, height: size * 0.36).offset(x: -size * 0.12, y: -size * 0.12)
-        }
-        .frame(width: size, height: size)
     }
 }

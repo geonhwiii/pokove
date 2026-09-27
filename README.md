@@ -48,33 +48,34 @@ There is one activity at a time, like Alcove. Swipe down or click the page icons
 
 ## Pokémon adventure
 
-While Claude or Codex works, your party of up to three Pokémon travels Kanto on its own: an idle stage game in the notch, in the spirit of MapleStory Idle or Cookie Run, on a journey through FireRed/LeafGreen's routes and gyms.
+While Claude or Codex works, your party of up to three Pokémon rides Kanto's stage lines on its own: an idle stage game in the notch, in the spirit of MapleStory Idle or Cookie Run, on a journey through FireRed/LeafGreen's gyms and the League.
 
 - **Starting out:** choose Bulbasaur, Charmander or Squirtle (Lv 5). You also start with one free gacha pull.
-- **The journey** follows the real map: Route 1, Viridian Forest, Pewter Gym (Brock), Mt. Moon, … the eight gyms, Victory Road, the Elite Four and the Champion, then Cerulean Cave.
-  - Each stretch holds two to four stages of wild Pokémon from its actual FRLG encounter table.
-  - Gyms and the League are the walls: leaders bring the last three of their original team.
-  - **Badges raise the level cap.** Experience past the cap is banked and flows back in at the next badge.
-  - Optional legendaries sit on the map: Snorlax, Zapdos, Articuno, Moltres, and Mewtwo after the Champion.
+- **The right side's Challenge tab** has three modes:
+  - **Stages:** each chapter is a subway-style line of ten stations ending at its gym leader (chapter 9 ends at the Elite Four and the Champion; chapter 10, Cerulean Cave, loops). Stations hold wild Pokémon from the real FRLG areas along the way (one each, two at the 10th). **Only stages need an agent working.** Tap a cleared station to repeat it.
+  - **Gym:** the next boss as a VS screen: their FRLG sprite and team, the badge at stake, the forecast win chance, a best-team button and **Challenge!** It unlocks when the chapter's line is cleared.
+  - **Dungeon:** a daily dungeon with Easy, Normal and Hard tiers, set around the party's level, of the day's type (Mon grass … Sun dragon and ghost). Five floors in one relay, a boss on the last. Each tier pays once a day (60 or 120 stardust, or an Ultra Ball: a gacha round of rare balls) and resets at 4:00.
+  - Gyms, legendaries and the dungeon are **challenges**: once started they play out at one action a second, agent or not. A lost challenge gives no experience and costs nothing.
+- **Badges raise the level cap.** Experience past the cap is banked and flows back in at the next badge.
+- **Legendaries** sit on ★ branches off their chapter's line: Snorlax, Zapdos, Articuno, Moltres, and Mewtwo after the Champion. Beat one and it joins.
+- **AUTO** (on by default) challenges the boss as soon as the line is cleared. After a loss the party trains at the last station (up to 30 clears, sooner if a level gained gives it a fair chance) and tries again. With AUTO off it trains until you tap Challenge.
 - **Battles are a 1:1 relay**, shown like the games: the foe at the top right, your Pokémon from behind, info plates and a text box.
-  - One action plays every 1.5 s, only while an agent works.
   - Pokémon use their real level-up moves with Gen 3 power, accuracy and type, and pick the best one for the matchup.
   - Strong moves rest for a turn or three, so movesets rotate. There are crits, multi-hits, drain and recoil, and pixel effects for each type.
   - When one faints, the next in the party comes out. All three share the experience.
-- **AUTO** (on by default) takes on a gym once a forecast (24 simulated battles) puts the win chance at 50% or more. Until then the party trains on the last route. **Challenge** takes it on now. A loss costs nothing.
 - **Getting Pokémon never fails:**
   - **Discovery:** about every 20 minutes of agent work, someone from the current area joins on the spot. A species you already have gives its line experience instead.
-  - **Gacha:** coins from cleared stages buy three Poké Balls. The kind of ball hints at rarity. Open one and the Pokémon inside joins; a duplicate gives experience instead.
+  - **Gacha:** **stardust** from stations (+1), bosses (+30), legendaries and the dungeon buys three Poké Balls for 400. The kind of ball hints at rarity. Open one and the Pokémon inside joins; a duplicate gives experience instead.
     - The pool is everything met on the journey, plus gacha-only Pokémon: the other starters, Eevee, fossils, Lapras and more. Mew appears after the Champion.
 - **The page:**
   - The battle and your party are on the left, with a wand button for the best team against what's next.
-  - The right side switches between the **Map** (tap a place for its Pokémon, trainer or legendary; stay on a route you've reached), the **Pokédex** and the **Gacha**.
-  - "While you were away" sums up what happened since you last looked.
+  - The right side switches between **Challenge**, the **Pokédex** and the **Gacha**.
+  - "While you were away" sums up what happened since you last looked, and points at the best-team button when a boss keeps winning.
 - **Banners** only come for new species, evolutions, badges and legendaries. Mute them in one click with the bell on the page or **Adventure Banners** in the menu bar menu, say before sharing your screen.
 - **Data:** species, FireRed/LeafGreen moves and wild encounters come from three [PokéAPI](https://pokeapi.co) GraphQL requests.
-  - Sprites come from the PokéAPI sprite repository: Gen VII box icons, Black/White animated sprites (front and back), items and badges. Gym leader sprites come from [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/trainers/).
+  - Sprites come from the PokéAPI sprite repository: Gen VII box icons, Black/White animated sprites (front and back), items (Poké Balls, stardust) and badges. Gym leader sprites come from [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/trainers/).
   - Everything is downloaded at runtime and cached in `~/Library/Application Support/dancove/pokemon/`. **No Pokémon assets are in this repository or the app.**
-  - The save file is `adventure-v2.json` (`adventure-v2-debug.json` in Debug builds). The v1 `adventure.json` is left untouched.
+  - The save file is `adventure-v3.json` (`adventure-v3-debug.json` in Debug builds). On first launch it's migrated from v2's `adventure-v2.json`, which is left as it was, like v1's `adventure.json`.
 
 `scripts/adventure-sim.swift` plays the rules for hundreds of simulated hours, to tune the pacing (see `docs/pokemon-handoff.md`).
 
@@ -177,10 +178,10 @@ Debug builds listen for `com.geonhwiii.dancove.debug` distributed notifications,
 - **Windows:** `rebuild` (recreates the notch windows).
 - **Adventure:**
   - Setup: `poke starter <id>`, `poke reset`.
-  - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke coins <n>`, `poke jump <node> <stage> <badges>`, `poke tick <n>` (battle actions without an agent).
-  - Gacha: `poke pull`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
-  - Battles: `poke challenge`, `poke legend <id>`, `poke auto on|off`.
-  - Page: `poke pane map|dex|gacha|recap`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/dancove-state.txt`), `select <dex number>`.
+  - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke jump <chapter> <station> <badges>` (1-based; station 11 means the boss is next), `poke tick <n>` (battle actions without an agent or the clock).
+  - Gacha: `poke pull`, `poke ultra` (adds an Ultra Ball), `poke ultraopen`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
+  - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon easy|normal|hard`, `poke dungeonreset`, `poke auto on|off`.
+  - Page: `poke pane challenge|dex|gacha|recap`, `poke mode stage|gym|dungeon|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/dancove-state.txt`), `select <dex number>`.
 - **Settings:** `settings claude|adventure|…`.
 
 `defaults write com.geonhwiii.dancove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.

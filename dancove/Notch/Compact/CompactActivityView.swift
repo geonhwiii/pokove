@@ -124,7 +124,7 @@ private struct ClaudeCompactTrailing: View {
                         PartnerIcon(speciesID: leader.speciesID)
                             .overlay(alignment: .topTrailing) {
                                 // A pull is ready in the gacha.
-                                if app.adventure.canPull || app.adventure.offer != nil {
+                                if app.adventure.hasGachaWaiting {
                                     Circle().fill(Color(hex: 0xFFD35A)).frame(width: 4, height: 4).offset(x: 1, y: 1)
                                 }
                             }

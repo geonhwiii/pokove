@@ -11,28 +11,29 @@ extension Notification.Name {
     static let dancoveDebugSelectPokemon = Notification.Name("dancoveDebugSelectPokemon")
     static let dancoveDebugAdventurePane = Notification.Name("dancoveDebugAdventurePane")
     static let dancoveDebugOpenBall = Notification.Name("dancoveDebugOpenBall")
+    static let dancoveDebugChallengeMode = Notification.Name("dancoveDebugChallengeMode")
     #endif
 }
 
 /// Which view fills the right half of the adventure page.
 enum AdventurePane: String, CaseIterable {
-    case map, dex, gacha
+    case challenge, dex, gacha
 
     var title: String {
         switch self {
-        case .map: String(localized: "Map")
+        case .challenge: String(localized: "Challenge")
         case .dex: String(localized: "Pokédex")
         case .gacha: String(localized: "Gacha")
         }
     }
 }
 
-/// The adventure page: the battle and party on the left; the map, Pokédex or gacha on the right.
+/// The adventure page: the battle and party on the left; the challenges, Pokédex or gacha on the right.
 struct AdventurePageView: View {
     @Environment(AppModel.self) private var app
     /// The species whose details replace the battle scene.
     @State private var selection: Int?
-    @AppStorage("adventurePane") private var pane: AdventurePane = .map
+    @AppStorage("adventurePane") private var pane: AdventurePane = .challenge
     @State private var showsRecap = false
 
     var body: some View {
@@ -79,7 +80,7 @@ struct AdventurePageView: View {
             VStack(alignment: .leading, spacing: 6) {
                 PaneTabs(pane: $pane)
                 switch pane {
-                case .map: KantoMapView()
+                case .challenge: ChallengeView()
                 case .dex: DexGrid(selection: $selection)
                 case .gacha: GachaView()
                 }
@@ -125,7 +126,7 @@ extension Array {
     subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
 
-/// Map, Pokédex and Gacha tabs, with the coin purse.
+/// Challenge, Pokédex and Gacha tabs, with the stardust purse.
 private struct PaneTabs: View {
     @Binding var pane: AdventurePane
     @Environment(AppModel.self) private var app
@@ -144,7 +145,7 @@ private struct PaneTabs: View {
                         .frame(height: 19)
                         .background(pane == item ? .white.opacity(0.14) : .clear, in: Capsule())
                         .overlay(alignment: .topTrailing) {
-                            if item == .gacha, adventure.canPull || adventure.offer != nil {
+                            if item == .gacha, adventure.hasGachaWaiting {
                                 Circle().fill(Color(hex: 0xFFD35A)).frame(width: 5, height: 5).offset(x: -1, y: 1)
                             }
                         }
@@ -155,13 +156,13 @@ private struct PaneTabs: View {
             Spacer(minLength: 2)
             BannerToggle()
             HStack(spacing: 3) {
-                CoinIcon()
-                Text("\(adventure.coins)")
+                StardustIcon(size: 11)
+                Text("\(adventure.stardust)")
                     .font(.system(size: 10, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.75))
                     .contentTransition(.numericText())
             }
-            .help("Coins, from clearing stages. \(Gacha.price) buy a gacha pull.")
+            .help("Stardust, from stations, bosses and the dungeon. \(Gacha.price) buy three Poké Balls.")
         }
     }
 }
@@ -188,7 +189,7 @@ private struct BannerToggle: View {
     }
 }
 
-/// "While you were away": what the agents' work earned since the page was last open.
+/// "While you were away": what the agents' work and the challenges earned since the page was last open.
 private struct RecapCard: View {
     let close: () -> Void
     @Environment(AppModel.self) private var app
@@ -208,12 +209,31 @@ private struct RecapCard: View {
             }
             HStack(spacing: 5) {
                 if recap.clears > 0 { chip(symbol: "flag.fill", text: "\(recap.clears)") }
-                if recap.coins > 0 {
-                    HStack(spacing: 2) { CoinIcon(size: 8); Text("+\(recap.coins)") }.modifier(RecapChip())
+                if recap.stardust > 0 {
+                    HStack(spacing: 3) { StardustIcon(size: 9); Text("+\(recap.stardust)") }.modifier(RecapChip())
                 }
                 if recap.levels > 0 { chip(symbol: "arrow.up", text: "Lv +\(recap.levels)") }
                 if !recap.learned.isEmpty { chip(symbol: "bolt.fill", text: String(localized: "\(recap.learned.count) moves")) }
                 ForEach(recap.badges, id: \.self) { BadgeImageView(number: $0, size: 13) }
+                ForEach(recap.dungeon, id: \.self) { tier in chip(symbol: "door.left.hand.open", text: tier.title) }
+            }
+            if let stuck = recap.stuck, let trainer = trainer(stuck) {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.circle.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(Color(hex: 0xFFB070))
+                    Text("\(trainer.name) keeps winning. Try the best team.")
+                        .font(.system(size: 8.5, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Button {
+                        withAnimation(.smooth(duration: 0.25)) { app.adventure.recommendParty() }
+                    } label: {
+                        Image(systemName: "wand.and.stars").font(.system(size: 8, weight: .bold)).foregroundStyle(.black)
+                            .frame(width: 20, height: 14)
+                            .background(Color(hex: 0xFFD35A), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             if !recap.discovered.isEmpty || !recap.evolved.isEmpty {
                 HStack(spacing: 0) {
@@ -232,6 +252,10 @@ private struct RecapCard: View {
         .background(Color(hex: 0x101218).opacity(0.94), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(.white.opacity(0.12)))
         .onTapGesture(perform: close)
+    }
+
+    private func trainer(_ id: String) -> Trainer? {
+        app.adventure.chapters.flatMap(\.bosses).first { $0.id == id }
     }
 
     private func summary(_ recap: AdventureRecap) -> String {

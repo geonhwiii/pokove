@@ -247,7 +247,7 @@ final class PokeDexStore {
         }
     }
 
-    static let journeyAreas = Array(Set(Kanto.main(starter: 4).flatMap(\.areas))).sorted()
+    static let journeyAreas = Array(Set(Kanto.stretches.flatMap(\.areas))).sorted()
 
     private nonisolated static func fetch<T: Sendable>(_ cached: T?, _ download: @Sendable () async throws -> T) async throws -> T {
         if let cached { return cached }

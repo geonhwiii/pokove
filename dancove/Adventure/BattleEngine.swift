@@ -87,6 +87,7 @@ nonisolated enum PokeMath {
         case .wild: 1
         case .trainer: 1.5
         case .legend: 3
+        case .dungeon: 1.25
         }
         let relative = min(1, Double(level) / Double(max(1, partyLevel)))
         return max(1, Int((xpScale * Double(max(20, baseExperience)).squareRoot() * (0.4 + 0.6 * relative) * bonus).rounded()))
@@ -101,18 +102,19 @@ nonisolated struct GameData: Sendable {
     let dex: DexView
     let moves: MoveDex
     let encounters: EncounterDex
-    /// The main journey for this player's starter.
-    let nodes: [JourneyNode]
+    /// The journey for this player's starter.
+    let chapters: [Chapter]
 
     init(species: [PokeSpecies], moves: MoveDex, encounters: EncounterDex, starter: Int) {
         dex = DexView(species)
         self.moves = moves
         self.encounters = encounters
-        nodes = Kanto.main(starter: starter)
+        chapters = Kanto.chapters(starter: starter)
     }
 
-    func node(_ id: String) -> JourneyNode? { nodes.first { $0.id == id } ?? Kanto.legends.first { $0.id == id } }
-    func nodeIndex(_ id: String) -> Int? { nodes.firstIndex { $0.id == id } }
+    func legend(_ id: String) -> LegendSpot? { Kanto.legends.first { $0.id == id } }
+    /// The chapter whose line a legendary branches off.
+    func chapterIndex(ofLegend id: String) -> Int? { chapters.firstIndex { $0.legend?.id == id } }
 }
 
 /// The parts of the dex the rules need, so they don't depend on the observable store.
@@ -160,7 +162,8 @@ nonisolated struct Combatant: Identifiable, Equatable, Sendable {
     var moves: [PokeMove]
     /// Rounds left before a strong move can be used again.
     var cooldowns: [Int: Int] = [:]
-    var isBoss = false
+    /// Bosses (legendaries, the dungeon's last floor) have more HP than their level gives.
+    var hpScale: Double = 1
     /// The party member this is, for experience and evolution.
     var ownedID: UUID?
 
@@ -168,19 +171,17 @@ nonisolated struct Combatant: Identifiable, Equatable, Sendable {
     var isFainted: Bool { hp <= 0 }
     var hpFraction: Double { maxHP > 0 ? Double(max(0, hp)) / Double(maxHP) : 0 }
 
-    static let bossHPMultiplier = 2.5
-
-    init(species: PokeSpecies, level: Int, moves: MoveDex, isBoss: Bool = false, ownedID: UUID? = nil) {
+    init(species: PokeSpecies, level: Int, moves: MoveDex, hpScale: Double = 1, ownedID: UUID? = nil) {
         id = UUID()
         speciesID = species.id
         self.level = level
         types = species.types
         var stats = PokeMath.stats(species.stats, level: level)
-        if isBoss { stats.hp = Int(Double(stats.hp) * Self.bossHPMultiplier) }
+        stats.hp = Int(Double(stats.hp) * hpScale)
         self.stats = stats
         hp = stats.hp
         self.moves = moves.moveset(species: species.id, types: species.types, level: level)
-        self.isBoss = isBoss
+        self.hpScale = hpScale
         self.ownedID = ownedID
     }
 
@@ -191,6 +192,7 @@ nonisolated struct Combatant: Identifiable, Equatable, Sendable {
         self.level = level
         types = species.types
         stats = PokeMath.stats(species.stats, level: level)
+        stats.hp = Int(Double(stats.hp) * hpScale)
         self.moves = moves.moveset(species: species.id, types: species.types, level: level)
         cooldowns = cooldowns.filter { entry in self.moves.contains { $0.id == entry.key } }
         hp = isFainted ? 0 : max(1, stats.hp - taken)
@@ -201,51 +203,51 @@ nonisolated struct Combatant: Identifiable, Equatable, Sendable {
 
 // MARK: Stages
 
-/// What a stage holds: wild Pokémon, a trainer's team, or a legendary.
+/// What a battle holds: wild Pokémon at a station, a trainer's team, a legendary, or the dungeon.
 nonisolated struct StagePlan: Equatable, Sendable {
     enum Kind: Equatable, Sendable {
         case wild
         case trainer(Trainer)
         case legend
+        case dungeon(DungeonTier)
     }
 
     struct Foe: Equatable, Sendable {
         let species: Int
         let level: Int
+        var hpScale: Double = 1
     }
 
-    let node: JourneyNode
-    /// Index of the stage within its node.
-    let stage: Int
     let kind: Kind
     let foes: [Foe]
+    let scenery: Scenery
 
     var trainer: Trainer? { if case .trainer(let trainer) = kind { trainer } else { nil } }
 
-    /// Wild stages differ on every visit; the last stage of a stretch holds one more Pokémon.
-    /// Wild Pokémon stay a level or more below the party, as in the games, so only trainers and
-    /// legendaries stand in the way: the routes are for exploring, the gyms for testing the team.
-    static func make(node: JourneyNode, stage: Int, data: GameData, partyLevel: Int, rng: inout SeededRNG) -> StagePlan {
-        switch node.kind {
-        case .trainers(let trainers):
-            let trainer = trainers[min(stage, trainers.count - 1)]
-            return StagePlan(node: node, stage: stage, kind: .trainer(trainer),
-                             foes: trainer.battleTeam.map { Foe(species: $0.species, level: $0.level) })
-        case .legend(let species, let level, _):
-            return StagePlan(node: node, stage: 0, kind: .legend, foes: [Foe(species: species, level: level)])
-        case .route(let stages, let levels, _, _):
-            let pool = data.encounters.pool(for: node, dex: data.dex)
-            let t = stages > 1 ? Double(stage) / Double(stages - 1) : 1
-            let level = min(levels.lowerBound + Int((Double(levels.upperBound - levels.lowerBound) * t).rounded()), partyLevel - 1)
-            let count = stage == stages - 1 ? 3 : 2
-            let foes = (0..<count).map { index -> Foe in
-                let species = rng.weighted(pool.map(\.share)).map { pool[$0].species } ?? 16
-                // The last one is the stretch's toughest.
-                let spread = index == count - 1 ? 0 : rng.pick(-2...(-1))
-                return Foe(species: species, level: max(2, level + spread))
-            }
-            return StagePlan(node: node, stage: stage, kind: .wild, foes: foes)
+    static let legendHP = 2.5
+
+    /// One wild Pokémon, two at a chapter's last station, different on every visit. Wild
+    /// Pokémon stay a level or more below the party, as in the games, so only the bosses stand in
+    /// the way: the line is for exploring, the gyms for testing the team.
+    static func station(_ station: Station, isLast: Bool, data: GameData, partyLevel: Int, rng: inout SeededRNG) -> StagePlan {
+        let pool = data.encounters.pool(for: station.stretch, dex: data.dex)
+        let level = min(station.level, partyLevel - 1)
+        let count = isLast ? 2 : 1
+        let foes = (0..<count).map { index -> Foe in
+            let species = rng.weighted(pool.map(\.share)).map { pool[$0].species } ?? 16
+            // The last one is the toughest.
+            let spread = index == count - 1 ? 0 : rng.pick(-2...(-1))
+            return Foe(species: species, level: max(2, level + spread))
         }
+        return StagePlan(kind: .wild, foes: foes, scenery: station.stretch.scenery)
+    }
+
+    static func boss(_ trainer: Trainer, scenery: Scenery) -> StagePlan {
+        StagePlan(kind: .trainer(trainer), foes: trainer.battleTeam.map { Foe(species: $0.species, level: $0.level) }, scenery: scenery)
+    }
+
+    static func legend(_ spot: LegendSpot) -> StagePlan {
+        StagePlan(kind: .legend, foes: [Foe(species: spot.species, level: spot.level, hpScale: legendHP)], scenery: spot.scenery)
     }
 }
 
@@ -280,8 +282,8 @@ nonisolated enum BattleEvent: Equatable, Sendable {
     case wiped
 }
 
-/// A stage in progress, fought one Pokémon a side at a time. `step()` plays one action; the app
-/// calls it every 1.5 s while an agent works.
+/// A battle in progress, fought one Pokémon a side at a time. `step()` plays one action; the app
+/// calls it every 1.5 s at a station while an agent works, and every second in a challenge.
 nonisolated struct BattleState: Equatable, Sendable {
     enum Phase: Equatable, Sendable {
         case intro(Int)
@@ -317,7 +319,7 @@ nonisolated struct BattleState: Equatable, Sendable {
         self.party = party
         partyIndex = party.firstIndex { !$0.isFainted } ?? 0
         foes = plan.foes.compactMap { foe in
-            data.dex[foe.species].map { Combatant(species: $0, level: foe.level, moves: data.moves, isBoss: plan.kind == .legend) }
+            data.dex[foe.species].map { Combatant(species: $0, level: foe.level, moves: data.moves, hpScale: foe.hpScale) }
         }
         rng = SeededRNG(seed: seed)
         phase = .intro(plan.trainer == nil ? 1 : 2)
