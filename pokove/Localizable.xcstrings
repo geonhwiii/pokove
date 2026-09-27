@@ -461,16 +461,6 @@
         }
       }
     },
-    "5 floors · a boss on the last · lose and try again": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "5층 · 마지막 층은 보스 · 져도 다시 도전"
-          }
-        }
-      }
-    },
     "?": {
       "localizations": {
         "ko": {
@@ -1303,12 +1293,12 @@
         }
       }
     },
-    "Cleared · pick a station to repeat it": {
+    "Cleared": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "클리어 · 역을 골라 반복할 수 있어요"
+            "value": "클리어"
           }
         }
       }

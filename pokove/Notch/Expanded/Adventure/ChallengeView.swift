@@ -309,7 +309,7 @@ private struct StageLineView: View {
                 }
             } else {
                 Image(systemName: "checkmark").foregroundStyle(Self.lineColor)
-                Text("Cleared · pick a station to repeat it").foregroundStyle(.white.opacity(0.55)).lineLimit(1)
+                Text("Cleared").foregroundStyle(.white.opacity(0.55)).lineLimit(1)
                 Spacer(minLength: 0)
             }
         }
@@ -720,6 +720,7 @@ private struct VSNote: View {
         .padding(.horizontal, 8)
         .frame(height: 19)
         .background(.white.opacity(0.1), in: Capsule())
+        .fixedSize()
     }
 }
 
@@ -812,7 +813,8 @@ private struct BossVSView: View {
                 GoButton(title: String(localized: "Challenge!")) { adventure.challengeBoss() }
                     .disabled(adventure.isChallenging)
             } else if isNext {
-                BestTeamButton(goal: goal)
+                // No best-team button until the boss opens: the note needs the room, and the party
+                // bar's button does the same.
                 VSNote(symbol: "lock.fill", text: String(localized: "\(adventure.stationsLeft) stations left"))
             } else {
                 VSNote(symbol: "lock.fill", text: String(localized: "Chapter \(entry.chapter + 1)"))
@@ -925,12 +927,6 @@ private struct DungeonView: View {
             ForEach(DungeonTier.allCases, id: \.self) { tier in
                 TierRow(tier: tier)
             }
-            Text("5 floors · a boss on the last · lose and try again")
-                .font(.system(size: 8.5, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.42))
-                .padding(.horizontal, 2)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
