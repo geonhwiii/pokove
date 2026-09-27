@@ -1,8 +1,8 @@
-// Renders dancove's app icon into Assets.xcassets/AppIcon.appiconset.
+// Renders pokove's app icon into Assets.xcassets/AppIcon.appiconset.
 // Run from the repo root: swift scripts/make-icon.swift [preview.png]
 //
-// A dark bezel like Alcove's around a glossy screen: dusk over a cove, glass waves rolling in,
-// and the notch at the top.
+// A dark bezel like Alcove's around a pixel-art screen: dusk over a cove, drawn on a 44-cell grid
+// like a GBA scene, with the notch at the top, a stardust sparkle and a sail on the horizon.
 import AppKit
 import SwiftUI
 
@@ -44,206 +44,181 @@ private struct Bezel: View {
     }
 }
 
+/// The pixel scene behind glass: scaled up without smoothing, with a faint sheen and a recessed edge.
 private struct Screen: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 132, style: .continuous)
-        ZStack {
-            // Dusk over the cove: deep blue overhead, pink, and a peach glow at the horizon.
-            MeshGradient(
-                width: 3, height: 3,
-                points: [
-                    [0, 0], [0.5, 0], [1, 0],
-                    [0, 0.42], [0.55, 0.4], [1, 0.46],
-                    [0, 0.7], [0.5, 0.7], [1, 0.7],
-                ],
-                colors: [
-                    color(0x0A72FF), color(0x3D63FF), color(0x8A5CFF),
-                    color(0x6FB6FF), color(0xD58CFF), color(0xFF7FC4),
-                    color(0xFFB0C8), color(0xFFD3A6), color(0xFFA68C),
-                ]
-            )
-            // The low sun, just above the water.
-            RadialGradient(colors: [.white.opacity(0.95), color(0xFFD9B0, 0.6), color(0xFFB08A, 0)],
-                           center: .init(x: 0.5, y: 0.66), startRadius: 0, endRadius: 250)
-                .blendMode(.screen)
-
-            GlassWave(baseline: 0.665, amplitude: 0.022, phase: 0.6, periods: 1.3,
-                      colors: [color(0x8FDCFF), color(0x4F7BFF), color(0x4A34D8)], glow: 0.75)
-            GlassWave(baseline: 0.785, amplitude: 0.03, phase: 2.6, periods: 1.1,
-                      colors: [color(0xC4F2FF), color(0x6F9CFF), color(0x6A46F0), color(0x3B25B8)], glow: 1)
-
-            // The sun's path on the water.
-            Ellipse()
-                .fill(.white.opacity(0.5))
-                .frame(width: 70, height: 190)
-                .blur(radius: 28)
-                .offset(y: 220)
-                .blendMode(.screen)
-
-            DarkNotch()
-                .frame(maxHeight: .infinity, alignment: .top)
-
-            // Glass sheen: a soft diagonal band of light.
-            LinearGradient(stops: [
-                .init(color: .white.opacity(0), location: 0.28),
-                .init(color: .white.opacity(0.14), location: 0.4),
-                .init(color: .white.opacity(0), location: 0.56),
-            ], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .blendMode(.screen)
-        }
-        .clipShape(shape)
-        // Recessed into the bezel: a soft inner shadow, then a thin bright lip.
-        .overlay {
-            shape
-                .stroke(.black.opacity(0.5), lineWidth: 28)
-                .blur(radius: 15)
-                .clipShape(shape)
-        }
-        // Light glowing up from the bottom edge of the glass, as in Alcove's icon.
-        .overlay {
-            shape
-                .stroke(color(0xFFD2F4), lineWidth: 30)
-                .blur(radius: 14)
-                .mask(LinearGradient(stops: [.init(color: .clear, location: 0.7), .init(color: .black, location: 1)],
-                                     startPoint: .top, endPoint: .bottom))
-                .clipShape(shape)
-                .opacity(0.8)
-        }
-        .overlay {
-            shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.55), .white.opacity(0.15), .white.opacity(0.6)],
-                                              startPoint: .top, endPoint: .bottom), lineWidth: 3)
-        }
-        .shadow(color: color(0xB08CFF, 0.35), radius: 26)
+        Image(decorative: CoveScene().draw().image(), scale: 1)
+            .interpolation(.none)
+            .resizable()
+            .overlay {
+                LinearGradient(stops: [
+                    .init(color: .white.opacity(0), location: 0.3),
+                    .init(color: .white.opacity(0.1), location: 0.42),
+                    .init(color: .white.opacity(0), location: 0.54),
+                ], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    .blendMode(.screen)
+            }
+            .clipShape(shape)
+            .overlay {
+                shape.stroke(.black.opacity(0.45), lineWidth: 24).blur(radius: 12).clipShape(shape)
+            }
+            .overlay {
+                shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.12), .white.opacity(0.5)],
+                                                  startPoint: .top, endPoint: .bottom), lineWidth: 3)
+            }
+            .shadow(color: color(0xB08CFF, 0.3), radius: 24)
     }
 }
 
-/// A band of water with a sine crest, drawn past the screen's sides and bottom so only the
-/// crest shows an edge.
-struct WaveShape: Shape {
-    var baseline: CGFloat
-    var amplitude: CGFloat
-    var phase: Double
-    var periods: Double
+// MARK: Pixel scene
 
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let overscan: CGFloat = 60
-        let steps = 160
-        for step in 0...steps {
-            let t = Double(step) / Double(steps)
-            let x = rect.minX - overscan + CGFloat(t) * (rect.width + 2 * overscan)
-            let y = rect.minY + rect.height * (baseline + amplitude * CGFloat(sin(t * periods * 2 * .pi + phase)))
-            step == 0 ? path.move(to: CGPoint(x: x, y: y)) : path.addLine(to: CGPoint(x: x, y: y))
+/// A square grid of sRGB colors; empty cells stay transparent.
+private struct PixelGrid {
+    let size: Int
+    private var cells: [UInt32?]
+
+    init(size: Int) {
+        self.size = size
+        cells = Array(repeating: nil, count: size * size)
+    }
+
+    subscript(x: Int, y: Int) -> UInt32? {
+        get { x >= 0 && y >= 0 && x < size && y < size ? cells[y * size + x] : nil }
+        set { if x >= 0 && y >= 0 && x < size && y < size { cells[y * size + x] = newValue } }
+    }
+
+    func image() -> CGImage {
+        var bytes = [UInt8](repeating: 0, count: size * size * 4)
+        for (i, cell) in cells.enumerated() {
+            guard let cell else { continue }
+            bytes[i * 4] = UInt8((cell >> 16) & 0xFF)
+            bytes[i * 4 + 1] = UInt8((cell >> 8) & 0xFF)
+            bytes[i * 4 + 2] = UInt8(cell & 0xFF)
+            bytes[i * 4 + 3] = 255
         }
-        path.addLine(to: CGPoint(x: rect.maxX + overscan, y: rect.maxY + overscan))
-        path.addLine(to: CGPoint(x: rect.minX - overscan, y: rect.maxY + overscan))
-        path.closeSubpath()
-        return path
+        return CGImage(width: size, height: size, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: size * 4,
+                       space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                       provider: CGDataProvider(data: Data(bytes) as CFData)!,
+                       decode: nil, shouldInterpolate: false, intent: .defaultIntent)!
     }
 }
 
-/// Water as thick glass: light caught white along the crest, clear color below.
-private struct GlassWave: View {
-    let baseline: CGFloat
-    let amplitude: CGFloat
-    let phase: Double
-    let periods: Double
-    let colors: [Color]
-    let glow: Double
+/// Dusk over the cove on a 44-cell grid.
+private struct CoveScene {
+    let size = 44
+    let horizon = 29                 // first row of water
+    let sunRadius = 6.6
+    let notchWidth = 18, notchHeight = 5
 
-    var body: some View {
-        let wave = WaveShape(baseline: baseline, amplitude: amplitude, phase: phase, periods: periods)
-        ZStack {
-            wave.fill(LinearGradient(colors: colors, startPoint: .top, endPoint: .bottom))
-                .opacity(0.82)
-            // Cyan light caught just under the crest, as in thick glass.
-            wave.stroke(color(0x3FF0FF), lineWidth: 60)
-                .blur(radius: 22)
-                .opacity(0.55 * glow)
-                .mask(wave)
-            // The bright inner edge.
-            wave.stroke(.white, lineWidth: 26)
-                .blur(radius: 10)
-                .opacity(0.8 * glow)
-                .mask(wave)
-            // An iridescent rim along the crest.
-            wave.stroke(LinearGradient(colors: [color(0x9DF6FF), .white, color(0xFFB8EC)], startPoint: .leading, endPoint: .trailing),
-                        lineWidth: 5)
-                .blur(radius: 0.8)
-                .mask(wave)
+    /// Deep blue overhead down to a peach glow at the horizon.
+    let sky: [UInt32] = [0x2446E0, 0x3D5CFF, 0x6A5CFF, 0x9A5EF6, 0xCB68EC, 0xFF7FC4, 0xFFA2B6, 0xFFCBA8]
+    let stars: [(x: Int, y: Int, bright: Bool)] = [(5, 4, true), (12, 11, false), (39, 15, false), (4, 17, false)]
+    let sparkle = (x: 34, y: 9)
+    let sail = (x: 9, y: 29)
+
+    func draw() -> PixelGrid {
+        var grid = PixelGrid(size: size)
+        drawSky(into: &grid)
+        drawSun(into: &grid)
+        drawSail(into: &grid)
+        drawSea(into: &grid)
+        drawSparkles(into: &grid)
+        drawNotch(into: &grid)
+        return grid
+    }
+
+    /// Flat bands, thinner toward the horizon, with one checkered row between each pair.
+    private func drawSky(into grid: inout PixelGrid) {
+        let bounds = (1..<sky.count).map { i in
+            Int((Double(horizon) * (1 - pow(1 - Double(i) / Double(sky.count), 1.35))).rounded())
         }
-        .shadow(color: color(0x2A1C8A, 0.4), radius: 20, y: -6)
-    }
-}
-
-/// The notch outline the app draws, ears and all: flat top, concave ears, rounded bottom.
-struct NotchOutline: Shape {
-    var ear: CGFloat = 30
-    var radius: CGFloat = 66
-
-    func path(in rect: CGRect) -> Path {
-        let left = rect.minX + ear, right = rect.maxX - ear
-        let r = min(radius, (right - left) / 2, rect.height - ear)
-        let k: CGFloat = 0.55
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addQuadCurve(to: CGPoint(x: left, y: rect.minY + ear), control: CGPoint(x: left, y: rect.minY))
-        path.addLine(to: CGPoint(x: left, y: rect.maxY - r))
-        path.addCurve(to: CGPoint(x: left + r, y: rect.maxY),
-                      control1: CGPoint(x: left, y: rect.maxY - r * (1 - k)), control2: CGPoint(x: left + r * (1 - k), y: rect.maxY))
-        path.addLine(to: CGPoint(x: right - r, y: rect.maxY))
-        path.addCurve(to: CGPoint(x: right, y: rect.maxY - r),
-                      control1: CGPoint(x: right - r * (1 - k), y: rect.maxY), control2: CGPoint(x: right, y: rect.maxY - r * (1 - k)))
-        path.addLine(to: CGPoint(x: right, y: rect.minY + ear))
-        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY), control: CGPoint(x: right, y: rect.minY))
-        path.closeSubpath()
-        return path
-    }
-}
-
-/// Glossy black glass, like the real notch, with the screen's colors caught in its rim.
-private struct DarkNotch: View {
-    var body: some View {
-        let shape = NotchOutline(ear: 24, radius: 52)
-        ZStack {
-            // Light spilling out from under it, like a live activity.
-            shape
-                .fill(LinearGradient(colors: [color(0x00D8FF), color(0xFF5BD8)], startPoint: .leading, endPoint: .trailing))
-                .blur(radius: 36)
-                .opacity(0.95)
-                .offset(y: 24)
-            shape.fill(LinearGradient(colors: [color(0x16161C), color(0x040406)], startPoint: .top, endPoint: .bottom))
-            // Reflections pooled in the lower glass.
-            shape
-                .fill(LinearGradient(stops: [
-                    .init(color: .white.opacity(0), location: 0.45),
-                    .init(color: color(0x7FD8FF, 0.22), location: 0.8),
-                    .init(color: color(0xFF9BE6, 0.3), location: 1),
-                ], startPoint: .top, endPoint: .bottom))
-            shape
-                .stroke(LinearGradient(colors: [color(0x5FE8FF), color(0xB38CFF), color(0xFF8AD8)],
-                                       startPoint: .leading, endPoint: .trailing), lineWidth: 7)
-                .blur(radius: 1.2)
-                .mask(shape)
-            Lens()
-                .frame(width: 30, height: 30)
-                .offset(y: -4)
+        for y in 0..<horizon {
+            let band = bounds.firstIndex { y < $0 } ?? bounds.count
+            for x in 0..<size {
+                let dithered = band < bounds.count && y == bounds[band] - 1 && (x + y) % 2 == 0
+                grid[x, y] = sky[dithered ? band + 1 : band]
+            }
         }
-        .frame(width: 300, height: 100)
     }
-}
 
-private struct Lens: View {
-    var body: some View {
-        ZStack {
-            Circle().fill(RadialGradient(colors: [color(0x3C3FA8), color(0x131437)], center: .init(x: 0.4, y: 0.35),
-                                         startRadius: 2, endRadius: 34))
-            Circle().strokeBorder(color(0x8C8FFF, 0.6), lineWidth: 3)
-            Circle()
-                .fill(.white.opacity(0.85))
-                .frame(width: 14, height: 14)
-                .blur(radius: 1.5)
-                .offset(x: -10, y: -10)
+    /// A half disc sitting on the horizon, white at its core.
+    private func drawSun(into grid: inout PixelGrid) {
+        let center = Double(size) / 2
+        for y in 0..<horizon {
+            for x in 0..<size {
+                let dx = Double(x) + 0.5 - center, dy = Double(y) + 0.5 - Double(horizon)
+                let distance = (dx * dx + dy * dy).squareRoot()
+                if distance <= sunRadius { grid[x, y] = distance <= sunRadius * 0.58 ? 0xFFFFFF : 0xFFF1C9 }
+            }
+        }
+    }
+
+    /// A small sail standing on the horizon.
+    private func drawSail(into grid: inout PixelGrid) {
+        for (i, width) in [1, 1, 2, 2, 3].enumerated() {
+            for x in sail.x..<(sail.x + width) { grid[x, sail.y - 5 + i] = 0xFFF6EE }
+        }
+    }
+
+    /// The front wave's crest row at column `x`.
+    private func frontCrest(_ x: Int) -> Int {
+        Int((Double(size) * (0.815 + 0.022 * sin(Double(x) / Double(size) * 1.15 * 2 * .pi + 2.4))).rounded())
+    }
+
+    private func drawSea(into grid: inout PixelGrid) {
+        let crest: UInt32 = 0xC8F4FF, crestDim: UInt32 = 0x8FDCFF
+        for x in 0..<size {
+            let front = frontCrest(x)
+            for y in horizon..<size {
+                let cell: UInt32
+                if y == horizon { cell = crestDim }
+                else if y < front { cell = y < horizon + (front - horizon) / 2 ? 0x5A86FF : 0x5A48EC }
+                else if y == front { cell = crest }
+                else if y == front + 1 { cell = crestDim }
+                else { cell = y >= size - 3 ? 0x2A1C8A : 0x3A26B8 }
+                grid[x, y] = cell
+            }
+        }
+        // The sun's path on the water: dashes that shrink toward the front wave.
+        let mid = size / 2
+        for (i, y) in stride(from: horizon + 1, to: frontCrest(mid) - 1, by: 2).enumerated() {
+            let half = max(1, Int((sunRadius * (1.05 - 0.28 * Double(i))).rounded()))
+            let inset = i % 2
+            for x in (mid - half + inset)..<(mid + half - inset) where grid[x, y] != crest {
+                grid[x, y] = i == 0 ? 0xFFE3C4 : 0xE9D8FF
+            }
+        }
+    }
+
+    private func drawSparkles(into grid: inout PixelGrid) {
+        for star in stars { grid[star.x, star.y] = star.bright ? 0xFFFFFF : 0xBFC8FF }
+        // A four-point stardust glint.
+        grid[sparkle.x, sparkle.y] = 0xFFFFFF
+        for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] { grid[sparkle.x + dx, sparkle.y + dy] = 0xBFC8FF }
+        for (dx, dy) in [(-2, 0), (2, 0), (0, -2), (0, 2)] { grid[sparkle.x + dx, sparkle.y + dy] = 0x8FA0FF }
+    }
+
+    /// The notch with its ears, a camera lens, and a live activity's light spilling out below.
+    private func drawNotch(into grid: inout PixelGrid) {
+        let left = (size - notchWidth) / 2, right = left + notchWidth - 1
+        for y in 0..<notchHeight {
+            for x in left...right where !(y == notchHeight - 1 && (x == left || x == right)) {
+                grid[x, y] = 0x000000
+            }
+        }
+        grid[left - 1, 0] = 0x000000
+        grid[right + 1, 0] = 0x000000
+        let lensX = size / 2 - 1, lensY = notchHeight / 2 - 1
+        grid[lensX, lensY] = 0x9A9DFF
+        grid[lensX + 1, lensY] = 0x2B2E8C
+        grid[lensX, lensY + 1] = 0x2B2E8C
+        grid[lensX + 1, lensY + 1] = 0x2B2E8C
+        let glow: [UInt32] = [0x49E6FF, 0x6FC8FF, 0x9AA8FF, 0xC792FF, 0xF08AE0, 0xFF7FD0]
+        for x in (left + 1)...(right - 1) {
+            let t = Double(x - left - 1) / Double(right - left - 2)
+            grid[x, notchHeight] = glow[min(glow.count - 1, Int(t * Double(glow.count)))]
         }
     }
 }
@@ -267,7 +242,7 @@ func main() throws {
         try data.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))
         return
     }
-    let output = URL(fileURLWithPath: "dancove/Assets.xcassets/AppIcon.appiconset")
+    let output = URL(fileURLWithPath: "pokove/Assets.xcassets/AppIcon.appiconset")
     var images: [[String: String]] = []
     for points in [16, 32, 128, 256, 512] {
         for scale in [1, 2] {

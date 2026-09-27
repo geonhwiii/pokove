@@ -1,13 +1,13 @@
 // Simulates the Kanto journey over many hours of agent work, to tune its pacing.
 // Run from the repo root:
 //   swiftc -O -parse-as-library -o /tmp/adventure-sim scripts/adventure-sim.swift \
-//     dancove/Adventure/BattleEngine.swift dancove/Adventure/AdventureRules.swift \
-//     dancove/Adventure/Kanto.swift dancove/Adventure/PokeMoves.swift dancove/Adventure/PokeDex.swift
+//     pokove/Adventure/BattleEngine.swift pokove/Adventure/AdventureRules.swift \
+//     pokove/Adventure/Kanto.swift pokove/Adventure/PokeMoves.swift pokove/Adventure/PokeDex.swift
 //   /tmp/adventure-sim [hours] [xpScale] [starter] [seed] [agentHoursPerDay]
 //   /tmp/adventure-sim duel <chapter> <station 1-10 | b1-b5> <level> <species>...
 // Stations run on agent time (1.5 s per action). Bosses (via AUTO), legendaries and the daily
 // dungeon don't need an agent, so they cost no agent time here.
-// Data comes from the app's cache (~/Library/Application Support/dancove/pokemon) or PokéAPI.
+// Data comes from the app's cache (~/Library/Application Support/pokove/pokemon) or PokéAPI.
 import Foundation
 
 @main

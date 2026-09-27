@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fills Korean translations (and English plural variants) into dancove/Localizable.xcstrings.
+"""Fills Korean translations (and English plural variants) into pokove/Localizable.xcstrings.
 
 Run after `xcstringstool sync` has added any new keys:
     python3 scripts/localize-ko.py
@@ -9,7 +9,7 @@ import json
 import pathlib
 import sys
 
-CATALOG = pathlib.Path(__file__).resolve().parent.parent / "dancove" / "Localizable.xcstrings"
+CATALOG = pathlib.Path(__file__).resolve().parent.parent / "pokove" / "Localizable.xcstrings"
 
 KO = {
     "%@ %@ · Lv %lld": "%1$@ %2$@ · Lv %3$lld",
@@ -64,7 +64,7 @@ KO = {
     "Poison": "독",
     "Pokédex": "도감",
     "Pokémon adventure": "포켓몬 모험",
-    "Pokémon data and sprites are downloaded from PokéAPI (pokeapi.co) while dancove runs and are cached on this Mac. None are bundled with dancove.": "포켓몬 데이터와 이미지는 dancove가 실행될 때 PokéAPI(pokeapi.co)에서 받아 이 Mac에 저장해요. dancove에는 들어 있지 않아요.",
+    "Pokémon data and sprites are downloaded from PokéAPI (pokeapi.co) while pokove runs and are cached on this Mac. None are bundled with pokove.": "포켓몬 데이터와 이미지는 pokove가 실행될 때 PokéAPI(pokeapi.co)에서 받아 이 Mac에 저장해요. pokove에는 들어 있지 않아요.",
     "Progress": "진행 상황",
     "Psychic": "에스퍼",
     "Rock": "바위",
@@ -84,7 +84,7 @@ KO = {
     "%lld items": "%lld개",
     "%lld pinned": "고정 %lld개",
     "%lldd": "%lld일",
-    "Allow Accessibility for dancove to paste straight into apps.": "dancove에 손쉬운 사용을 허용하면 앱에 바로 붙여넣을 수 있어요.",
+    "Allow Accessibility for pokove to paste straight into apps.": "pokove에 손쉬운 사용을 허용하면 앱에 바로 붙여넣을 수 있어요.",
     "Clear": "지우기",
     "Clear %lld?": "%lld개 지울까요?",
     "Clear History": "기록 지우기",
@@ -110,7 +110,7 @@ KO = {
     "Saved": "저장된 항목",
     "The notch opens to what's going on: music while it plays, Claude while it works.": "노치를 열면 상황에 맞는 화면이 나와요. 음악이 재생 중이면 음악, Claude가 작업 중이면 Claude.",
     "The notch opens where you left it. A Claude permission request still comes first.": "노치를 열면 마지막으로 본 화면이 나와요. Claude 권한 요청은 그래도 먼저 보여줘요.",
-    "To paste into the app you're using, dancove presses ⌘V for you, which needs Accessibility access. Without it, items are copied and you paste them yourself.": "지금 쓰는 앱에 바로 붙여넣으려면 dancove가 ⌘V를 대신 눌러야 해서 손쉬운 사용 권한이 필요해요. 권한이 없으면 복사만 되고 붙여넣기는 직접 하시면 돼요.",
+    "To paste into the app you're using, pokove presses ⌘V for you, which needs Accessibility access. Without it, items are copied and you paste them yourself.": "지금 쓰는 앱에 바로 붙여넣으려면 pokove가 ⌘V를 대신 눌러야 해서 손쉬운 사용 권한이 필요해요. 권한이 없으면 복사만 되고 붙여넣기는 직접 하시면 돼요.",
     "Unpin": "고정 해제",
     "items": "항목",
     "%@ wants to use %@": "%1$@ · %2$@ 사용 요청",
@@ -237,12 +237,12 @@ KO = {
     "Preview Display HUD": "디스플레이 HUD 미리보기",
     "Preview Notification": "알림 미리보기",
     "Preview Sound HUD": "사운드 HUD 미리보기",
-    "Quit dancove": "dancove 종료",
+    "Quit pokove": "pokove 종료",
     "Rate limited": "요청 한도 초과",
     "Reading": "읽는 중",
     "Reading %@": "%@ 읽는 중",
     "Relaunch Now": "지금 다시 시작",
-    "Relaunch dancove to switch languages.": "언어를 바꾸려면 dancove를 다시 시작하세요.",
+    "Relaunch pokove to switch languages.": "언어를 바꾸려면 pokove를 다시 시작하세요.",
     "Remove": "빼기",
     "Replace system volume & brightness HUD": "시스템 음량·밝기 HUD 대체",
     "Running agent": "에이전트 실행 중",
@@ -287,21 +287,21 @@ KO = {
     "Version %@": "버전 %@",
     "Wait for an answer": "응답 대기 시간",
     "Waiting for you": "응답 대기 중",
-    "Welcome to dancove": "dancove에 오신 걸 환영해요",
+    "Welcome to pokove": "pokove에 오신 걸 환영해요",
     "When Claude finishes": "Claude가 작업을 마쳤을 때",
     "When Claude needs permission or input": "Claude가 권한이나 입력이 필요할 때",
     "When a turn fails": "작업이 실패했을 때",
-    "When the app running Claude isn't in front, dancove holds the request and shows Allow / Deny in the notch. If you don't answer in time, or switch to that app, Claude asks in its own window as usual.":
-        "Claude를 실행 중인 앱이 앞에 없으면 dancove가 요청을 잠시 붙잡고 노치에 허용 / 거부를 보여 줘요. 시간 안에 답하지 않거나 그 앱으로 전환하면 평소처럼 Claude 창에서 물어봐요.",
+    "When the app running Claude isn't in front, pokove holds the request and shows Allow / Deny in the notch. If you don't answer in time, or switch to that app, Claude asks in its own window as usual.":
+        "Claude를 실행 중인 앱이 앞에 없으면 pokove가 요청을 잠시 붙잡고 노치에 허용 / 거부를 보여 줘요. 시간 안에 답하지 않거나 그 앱으로 전환하면 평소처럼 Claude 창에서 물어봐요.",
     "Works with Music, Spotify, browsers and any app that reports to Control Center.": "음악, Spotify, 브라우저 등 제어 센터에 표시되는 모든 앱과 함께 동작해요.",
     "Writing": "작성 중",
     "Writing %@": "%@ 작성 중",
     "app": "앱",
-    "dancove Settings": "dancove 설정",
-    "dancove adds small hooks to ~/.claude/settings.json that forward Claude's events to 127.0.0.1 with curl, and stay silent when dancove isn't running. Your other settings are kept, and the previous file is saved as settings.json.dancove-backup. Sessions that are already running pick up the hooks after a restart.":
-        "dancove는 ~/.claude/settings.json에 작은 훅을 추가해 Claude의 이벤트를 curl로 127.0.0.1에 전달해요. dancove가 꺼져 있으면 아무 일도 하지 않아요. 다른 설정은 그대로 두고, 기존 파일은 settings.json.dancove-backup으로 저장해요. 이미 실행 중인 세션은 다시 시작해야 훅이 적용돼요.",
-    "dancove listens for the volume and brightness keys and draws its own HUD in the notch. Nothing else is read.":
-        "dancove는 음량·밝기 키만 감지해 노치에 자체 HUD를 그려요. 그 밖의 입력은 읽지 않아요.",
+    "pokove Settings": "pokove 설정",
+    "pokove adds small hooks to ~/.claude/settings.json that forward Claude's events to 127.0.0.1 with curl, and stay silent when pokove isn't running. Your other settings are kept, and the previous file is saved as settings.json.pokove-backup. Sessions that are already running pick up the hooks after a restart.":
+        "pokove는 ~/.claude/settings.json에 작은 훅을 추가해 Claude의 이벤트를 curl로 127.0.0.1에 전달해요. pokove가 꺼져 있으면 아무 일도 하지 않아요. 다른 설정은 그대로 두고, 기존 파일은 settings.json.pokove-backup으로 저장해요. 이미 실행 중인 세션은 다시 시작해야 훅이 적용돼요.",
+    "pokove listens for the volume and brightness keys and draws its own HUD in the notch. Nothing else is read.":
+        "pokove는 음량·밝기 키만 감지해 노치에 자체 HUD를 그려요. 그 밖의 입력은 읽지 않아요.",
     "now": "방금",
     "%@s": "%@초",
 
@@ -456,7 +456,7 @@ KO = {
 # Keys that read the same in Korean (numbers, names, symbols).
 SAME = {
     "%@ · %@", "%@ — %@", "%lld", "%lld / %lld", "%lld%%", "%lld/%lld", "?", "AirPlay", "Bluetooth", "Claude",
-    "English", "NEW", "dancove", "· %@", "한국어", "", "Codex", "AUTO", "+%lld", "%lld-%lld", "VS", "–",
+    "English", "NEW", "pokove", "· %@", "한국어", "", "Codex", "AUTO", "+%lld", "%lld-%lld", "VS", "–",
 }
 
 # English plural variants.

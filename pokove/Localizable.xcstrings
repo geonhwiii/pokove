@@ -1,0 +1,4190 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "%@ %@ · Lv %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$@ · Lv %3$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ · Lv %3$lld"
+          }
+        }
+      }
+    },
+    "%@ EXP +%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ EXP +%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 경험치 +%2$lld"
+          }
+        }
+      }
+    },
+    "%@ earned!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 획득!"
+          }
+        }
+      }
+    },
+    "%@ evolved!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 진화!"
+          }
+        }
+      }
+    },
+    "%@ is waiting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 상대: %@"
+          }
+        }
+      }
+    },
+    "%@ is waiting · tap Challenge": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 상대: %@ · 도전을 눌러요"
+          }
+        }
+      }
+    },
+    "%@ joined your team!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 합류!"
+          }
+        }
+      }
+    },
+    "%@ keeps winning. Try the best team.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에게 계속 지고 있어요. 추천 파티를 써 보세요."
+          }
+        }
+      }
+    },
+    "%@ wants to use %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ wants to use %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ 사용 요청"
+          }
+        }
+      }
+    },
+    "%@ · Lv %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · Lv %2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · Lv %2$lld"
+          }
+        }
+      }
+    },
+    "%@ — %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ — %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — %@"
+          }
+        }
+      }
+    },
+    "%@s": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@초"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld / %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld / %2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / %lld"
+          }
+        }
+      }
+    },
+    "%lld caught · %lld seen / %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld caught · %2$lld seen / %3$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld마리 잡음 · %2$lld마리 발견 / %3$lld"
+          }
+        }
+      }
+    },
+    "%lld done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 완료"
+          }
+        }
+      }
+    },
+    "%lld evolved": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld마리 진화"
+          }
+        }
+      }
+    },
+    "%lld items": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개"
+          }
+        }
+      }
+    },
+    "%lld moves": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기술 %lld개"
+          }
+        }
+      }
+    },
+    "%lld new": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 포켓몬 %lld"
+          }
+        }
+      }
+    },
+    "%lld percent": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld퍼센트"
+          }
+        }
+      }
+    },
+    "%lld pinned": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정 %lld개"
+          }
+        }
+      }
+    },
+    "%lld stations left": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "역 %lld개 남음"
+          }
+        }
+      }
+    },
+    "%lld to go": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 남음"
+          }
+        }
+      }
+    },
+    "%lld turns · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld turns · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld회 · %@"
+          }
+        }
+      }
+    },
+    "%lld waiting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 대기 중"
+          }
+        }
+      }
+    },
+    "%lld working": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 작업 중"
+          }
+        }
+      }
+    },
+    "%lld%%": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
+    "%lld%% remaining": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%% 남음"
+          }
+        }
+      }
+    },
+    "%lld-%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld-%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld-%lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld/%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld"
+          }
+        }
+      }
+    },
+    "%lldd": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일"
+          }
+        }
+      }
+    },
+    "%lldh": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld시간"
+          }
+        }
+      }
+    },
+    "%lldh %lldm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lldh %2$lldm"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld시간 %lld분"
+          }
+        }
+      }
+    },
+    "%lldm": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld분"
+          }
+        }
+      }
+    },
+    "%lldm %llds": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lldm %2$llds"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld분 %lld초"
+          }
+        }
+      }
+    },
+    "%llds": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld초"
+          }
+        }
+      }
+    },
+    "+%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
+          }
+        }
+      }
+    },
+    "+%lld more": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld개 더"
+          }
+        }
+      }
+    },
+    "1 wild Pokémon · Lv %lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "야생 1마리 · Lv %lld"
+          }
+        }
+      }
+    },
+    "2 wild Pokémon · Lv %lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "야생 2마리 · Lv %lld"
+          }
+        }
+      }
+    },
+    "5 floors · a boss on the last · lose and try again": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5층 · 마지막 층은 보스 · 져도 다시 도전"
+          }
+        }
+      }
+    },
+    "?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "?"
+          }
+        }
+      }
+    },
+    "A Dynamic Island for your Mac's notch — with Claude Code built in.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 노치를 위한 다이내믹 아일랜드 — Claude Code까지 한곳에서."
+          }
+        }
+      }
+    },
+    "A challenge is underway": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도전 중이에요"
+          }
+        }
+      }
+    },
+    "A page beside the calendar. Click “New To-do” to type; the notch borrows the keyboard only while you type and hands it back when it closes.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더 옆 페이지예요. “새로운 할 일”을 눌러 입력하세요. 노치는 입력하는 동안에만 키보드를 빌리고, 닫히면 원래 앱으로 돌려줘요."
+          }
+        }
+      }
+    },
+    "API overloaded": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 과부하"
+          }
+        }
+      }
+    },
+    "AUTO": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO"
+          }
+        }
+      }
+    },
+    "AUTO is off: the party trains until you tap Challenge": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO 꺼짐: 도전을 누를 때까지 수련해요"
+          }
+        }
+      }
+    },
+    "AUTO: the boss is challenged as soon as the line is cleared, and again after training": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTO: 노선을 다 깨면 바로 보스에게 도전하고, 지면 수련 뒤 다시 도전해요"
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정보"
+          }
+        }
+      }
+    },
+    "About the data": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "데이터 안내"
+          }
+        }
+      }
+    },
+    "Access": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접근 권한"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "손쉬운 사용"
+          }
+        }
+      }
+    },
+    "Account on hold": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정 보류됨"
+          }
+        }
+      }
+    },
+    "Active sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 중인 세션"
+          }
+        }
+      }
+    },
+    "Add to Party": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파티에 넣기"
+          }
+        }
+      }
+    },
+    "Adventure": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험"
+          }
+        }
+      }
+    },
+    "Adventure Banners": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 알림"
+          }
+        }
+      }
+    },
+    "Adventure banners are muted. Click to turn them back on.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 알림이 꺼져 있어요. 누르면 다시 켜져요."
+          }
+        }
+      }
+    },
+    "Adventure banners are on. Click to mute them, say before sharing your screen.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 알림이 켜져 있어요. 화면 공유 전에 눌러서 끌 수 있어요."
+          }
+        }
+      }
+    },
+    "Adventure partner": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 파트너"
+          }
+        }
+      }
+    },
+    "Agent: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트: %@"
+          }
+        }
+      }
+    },
+    "Agents": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트"
+          }
+        }
+      }
+    },
+    "AirPlay": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirPlay"
+          }
+        }
+      }
+    },
+    "All day": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "종일"
+          }
+        }
+      }
+    },
+    "All done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 끝냈어요"
+          }
+        }
+      }
+    },
+    "All quiet": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 쉬는 중"
+          }
+        }
+      }
+    },
+    "Allow": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용"
+          }
+        }
+      }
+    },
+    "Allow %@?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 허용할까요?"
+          }
+        }
+      }
+    },
+    "Allow Accessibility for pokove to paste straight into apps.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove에 손쉬운 사용을 허용하면 앱에 바로 붙여넣을 수 있어요."
+          }
+        }
+      }
+    },
+    "Allow Calendar Access": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더 접근 허용"
+          }
+        }
+      }
+    },
+    "Allow…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용…"
+          }
+        }
+      }
+    },
+    "Always": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항상 허용"
+          }
+        }
+      }
+    },
+    "Always Allow": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항상 허용"
+          }
+        }
+      }
+    },
+    "An Ultra Ball from the dungeon: three balls, all rare or better": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "던전에서 받은 울트라볼: 희귀 이상만 나오는 볼 3개"
+          }
+        }
+      }
+    },
+    "An Ultra Ball: three balls, all rare or better": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "울트라볼: 희귀 이상만 나오는 볼 3개"
+          }
+        }
+      }
+    },
+    "An unofficial, non-commercial fan feature, not affiliated with or endorsed by Nintendo, Game Freak, Creatures Inc. or The Pokémon Company. Pokémon and all related names are their trademarks.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비공식·비상업 팬 기능이에요. Nintendo, Game Freak, Creatures Inc., The Pokémon Company와 관계가 없고 승인받지 않았어요. 포켓몬과 관련 이름은 모두 해당 회사의 상표예요."
+          }
+        }
+      }
+    },
+    "Announce headphones and speakers": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "헤드폰·스피커 연결 알림"
+          }
+        }
+      }
+    },
+    "Answer from the notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에서 응답하기"
+          }
+        }
+      }
+    },
+    "Apply": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "적용"
+          }
+        }
+      }
+    },
+    "Audio output": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오 출력"
+          }
+        }
+      }
+    },
+    "Authentication failed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "인증 실패"
+          }
+        }
+      }
+    },
+    "Background agent finished": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "백그라운드 에이전트 완료"
+          }
+        }
+      }
+    },
+    "Badge earned": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배지 획득"
+          }
+        }
+      }
+    },
+    "Badges": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배지"
+          }
+        }
+      }
+    },
+    "Badges %lld/8": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배지 %lld/8"
+          }
+        }
+      }
+    },
+    "Banners for new Pokémon, evolutions and badges": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 포켓몬·진화·배지 알림 보기"
+          }
+        }
+      }
+    },
+    "Battery": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리"
+          }
+        }
+      }
+    },
+    "Battery %lld percent": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 %lld퍼센트"
+          }
+        }
+      }
+    },
+    "Battery & Devices": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 및 기기"
+          }
+        }
+      }
+    },
+    "Battling…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배틀 중…"
+          }
+        }
+      }
+    },
+    "Beaten": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이겼어요"
+          }
+        }
+      }
+    },
+    "Best team for this fight": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 상대에 맞는 추천 파티"
+          }
+        }
+      }
+    },
+    "Best team for what's next": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 상대에 맞는 추천 파티"
+          }
+        }
+      }
+    },
+    "Billing issue": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "결제 문제"
+          }
+        }
+      }
+    },
+    "Bluetooth": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth"
+          }
+        }
+      }
+    },
+    "Bug": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "벌레"
+          }
+        }
+      }
+    },
+    "Calendar": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더"
+          }
+        }
+      }
+    },
+    "Calendar & To-dos": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캘린더 및 할 일"
+          }
+        }
+      }
+    },
+    "Challenge": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도전"
+          }
+        }
+      }
+    },
+    "Challenge bosses automatically (AUTO)": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보스에게 자동으로 도전 (AUTO)"
+          }
+        }
+      }
+    },
+    "Challenge!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도전!"
+          }
+        }
+      }
+    },
+    "Champion": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "챔피언"
+          }
+        }
+      }
+    },
+    "Chapter %lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld장"
+          }
+        }
+      }
+    },
+    "Chapter %lld · %@ next": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Chapter %1$lld · %2$@ next"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld장 · 다음 상대 %2$@"
+          }
+        }
+      }
+    },
+    "Chapter %lld · station %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Chapter %1$lld · station %2$lld/%3$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld장 · %2$lld/%3$lld역"
+          }
+        }
+      }
+    },
+    "Charging": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 중"
+          }
+        }
+      }
+    },
+    "Choose a port between 1024 and 65535.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1024에서 65535 사이의 포트를 고르세요."
+          }
+        }
+      }
+    },
+    "Choose your partner": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파트너를 골라 주세요"
+          }
+        }
+      }
+    },
+    "Claimed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "받음"
+          }
+        }
+      }
+    },
+    "Claude": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        }
+      }
+    },
+    "Claude Code Settings…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code 설정…"
+          }
+        }
+      }
+    },
+    "Claude Code in your notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치 속 Claude Code"
+          }
+        }
+      }
+    },
+    "Claude finished": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 작업 완료"
+          }
+        }
+      }
+    },
+    "Claude is waiting for you": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 답을 기다려요"
+          }
+        }
+      }
+    },
+    "Claude needs permission": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 권한을 요청해요"
+          }
+        }
+      }
+    },
+    "Claude stopped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 멈췄어요"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지우기"
+          }
+        }
+      }
+    },
+    "Clear %lld?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 지울까요?"
+          }
+        }
+      }
+    },
+    "Clear Completed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료 항목 지우기"
+          }
+        }
+      }
+    },
+    "Clear Finished Sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끝난 세션 지우기"
+          }
+        }
+      }
+    },
+    "Clear History": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록 지우기"
+          }
+        }
+      }
+    },
+    "Clear history": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기록 지우기"
+          }
+        }
+      }
+    },
+    "Clear stations and beat bosses to earn stardust.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "역을 깨고 보스를 이기면 별의모래가 모여요."
+          }
+        }
+      }
+    },
+    "Cleared · pick a station to repeat it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클리어 · 역을 골라 반복할 수 있어요"
+          }
+        }
+      }
+    },
+    "Click again to clear. Pinned items stay.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한 번 더 누르면 지워져요. 고정한 항목은 남아요."
+          }
+        }
+      }
+    },
+    "Click the notch to expand it.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치를 클릭하면 펼쳐져요."
+          }
+        }
+      }
+    },
+    "Clicking an item": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항목을 클릭하면"
+          }
+        }
+      }
+    },
+    "Clipboard": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클립보드"
+          }
+        }
+      }
+    },
+    "Codex": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        }
+      }
+    },
+    "Codex finished": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex 작업 완료"
+          }
+        }
+      }
+    },
+    "Codex needs approval": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex가 승인을 요청해요"
+          }
+        }
+      }
+    },
+    "Codex stopped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex가 멈췄어요"
+          }
+        }
+      }
+    },
+    "Compacting context…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "컨텍스트 압축 중…"
+          }
+        }
+      }
+    },
+    "Connect Claude Code in Settings to get notified when Claude needs you.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정에서 Claude Code를 연결하면 Claude가 찾을 때 알려 드려요."
+          }
+        }
+      }
+    },
+    "Connected": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결됨"
+          }
+        }
+      }
+    },
+    "Connecting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결 중"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결"
+          }
+        }
+      }
+    },
+    "Connectivity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기 연결"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사됨"
+          }
+        }
+      }
+    },
+    "Copies it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사"
+          }
+        }
+      }
+    },
+    "Copy something and it shows up here.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무언가 복사하면 여기에 쌓여요."
+          }
+        }
+      }
+    },
+    "Couldn't reach PokéAPI": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PokéAPI에 연결할 수 없어요"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "악"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "삭제"
+          }
+        }
+      }
+    },
+    "Deny": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "거부"
+          }
+        }
+      }
+    },
+    "Detect Claude app, IDE and CLI sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 앱·IDE·CLI 세션 자동 감지"
+          }
+        }
+      }
+    },
+    "Detect Codex sessions": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex 세션 감지"
+          }
+        }
+      }
+    },
+    "Detection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "감지"
+          }
+        }
+      }
+    },
+    "Display": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이"
+          }
+        }
+      }
+    },
+    "Display & Sound": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이 및 사운드"
+          }
+        }
+      }
+    },
+    "Displays": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
+          }
+        }
+      }
+    },
+    "Dragon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "드래곤"
+          }
+        }
+      }
+    },
+    "Dungeon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "던전"
+          }
+        }
+      }
+    },
+    "Dungeon %@ · %lld/%lldF": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Dungeon %1$@ · %2$lld/%3$lldF"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "던전 %1$@ · %2$lld/%3$lld층"
+          }
+        }
+      }
+    },
+    "Easy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쉬움"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "편집"
+          }
+        }
+      }
+    },
+    "Editing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "편집 중"
+          }
+        }
+      }
+    },
+    "Editing %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 편집 중"
+          }
+        }
+      }
+    },
+    "Editing notebook": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노트북 편집 중"
+          }
+        }
+      }
+    },
+    "Electric": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전기"
+          }
+        }
+      }
+    },
+    "Elite Four %lld/4": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사천왕 %lld/4"
+          }
+        }
+      }
+    },
+    "Empty": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빈 자리"
+          }
+        }
+      }
+    },
+    "Enable Claude integration": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 연동 사용"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "Enter": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "입장"
+          }
+        }
+      }
+    },
+    "Expand on hover": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마우스를 올리면 펼치기"
+          }
+        }
+      }
+    },
+    "Failed — %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실패 — %@"
+          }
+        }
+      }
+    },
+    "Fairy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "페어리"
+          }
+        }
+      }
+    },
+    "Fetching": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가져오는 중"
+          }
+        }
+      }
+    },
+    "Fetching %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 가져오는 중"
+          }
+        }
+      }
+    },
+    "Fighting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "격투"
+          }
+        }
+      }
+    },
+    "Finding %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 찾는 중"
+          }
+        }
+      }
+    },
+    "Finding files": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일 찾는 중"
+          }
+        }
+      }
+    },
+    "Fire": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "불꽃"
+          }
+        }
+      }
+    },
+    "Floor %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Floor %1$lld/%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld층"
+          }
+        }
+      }
+    },
+    "Flying": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비행"
+          }
+        }
+      }
+    },
+    "Follows the session files in ~/.claude/projects and ~/.codex/sessions, so working status and finished alerts need no setup. Answering permission requests from the notch needs the hooks.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/projects와 ~/.codex/sessions의 세션 파일을 따라가서, 설정 없이도 작업 상태와 완료 알림을 보여 줘요. 노치에서 권한 요청에 답하려면 훅이 필요해요."
+          }
+        }
+      }
+    },
+    "Gacha": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "뽑기"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일반"
+          }
+        }
+      }
+    },
+    "Get 3 Poké Balls": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "몬스터볼 3개 받기"
+          }
+        }
+      }
+    },
+    "Getting Pokédex data…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감 데이터를 받는 중…"
+          }
+        }
+      }
+    },
+    "Ghost": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고스트"
+          }
+        }
+      }
+    },
+    "Go First": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선봉으로"
+          }
+        }
+      }
+    },
+    "Go on an adventure": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 떠나기"
+          }
+        }
+      }
+    },
+    "Granted": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용됨"
+          }
+        }
+      }
+    },
+    "Grant…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용…"
+          }
+        }
+      }
+    },
+    "Grass": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "풀"
+          }
+        }
+      }
+    },
+    "Ground": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "땅"
+          }
+        }
+      }
+    },
+    "Gym": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "체육관"
+          }
+        }
+      }
+    },
+    "Haptic feedback": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "햅틱 피드백"
+          }
+        }
+      }
+    },
+    "Hard": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어려움"
+          }
+        }
+      }
+    },
+    "Hide from screen recordings": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화면 녹화에서 숨기기"
+          }
+        }
+      }
+    },
+    "Hide in full screen": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 화면에서 숨기기"
+          }
+        }
+      }
+    },
+    "Hit output limit": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출력 한도 도달"
+          }
+        }
+      }
+    },
+    "Hooks": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "훅"
+          }
+        }
+      }
+    },
+    "Hover delay": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "호버 지연"
+          }
+        }
+      }
+    },
+    "Hover the notch to open it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에 마우스를 올려 열어 보세요"
+          }
+        }
+      }
+    },
+    "Ice": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "얼음"
+          }
+        }
+      }
+    },
+    "Idle": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대기 중"
+          }
+        }
+      }
+    },
+    "Image": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미지"
+          }
+        }
+      }
+    },
+    "In %lld min": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld분 후"
+          }
+        }
+      }
+    },
+    "Inspired by Alcove and NotchNook.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcove와 NotchNook에서 영감을 받았어요."
+          }
+        }
+      }
+    },
+    "Install Hooks": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "훅 설치"
+          }
+        }
+      }
+    },
+    "Installed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설치됨"
+          }
+        }
+      }
+    },
+    "Interaction": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상호작용"
+          }
+        }
+      }
+    },
+    "Invalid request": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잘못된 요청"
+          }
+        }
+      }
+    },
+    "It became %@.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 모습: %@"
+          }
+        }
+      }
+    },
+    "Joined your team": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "동료가 되었어요"
+          }
+        }
+      }
+    },
+    "Jot things down without leaving what you're doing.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "하던 일을 멈추지 않고 바로 적어 두세요."
+          }
+        }
+      }
+    },
+    "Journey": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여정"
+          }
+        }
+      }
+    },
+    "Keep clipboard history": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클립보드 기록 보관"
+          }
+        }
+      }
+    },
+    "Keep up to": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최대 보관 개수"
+          }
+        }
+      }
+    },
+    "Keep your agents busy to meet this one.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 열심히 일하면 만날 수 있어요."
+          }
+        }
+      }
+    },
+    "Keyboard": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "키보드"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어"
+          }
+        }
+      }
+    },
+    "Launch at login": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 시 실행"
+          }
+        }
+      }
+    },
+    "League": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "리그"
+          }
+        }
+      }
+    },
+    "Legendary": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전설"
+          }
+        }
+      }
+    },
+    "Legendary · Lv %lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전설 · Lv %lld"
+          }
+        }
+      }
+    },
+    "Level": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레벨"
+          }
+        }
+      }
+    },
+    "Level cap raised to %lld.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레벨 상한이 %lld까지 올랐어요."
+          }
+        }
+      }
+    },
+    "Listener": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "리스너"
+          }
+        }
+      }
+    },
+    "Listening on 127.0.0.1:%@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "127.0.0.1:%@에서 수신 중"
+          }
+        }
+      }
+    },
+    "Live Activities": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간 현황"
+          }
+        }
+      }
+    },
+    "Loop": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "순환"
+          }
+        }
+      }
+    },
+    "Looping the last line": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 노선을 돌고 있어요"
+          }
+        }
+      }
+    },
+    "Low Battery": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 부족"
+          }
+        }
+      }
+    },
+    "Low battery alerts": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 부족 알림"
+          }
+        }
+      }
+    },
+    "Lv %lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lv %lld"
+          }
+        }
+      }
+    },
+    "Lv%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lv%lld"
+          }
+        }
+      }
+    },
+    "Mark as Done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료로 표시"
+          }
+        }
+      }
+    },
+    "Mark as Not Done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미완료로 표시"
+          }
+        }
+      }
+    },
+    "Mark as done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료로 표시"
+          }
+        }
+      }
+    },
+    "Mark as not done": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미완료로 표시"
+          }
+        }
+      }
+    },
+    "Media bridge": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미디어 브리지"
+          }
+        }
+      }
+    },
+    "Model not found": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모델을 찾을 수 없음"
+          }
+        }
+      }
+    },
+    "Move On": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여정 계속"
+          }
+        }
+      }
+    },
+    "Moves while an agent works": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 일하면 움직여요"
+          }
+        }
+      }
+    },
+    "Mythical": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "환상"
+          }
+        }
+      }
+    },
+    "NEW": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NEW"
+          }
+        }
+      }
+    },
+    "Needs permission": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 필요"
+          }
+        }
+      }
+    },
+    "Needs update": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 필요"
+          }
+        }
+      }
+    },
+    "New To-do": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로운 할 일"
+          }
+        }
+      }
+    },
+    "No events": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일정 없음"
+          }
+        }
+      }
+    },
+    "Normal": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노말"
+          }
+        }
+      }
+    },
+    "Not granted": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용 안 됨"
+          }
+        }
+      }
+    },
+    "Not installed": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설치 안 됨"
+          }
+        }
+      }
+    },
+    "Not yet reached": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 못 감"
+          }
+        }
+      }
+    },
+    "Nothing Playing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재생 중인 항목 없음"
+          }
+        }
+      }
+    },
+    "Nothing yet": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 없어요"
+          }
+        }
+      }
+    },
+    "Notifications": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림"
+          }
+        }
+      }
+    },
+    "Now Playing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 재생 중"
+          }
+        }
+      }
+    },
+    "Now · until %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 중 · %@까지"
+          }
+        }
+      }
+    },
+    "On battery": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "배터리 사용 중"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "열기"
+          }
+        }
+      }
+    },
+    "Open %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 열기"
+          }
+        }
+      }
+    },
+    "Open Pokédex": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감 열기"
+          }
+        }
+      }
+    },
+    "Open source app": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재생 중인 앱 열기"
+          }
+        }
+      }
+    },
+    "Party": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파티"
+          }
+        }
+      }
+    },
+    "Party is full": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파티가 가득 찼어요"
+          }
+        }
+      }
+    },
+    "Passwords and anything an app marks as confidential are never saved. History stays on this Mac.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "암호와 앱이 기밀로 표시한 항목은 저장하지 않아요. 기록은 이 Mac에만 남아요."
+          }
+        }
+      }
+    },
+    "Passwords are never saved.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "암호는 저장하지 않아요."
+          }
+        }
+      }
+    },
+    "Paste": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붙여넣기"
+          }
+        }
+      }
+    },
+    "Pastes it": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붙여넣기"
+          }
+        }
+      }
+    },
+    "Pasting": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "붙여넣기"
+          }
+        }
+      }
+    },
+    "Permission": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한"
+          }
+        }
+      }
+    },
+    "Permission requests": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 요청"
+          }
+        }
+      }
+    },
+    "Pick a Pokémon in the Pokédex to add it.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감에서 포켓몬을 골라 파티에 넣어 보세요."
+          }
+        }
+      }
+    },
+    "Pick a ball to open": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "열어 볼 볼을 하나 골라 주세요"
+          }
+        }
+      }
+    },
+    "Pin": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정"
+          }
+        }
+      }
+    },
+    "Play a sound": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소리 재생"
+          }
+        }
+      }
+    },
+    "Play a sound for new Pokémon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 포켓몬을 잡으면 소리 내기"
+          }
+        }
+      }
+    },
+    "Play something in Music, Spotify or a browser": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "음악, Spotify 또는 브라우저에서 재생해 보세요"
+          }
+        }
+      }
+    },
+    "Playing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재생 중"
+          }
+        }
+      }
+    },
+    "Plug in soon or turn on Low Power Mode.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "곧 충전하거나 저전력 모드를 켜 주세요."
+          }
+        }
+      }
+    },
+    "Plugged in": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전원 연결됨"
+          }
+        }
+      }
+    },
+    "Poison": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "독"
+          }
+        }
+      }
+    },
+    "Pokédex": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감"
+          }
+        }
+      }
+    },
+    "Pokémon adventure": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬 모험"
+          }
+        }
+      }
+    },
+    "Pokémon data and sprites are downloaded from PokéAPI (pokeapi.co) while pokove runs and are cached on this Mac. None are bundled with pokove.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬 데이터와 이미지는 pokove가 실행될 때 PokéAPI(pokeapi.co)에서 받아 이 Mac에 저장해요. pokove에는 들어 있지 않아요."
+          }
+        }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트"
+          }
+        }
+      }
+    },
+    "Power": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전원"
+          }
+        }
+      }
+    },
+    "Preview Charging Activity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Claude Notification": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Connection": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결 알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Display HUD": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스플레이 HUD 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Notification": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림 미리보기"
+          }
+        }
+      }
+    },
+    "Preview Sound HUD": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사운드 HUD 미리보기"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보"
+          }
+        }
+      }
+    },
+    "Progress": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 상황"
+          }
+        }
+      }
+    },
+    "Psychic": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에스퍼"
+          }
+        }
+      }
+    },
+    "Quit pokove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove 종료"
+          }
+        }
+      }
+    },
+    "Rate limited": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요청 한도 초과"
+          }
+        }
+      }
+    },
+    "Reading": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "읽는 중"
+          }
+        }
+      }
+    },
+    "Reading %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 읽는 중"
+          }
+        }
+      }
+    },
+    "Relaunch Now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 다시 시작"
+          }
+        }
+      }
+    },
+    "Relaunch pokove to switch languages.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "언어를 바꾸려면 pokove를 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빼기"
+          }
+        }
+      }
+    },
+    "Reopen to the last page": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막으로 본 화면으로 열기"
+          }
+        }
+      }
+    },
+    "Repeat": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "반복"
+          }
+        }
+      }
+    },
+    "Repeating %lld-%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Repeating %1$lld-%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld-%2$lld 반복 중"
+          }
+        }
+      }
+    },
+    "Replace system volume & brightness HUD": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 음량·밝기 HUD 대체"
+          }
+        }
+      }
+    },
+    "Resets at 4:00": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오전 4시 초기화"
+          }
+        }
+      }
+    },
+    "Rock": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "바위"
+          }
+        }
+      }
+    },
+    "Running agent": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트 실행 중"
+          }
+        }
+      }
+    },
+    "Running command": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "명령 실행 중"
+          }
+        }
+      }
+    },
+    "Saved": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장된 항목"
+          }
+        }
+      }
+    },
+    "Searching": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검색 중"
+          }
+        }
+      }
+    },
+    "Searching web": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "웹 검색 중"
+          }
+        }
+      }
+    },
+    "Searching web: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "웹 검색: %@"
+          }
+        }
+      }
+    },
+    "Searching “%@”": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” 검색 중"
+          }
+        }
+      }
+    },
+    "See when Claude is working, get notified when it finishes or needs you, and answer permission requests without switching apps.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 일하는 모습을 보고, 끝나거나 도움이 필요할 때 알림을 받고, 앱을 바꾸지 않고도 권한 요청에 답하세요."
+          }
+        }
+      }
+    },
+    "See your events here": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "여기서 일정을 확인하세요"
+          }
+        }
+      }
+    },
+    "Server error": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버 오류"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설정…"
+          }
+        }
+      }
+    },
+    "Show Now Playing live activity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 재생 중 표시"
+          }
+        }
+      }
+    },
+    "Show a live activity while Claude works": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 일하는 동안 표시"
+          }
+        }
+      }
+    },
+    "Show calendar in the notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에 캘린더 표시"
+          }
+        }
+      }
+    },
+    "Show charging activity": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 상태 표시"
+          }
+        }
+      }
+    },
+    "Show menu bar icon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메뉴 막대 아이콘 표시"
+          }
+        }
+      }
+    },
+    "Show on all displays": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 디스플레이에 표시"
+          }
+        }
+      }
+    },
+    "Show percentage": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "퍼센트 표시"
+          }
+        }
+      }
+    },
+    "Show to-dos in the notch": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에 할 일 표시"
+          }
+        }
+      }
+    },
+    "Show waveform": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파형 표시"
+          }
+        }
+      }
+    },
+    "Shows the device with its battery when audio switches to AirPods, Bluetooth or AirPlay devices.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오디오가 AirPods, Bluetooth, AirPlay 기기로 바뀌면 기기와 배터리를 보여 줘요."
+          }
+        }
+      }
+    },
+    "Something stirs in Cerulean Cave…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미지의동굴에서 무언가 깨어났어요…"
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문제가 발생했어요"
+          }
+        }
+      }
+    },
+    "Sound": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사운드"
+          }
+        }
+      }
+    },
+    "Source": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "소스"
+          }
+        }
+      }
+    },
+    "Stages": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스테이지"
+          }
+        }
+      }
+    },
+    "Stages cleared": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클리어한 스테이지"
+          }
+        }
+      }
+    },
+    "Stages move on while an agent works": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 일하면 스테이지가 진행돼요"
+          }
+        }
+      }
+    },
+    "Stardust": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "별의모래"
+          }
+        }
+      }
+    },
+    "Stardust, from stations, bosses and the dungeon. %lld buy three Poké Balls.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "별의모래: 역, 보스, 던전에서 모여요. %lld개로 몬스터볼 3개를 받아요."
+          }
+        }
+      }
+    },
+    "Start Claude or Codex anywhere — what they're doing shows up here.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어디서든 Claude나 Codex를 시작하세요. 하는 일이 여기에 나타나요."
+          }
+        }
+      }
+    },
+    "Start Over": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "처음부터"
+          }
+        }
+      }
+    },
+    "Start Over…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "처음부터 다시…"
+          }
+        }
+      }
+    },
+    "Start the adventure over?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험을 처음부터 다시 할까요?"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태"
+          }
+        }
+      }
+    },
+    "Stay quiet while Claude's app is in front": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude 앱이 앞에 있으면 조용히"
+          }
+        }
+      }
+    },
+    "Steel": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "강철"
+          }
+        }
+      }
+    },
+    "Stopped": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "중지됨"
+          }
+        }
+      }
+    },
+    "Swipe down on the notch to open it or switch activities, swipe up to close, swipe sideways to skip tracks.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치에서 아래로 쓸면 열리거나 활동이 바뀌고, 위로 쓸면 닫히고, 옆으로 쓸면 곡이 넘어가요."
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템"
+          }
+        }
+      }
+    },
+    "Take on the boss now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 보스에게 도전"
+          }
+        }
+      }
+    },
+    "The adventure starts once the Pokédex downloads.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도감을 받으면 모험이 시작돼요."
+          }
+        }
+      }
+    },
+    "The notch opens to what's going on: music while it plays, Claude while it works.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치를 열면 상황에 맞는 화면이 나와요. 음악이 재생 중이면 음악, Claude가 작업 중이면 Claude."
+          }
+        }
+      }
+    },
+    "The notch opens where you left it. A Claude permission request still comes first.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "노치를 열면 마지막으로 본 화면이 나와요. Claude 권한 요청은 그래도 먼저 보여줘요."
+          }
+        }
+      }
+    },
+    "Thinking…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "생각 중…"
+          }
+        }
+      }
+    },
+    "This day is clear": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘은 일정이 없어요"
+          }
+        }
+      }
+    },
+    "Tint with album artwork": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앨범 아트 색으로 물들이기"
+          }
+        }
+      }
+    },
+    "To paste into the app you're using, pokove presses ⌘V for you, which needs Accessibility access. Without it, items are copied and you paste them yourself.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 쓰는 앱에 바로 붙여넣으려면 pokove가 ⌘V를 대신 눌러야 해서 손쉬운 사용 권한이 필요해요. 권한이 없으면 복사만 되고 붙여넣기는 직접 하시면 돼요."
+          }
+        }
+      }
+    },
+    "To win": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이길 확률"
+          }
+        }
+      }
+    },
+    "To-dos": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "할 일"
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘"
+          }
+        }
+      }
+    },
+    "Today %lld · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Today %1$lld · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 %lld회 · %@"
+          }
+        }
+      }
+    },
+    "Today's dungeon": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘의 던전"
+          }
+        }
+      }
+    },
+    "Trackpad gestures": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "트랙패드 제스처"
+          }
+        }
+      }
+    },
+    "Training %lld/%lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Training %1$lld/%2$lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수련 중 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "Training for %@ · %lld%% to win": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Training for %1$@ · %2$lld%% to win"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 대비 수련 중 · 이길 확률 %2$lld%%"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 시도"
+          }
+        }
+      }
+    },
+    "Unavailable": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용할 수 없음"
+          }
+        }
+      }
+    },
+    "Unpin": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정 해제"
+          }
+        }
+      }
+    },
+    "Untitled": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목 없음"
+          }
+        }
+      }
+    },
+    "Update": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트"
+          }
+        }
+      }
+    },
+    "Updating tasks": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "할 일 갱신 중"
+          }
+        }
+      }
+    },
+    "VS": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VS"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "버전 %@"
+          }
+        }
+      }
+    },
+    "Wait for an answer": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응답 대기 시간"
+          }
+        }
+      }
+    },
+    "Waiting for you": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응답 대기 중"
+          }
+        }
+      }
+    },
+    "Water": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "물"
+          }
+        }
+      }
+    },
+    "Welcome to pokove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove에 오신 걸 환영해요"
+          }
+        }
+      }
+    },
+    "When Claude finishes": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 작업을 마쳤을 때"
+          }
+        }
+      }
+    },
+    "When Claude needs permission or input": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude가 권한이나 입력이 필요할 때"
+          }
+        }
+      }
+    },
+    "When a turn fails": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작업이 실패했을 때"
+          }
+        }
+      }
+    },
+    "When the app running Claude isn't in front, pokove holds the request and shows Allow / Deny in the notch. If you don't answer in time, or switch to that app, Claude asks in its own window as usual.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude를 실행 중인 앱이 앞에 없으면 pokove가 요청을 잠시 붙잡고 노치에 허용 / 거부를 보여 줘요. 시간 안에 답하지 않거나 그 앱으로 전환하면 평소처럼 Claude 창에서 물어봐요."
+          }
+        }
+      }
+    },
+    "While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and a daily dungeon are challenges you (or AUTO) start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동의 스테이지 노선을 따라 야생 포켓몬과 싸워요. 체육관 관장, 전설 포켓몬, 데일리 던전은 직접(또는 AUTO가) 시작하는 도전이에요. 가는 길에 새 포켓몬이 합류하고, 별의모래로 뽑기를 할 수 있어요. 배지를 따면 레벨 상한이 올라가요."
+          }
+        }
+      }
+    },
+    "While you were away": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "자리 비운 동안"
+          }
+        }
+      }
+    },
+    "Works with Music, Spotify, browsers and any app that reports to Control Center.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "음악, Spotify, 브라우저 등 제어 센터에 표시되는 모든 앱과 함께 동작해요."
+          }
+        }
+      }
+    },
+    "Writing": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작성 중"
+          }
+        }
+      }
+    },
+    "Writing %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 작성 중"
+          }
+        }
+      }
+    },
+    "You're the Champion!": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "챔피언이 되었어요!"
+          }
+        }
+      }
+    },
+    "Your Pokémon, Pokédex and journey will be cleared. This can't be undone.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포켓몬, 도감, 여정이 모두 지워져요. 되돌릴 수 없어요."
+          }
+        }
+      }
+    },
+    "app": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱"
+          }
+        }
+      }
+    },
+    "pokove": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove"
+          }
+        }
+      }
+    },
+    "pokove Settings": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove 설정"
+          }
+        }
+      }
+    },
+    "pokove adds small hooks to ~/.claude/settings.json that forward Claude's events to 127.0.0.1 with curl, and stay silent when pokove isn't running. Your other settings are kept, and the previous file is saved as settings.json.pokove-backup. Sessions that are already running pick up the hooks after a restart.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove는 ~/.claude/settings.json에 작은 훅을 추가해 Claude의 이벤트를 curl로 127.0.0.1에 전달해요. pokove가 꺼져 있으면 아무 일도 하지 않아요. 다른 설정은 그대로 두고, 기존 파일은 settings.json.pokove-backup으로 저장해요. 이미 실행 중인 세션은 다시 시작해야 훅이 적용돼요."
+          }
+        }
+      }
+    },
+    "pokove listens for the volume and brightness keys and draws its own HUD in the notch. Nothing else is read.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove는 음량·밝기 키만 감지해 노치에 자체 HUD를 그려요. 그 밖의 입력은 읽지 않아요."
+          }
+        }
+      }
+    },
+    "items": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항목"
+          }
+        }
+      }
+    },
+    "left": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "남았어요"
+          }
+        }
+      }
+    },
+    "now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방금"
+          }
+        }
+      }
+    },
+    "working": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "작업 중"
+          }
+        }
+      }
+    },
+    "~/.claude/settings.json could not be parsed: %@. Fix the file and try again.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/settings.json을 읽을 수 없어요: %@. 파일을 고친 뒤 다시 시도하세요."
+          }
+        }
+      }
+    },
+    "· %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        }
+      }
+    },
+    "· %@ %lld%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "· %1$@ %2$lld%%"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %1$@ %2$lld%%"
+          }
+        }
+      }
+    },
+    "×%lld": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "×%lld"
+          }
+        }
+      }
+    },
+    "–": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "–"
+          }
+        }
+      }
+    },
+    "한국어": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한국어"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

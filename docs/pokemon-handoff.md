@@ -132,7 +132,7 @@ session. It supersedes the v1 rules further down wherever they differ.
 - The text strip mustn't cover the party's Pokémon.
 - The tab icon is a Poké Ball.
 - A one-click way to mute banners before screen sharing.
-- The project may later be renamed **pokove**. Not now; noted under "Later".
+- The project was called **dancove** until 2026-09-27, when it was renamed **pokove** (bundle ID included). `LegacyMigration` copies the old settings and `Application Support/dancove/` on first launch.
 
 ## Standing decisions from v1
 
@@ -145,7 +145,7 @@ session. It supersedes the v1 rules further down wherever they differ.
 ## Data sources
 
 Three GraphQL requests go to `https://beta.pokeapi.co/graphql/v1beta`, run in parallel and cached in
-`~/Library/Application Support/dancove/pokemon/`:
+`~/Library/Application Support/pokove/pokemon/`:
 
 | File | Request | Size |
 |---|---|---|
@@ -215,16 +215,16 @@ Six runs (three starters × two seeds), hours of agent work:
 
 | File | Role |
 |---|---|
-| `dancove/Adventure/PokeDex.swift` | `PokeType`, `PokeSpecies`, `PokeDexStore` (downloads and caches species, moves and encounters), `PokeAPI.post` |
-| `dancove/Adventure/PokeMoves.swift` | `PokeMove` (Gen 3 values, damage kinds, cooldown, rating), `MoveDex` (learnsets, movesets), the moves query |
-| `dancove/Adventure/Kanto.swift` | trainers and teams, `Stretch`, `Station`, `Chapter`, `LegendSpot`, the chapters, level caps, gacha-only list, badge names, `EncounterDex` and its query |
-| `dancove/Adventure/BattleEngine.swift` | `SeededRNG`, `PokeMath` (stats, XP), `GameData`, `DexView`, `Combatant`, `StagePlan` (station, boss, legend), `BattleState` (1:1 relay) |
-| `dancove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `AutoChallenge`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend` |
-| `dancove/Adventure/BattleText.swift` | battle messages with Korean particles (이/가, 을/를, 은/는) |
-| `dancove/Adventure/AdventureService.swift` | game state, tick loop (stations on agent time, challenges on their own), growth, discovery, gacha and Ultra Balls, dungeon day, recap, banners, save (`adventure-v3.json`, migrating v2) |
-| `dancove/Adventure/PokeSprites.swift` | sprite cache (Pokémon, back sprites, trainers, items, badges) and views |
-| `dancove/Notch/Expanded/Adventure/` | `AdventurePageView` (layout, tabs, party bar, recap, dex, detail card), `ChallengeView` (mode picker, stage line, VS screens, dungeon, `StardustIcon`), `BattleSceneView`, `MoveEffects`, `GachaView` |
-| `dancove/Shared/PixelSparkles.swift` | `PixelSparkles`, `PokeBallGlyph` (tab, settings and banner icon) |
+| `pokove/Adventure/PokeDex.swift` | `PokeType`, `PokeSpecies`, `PokeDexStore` (downloads and caches species, moves and encounters), `PokeAPI.post` |
+| `pokove/Adventure/PokeMoves.swift` | `PokeMove` (Gen 3 values, damage kinds, cooldown, rating), `MoveDex` (learnsets, movesets), the moves query |
+| `pokove/Adventure/Kanto.swift` | trainers and teams, `Stretch`, `Station`, `Chapter`, `LegendSpot`, the chapters, level caps, gacha-only list, badge names, `EncounterDex` and its query |
+| `pokove/Adventure/BattleEngine.swift` | `SeededRNG`, `PokeMath` (stats, XP), `GameData`, `DexView`, `Combatant`, `StagePlan` (station, boss, legend), `BattleState` (1:1 relay) |
+| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `AutoChallenge`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend` |
+| `pokove/Adventure/BattleText.swift` | battle messages with Korean particles (이/가, 을/를, 은/는) |
+| `pokove/Adventure/AdventureService.swift` | game state, tick loop (stations on agent time, challenges on their own), growth, discovery, gacha and Ultra Balls, dungeon day, recap, banners, save (`adventure-v3.json`, migrating v2) |
+| `pokove/Adventure/PokeSprites.swift` | sprite cache (Pokémon, back sprites, trainers, items, badges) and views |
+| `pokove/Notch/Expanded/Adventure/` | `AdventurePageView` (layout, tabs, party bar, recap, dex, detail card), `ChallengeView` (mode picker, stage line, VS screens, dungeon, `StardustIcon`), `BattleSceneView`, `MoveEffects`, `GachaView` |
+| `pokove/Shared/PixelSparkles.swift` | `PixelSparkles`, `PokeBallGlyph` (tab, settings and banner icon) |
 
 ## Progress (v3)
 
@@ -241,15 +241,14 @@ Six runs (three starters × two seeds), hours of agent work:
 - Status conditions (burn, paralysis, sleep), shown in the plates.
 - Endgame after the Champion: a Battle Tower or gym rematches. The user said to decide after playing.
 - Day/night encounter tricks, shiny variants, Gens 2+.
-- Rename the project to **pokove** (the user's idea, not now).
 - REST fallback if the GraphQL beta goes away.
 
 ## Testing
 
-- Debug channel: `scratchpad/dbg <verb>` posts `com.geonhwiii.dancove.debug`. The verbs are listed in README → Building.
+- Debug channel: `scratchpad/dbg <verb>` posts `com.geonhwiii.pokove.debug`. The verbs are listed in README → Building.
 - To test the v2 → v3 migration on real data without touching the user's save: copy `adventure-v2.json` over `adventure-v2-debug.json` (back that up first), delete `adventure-v3-debug.json`, launch Debug.
-- `defaults write com.geonhwiii.dancove debugHoldOpen -bool true` keeps the notch open during screenshots. The user keeps working and clicking. Delete the default afterward.
+- `defaults write com.geonhwiii.pokove debugHoldOpen -bool true` keeps the notch open during screenshots. The user keeps working and clicking. Delete the default afterward.
 - While any agent session works, including the one running tests, battles tick for real.
-- Screenshots: `screencapture -x -o -l <window id>`. The notch is dancove's window at layer 27.
+- Screenshots: `screencapture -x -o -l <window id>`. The notch is pokove's window at layer 27.
 - `.task` timers must return when cancelled, `guard (try? await Task.sleep(...)) != nil`. `try?` alone runs the "timeout" code on cancel. That bug wiped the recap on reopen.
 - Never touch real agent session folders or the real clipboard in tests (see the memory file).
