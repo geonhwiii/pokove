@@ -18,7 +18,6 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
     <div class="copy">
       <h2>{t.title}</h2>
       <p>{t.body}</p>
-      <p class="no-loss">{t.noLoss}</p>
     </div>
 
     <figure class="line-card" aria-hidden="true">
@@ -63,7 +62,7 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
   </ul>
 
   <div class="fine">
-    <p>{t.off}</p>
+    <p>{t.note}</p>
     <p>{t.disclaimer}</p>
   </div>
 </section>
@@ -94,11 +93,6 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
 
   .copy p {
     color: var(--ink-soft);
-  }
-
-  .copy .no-loss {
-    color: var(--ink);
-    font-weight: 600;
   }
 
   /* The stage line, drawn like the app's: ten stations to the gym, a branch after the fifth. */
