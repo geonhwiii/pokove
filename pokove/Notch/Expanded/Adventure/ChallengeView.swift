@@ -550,7 +550,7 @@ private struct VSCard<Opponent: View, Stake: View, Actions: View>: View {
 }
 
 /// Navy for the party, the opponent's color on a diagonal band, a white slash and speed lines.
-private struct VSBackground: View {
+struct VSBackground: View {
     let color: Color
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

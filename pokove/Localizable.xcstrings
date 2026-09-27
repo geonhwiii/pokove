@@ -93,16 +93,6 @@
         }
       }
     },
-    "%@ keeps winning. Try the best team.": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@에게 계속 지고 있어요. 추천 파티를 써 보세요."
-          }
-        }
-      }
-    },
     "%@ wants to use %@": {
       "localizations": {
         "en": {
@@ -213,16 +203,6 @@
         }
       }
     },
-    "%lld evolved": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld마리 진화"
-          }
-        }
-      }
-    },
     "%lld items": {
       "localizations": {
         "en": {
@@ -247,26 +227,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개"
-          }
-        }
-      }
-    },
-    "%lld moves": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "기술 %lld개"
-          }
-        }
-      }
-    },
-    "%lld new": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "새 포켓몬 %lld"
           }
         }
       }
@@ -3969,16 +3929,6 @@
         }
       }
     },
-    "While you were away": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "자리 비운 동안"
-          }
-        }
-      }
-    },
     "Works with Music, Spotify, browsers and any app that reports to Control Center.": {
       "localizations": {
         "ko": {
@@ -4039,6 +3989,36 @@
         }
       }
     },
+    "items": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항목"
+          }
+        }
+      }
+    },
+    "left": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "남았어요"
+          }
+        }
+      }
+    },
+    "now": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방금"
+          }
+        }
+      }
+    },
     "pokove": {
       "localizations": {
         "ko": {
@@ -4075,36 +4055,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "pokove는 음량·밝기 키만 감지해 노치에 자체 HUD를 그려요. 그 밖의 입력은 읽지 않아요."
-          }
-        }
-      }
-    },
-    "items": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "항목"
-          }
-        }
-      }
-    },
-    "left": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "남았어요"
-          }
-        }
-      }
-    },
-    "now": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "방금"
           }
         }
       }

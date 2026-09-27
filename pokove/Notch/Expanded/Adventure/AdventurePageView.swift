@@ -35,6 +35,7 @@ struct AdventurePageView: View {
     @State private var selection: Int?
     @AppStorage("adventurePane") private var pane: AdventurePane = .challenge
     @State private var showsRecap = false
+    @State private var recapHovered = false
 
     var body: some View {
         let adventure = app.adventure
@@ -50,6 +51,10 @@ struct AdventurePageView: View {
                         } else if !adventure.hasStarted {
                             StarterPicker()
                                 .transition(.blurReplace)
+                        } else if showsRecap, !adventure.recap.isEmpty {
+                            RecapPanel { dismissRecap() }
+                                .onHover { recapHovered = $0 }
+                                .transition(.blurReplace)
                         } else {
                             BattleSceneView()
                                 .transition(.blurReplace)
@@ -62,13 +67,6 @@ struct AdventurePageView: View {
                 }
                 .frame(height: BattleSceneView.height)
                 .frame(maxWidth: .infinity)
-                .overlay(alignment: .bottom) {
-                    if showsRecap, selection == nil, !adventure.recap.isEmpty {
-                        RecapCard { dismissRecap() }
-                            .padding(6)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-                }
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(.white.opacity(0.08)))
                 .animation(.smooth(duration: 0.28), value: selection)
@@ -99,8 +97,12 @@ struct AdventurePageView: View {
         }
         .onDisappear { adventure.isWatching = false }
         .task(id: showsRecap) {
-            // Only a full eight seconds on screen counts as seen; leaving early keeps it for next time.
-            guard showsRecap, (try? await Task.sleep(for: .seconds(8))) != nil else { return }
+            // Only a full fifteen seconds on screen counts as seen; leaving early keeps it for next time.
+            // It stays while the pointer rests on it.
+            guard showsRecap, (try? await Task.sleep(for: .seconds(15))) != nil else { return }
+            while recapHovered {
+                guard (try? await Task.sleep(for: .seconds(1))) != nil else { return }
+            }
             dismissRecap()
         }
         #if DEBUG
@@ -189,99 +191,194 @@ private struct BannerToggle: View {
     }
 }
 
-/// "While you were away": what the agents' work and the challenges earned since the page was last open.
-private struct RecapCard: View {
+/// "While you were away": one line per thing that happened since the page was last open, naming
+/// who did it. It takes the battle scene's place until it's closed or has been up for a while.
+private struct RecapPanel: View {
     let close: () -> Void
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        let recap = app.adventure.recap
+        let adventure = app.adventure
+        let lines = RecapLine.lines(for: adventure)
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("While you were away")
-                    .font(.system(size: 10, weight: .bold))
+            HStack(spacing: 6) {
+                Text(RecapText.title)
+                    .font(.system(size: 11, weight: .heavy))
                     .foregroundStyle(.white)
+                if let since = adventure.recap.since {
+                    Text(RecapText.span(Date().timeIntervalSince(since)))
+                        .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.4))
+                }
                 Spacer()
                 Button(action: close) {
-                    Image(systemName: "xmark").font(.system(size: 7.5, weight: .bold)).foregroundStyle(.white.opacity(0.5))
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .frame(width: 18, height: 18)
+                        .background(.white.opacity(0.08), in: Circle())
                 }
                 .buttonStyle(.plain)
             }
-            HStack(spacing: 5) {
-                if recap.clears > 0 { chip(symbol: "flag.fill", text: "\(recap.clears)") }
-                if recap.stardust > 0 {
-                    HStack(spacing: 3) { StardustIcon(size: 9); Text("+\(recap.stardust)") }.modifier(RecapChip())
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(lines) { RecapRow(line: $0) }
                 }
-                if recap.levels > 0 { chip(symbol: "arrow.up", text: "Lv +\(recap.levels)") }
-                if !recap.learned.isEmpty { chip(symbol: "bolt.fill", text: String(localized: "\(recap.learned.count) moves")) }
-                ForEach(recap.badges, id: \.self) { BadgeImageView(number: $0, size: 13) }
-                ForEach(recap.dungeon, id: \.self) { tier in chip(symbol: "door.left.hand.open", text: tier.title) }
+                .padding(.bottom, 6)
             }
-            if let stuck = recap.stuck, let trainer = trainer(stuck) {
-                HStack(spacing: 4) {
-                    Image(systemName: "exclamationmark.circle.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(Color(hex: 0xFFB070))
-                    Text("\(trainer.name) keeps winning. Try the best team.")
-                        .font(.system(size: 8.5, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.75))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                    Button {
-                        withAnimation(.smooth(duration: 0.25)) { app.adventure.recommendParty() }
-                    } label: {
-                        Image(systemName: "wand.and.stars").font(.system(size: 8, weight: .bold)).foregroundStyle(.black)
-                            .frame(width: 20, height: 14)
-                            .background(Color(hex: 0xFFD35A), in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            if !recap.discovered.isEmpty || !recap.evolved.isEmpty {
-                HStack(spacing: 0) {
-                    ForEach(Array((recap.discovered + recap.evolved).suffix(8).enumerated()), id: \.offset) { _, id in
-                        PokeIconView(id: id, pixelSize: 0.5)
-                    }
-                    Text(summary(recap))
-                        .font(.system(size: 8.5, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .padding(.leading, 3)
-                }
-            }
+            .scrollIndicators(.automatic)
+            // A soft edge hints at more lines below.
+            .mask(LinearGradient(stops: [.init(color: .black, location: 0.82), .init(color: .black.opacity(0.25), location: 1)],
+                                 startPoint: .top, endPoint: .bottom))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(Color(hex: 0x101218).opacity(0.94), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(.white.opacity(0.12)))
-        .onTapGesture(perform: close)
-    }
-
-    private func trainer(_ id: String) -> Trainer? {
-        app.adventure.chapters.flatMap(\.bosses).first { $0.id == id }
-    }
-
-    private func summary(_ recap: AdventureRecap) -> String {
-        var parts: [String] = []
-        if !recap.discovered.isEmpty { parts.append(String(localized: "\(recap.discovered.count) new")) }
-        if !recap.evolved.isEmpty { parts.append(String(localized: "\(recap.evolved.count) evolved")) }
-        return parts.joined(separator: " · ")
-    }
-
-    private func chip(symbol: String, text: String) -> some View {
-        HStack(spacing: 2) {
-            Image(systemName: symbol).font(.system(size: 7, weight: .bold))
-            Text(text)
-        }
-        .modifier(RecapChip())
+        .padding(.horizontal, 10)
+        .padding(.top, 7)
+        .padding(.bottom, 4)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: 0x101218))
     }
 }
 
-private struct RecapChip: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .font(.system(size: 9, weight: .bold).monospacedDigit())
-            .foregroundStyle(.white.opacity(0.85))
-            .padding(.horizontal, 5)
-            .frame(height: 15)
-            .background(.white.opacity(0.1), in: Capsule())
+private struct RecapRow: View {
+    let line: RecapLine
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        HStack(spacing: 6) {
+            icon
+                .frame(width: 22, height: 17)
+            Text(line.text)
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.92))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+            Spacer(minLength: 4)
+            if let detail = line.detail {
+                HStack(spacing: 2) {
+                    if line.detailIsStardust { StardustIcon(size: 10) }
+                    Text(detail)
+                }
+                .font(.system(size: 10, weight: .bold).monospacedDigit())
+                .foregroundStyle(line.detailTint)
+                .lineLimit(1)
+                .fixedSize()
+            }
+            if line.offersBestTeam {
+                Button {
+                    withAnimation(.smooth(duration: 0.25)) { app.adventure.recommendParty() }
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: "wand.and.stars").font(.system(size: 8, weight: .bold))
+                        Text(RecapText.bestTeam).font(.system(size: 9, weight: .heavy))
+                    }
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 6)
+                    .frame(height: 15)
+                    .background(Color(hex: 0xFFD35A), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .fixedSize()
+            }
+        }
+        .frame(height: 17)
+    }
+
+    @ViewBuilder private var icon: some View {
+        switch line.icon {
+        case .pokemon(let id): PokeIconView(id: id, pixelSize: 0.5)
+        case .team(let ids):
+            ZStack {
+                ForEach(Array(ids.prefix(3).enumerated()), id: \.offset) { index, id in
+                    PokeIconView(id: id, pixelSize: 0.5).offset(x: CGFloat(index - (min(ids.count, 3) - 1)) * 4)
+                }
+            }
+        case .badge(let number): BadgeImageView(number: number, size: 14)
+        case .stardust: StardustIcon(size: 13)
+        case .symbol(let name, let color):
+            Image(systemName: name).font(.system(size: 10, weight: .bold)).foregroundStyle(color)
+        }
+    }
+}
+
+/// One line of the recap, most notable first.
+struct RecapLine: Identifiable {
+    enum Icon {
+        case pokemon(Int)
+        /// A few Pokémon, overlapping.
+        case team([Int])
+        case badge(Int)
+        case stardust
+        case symbol(String, Color)
+    }
+
+    let id: String
+    let icon: Icon
+    let text: String
+    var detail: String?
+    var detailTint: Color = .white.opacity(0.5)
+    var detailIsStardust = false
+    var offersBestTeam = false
+
+    /// How many joins or moves get a line of their own before the rest are counted together.
+    private static let namedLimit = 3
+
+    static func lines(for adventure: AdventureService) -> [RecapLine] {
+        let recap = adventure.recap
+        let name = { (id: Int) in adventure.dex.species(id)?.name ?? "#\(id)" }
+        let trainers = adventure.chapters.flatMap(\.bosses)
+        var lines: [RecapLine] = []
+
+        for badge in recap.badges {
+            let trainer = trainers.first { $0.badge == badge }?.name ?? ""
+            lines.append(.init(id: "badge\(badge)", icon: .badge(badge),
+                               text: RecapText.beat(trainer, badge: Kanto.badgeName(badge))))
+        }
+        // A boss that keeps winning comes early: it's the one line with something to do.
+        for (trainerID, times) in recap.losses.sorted(by: { $0.key < $1.key }) {
+            guard let trainer = trainers.first(where: { $0.id == trainerID }) else { continue }
+            let stuck = recap.stuck == trainerID
+            lines.append(.init(id: "lost\(trainerID)", icon: .symbol("shield.lefthalf.filled.slash", Color(hex: 0xFF9E6B)),
+                               text: RecapText.lost(to: trainer.name, times: times),
+                               detail: stuck ? nil : RecapText.training, offersBestTeam: stuck))
+        }
+        for (i, step) in recap.evolutions.enumerated() {
+            lines.append(.init(id: "evolved\(i)", icon: .pokemon(step.to),
+                               text: RecapText.evolved(step.from == step.to ? nil : name(step.from), into: name(step.to))))
+        }
+        // Party members first, then anyone else who grew.
+        let order = Dictionary(uniqueKeysWithValues: adventure.partyIDs.enumerated().map { ($1, $0) })
+        for growth in recap.growth.sorted(by: { (order[$0.member] ?? 9) < (order[$1.member] ?? 9) }) {
+            lines.append(.init(id: "growth\(growth.member)", icon: .pokemon(growth.species), text: name(growth.species),
+                               detail: "Lv \(growth.from) → \(growth.to)", detailTint: Color(hex: 0x7FE08A)))
+        }
+        if !recap.discovered.isEmpty {
+            lines.append(.init(id: "joined", icon: recap.discovered.count == 1 ? .pokemon(recap.discovered[0]) : .team(recap.discovered),
+                               text: RecapText.joined(recap.discovered.map(name))))
+        }
+        for tier in recap.dungeon {
+            let prize = DailyDungeon.stardust[tier]
+            lines.append(.init(id: "dungeon\(tier.rawValue)", icon: .symbol("door.left.hand.open", Color(hex: 0xB9A4FF)),
+                               text: RecapText.dungeon(tier.title),
+                               detail: prize.map { "+\($0)" } ?? RecapText.ultraBall,
+                               detailTint: Color(hex: 0xFFD35A), detailIsStardust: prize != nil))
+        }
+        for (i, learned) in recap.learned.prefix(namedLimit).enumerated() {
+            let move = adventure.data?.moves.move(learned.move)?.name ?? ""
+            lines.append(.init(id: "learned\(i)", icon: .pokemon(learned.species),
+                               text: RecapText.learned(name(learned.species), move)))
+        }
+        if recap.learned.count > namedLimit {
+            lines.append(.init(id: "learnedMore", icon: .symbol("bolt.fill", Color(hex: 0xFFD35A)),
+                               text: RecapText.learnedMore(recap.learned.count - namedLimit)))
+        }
+        if recap.clears > 0 || recap.stardust > 0 {
+            let station = recap.reached.map { "\($0.chapter + 1)-\($0.station + 1)" }
+            lines.append(.init(id: "wins", icon: .symbol("flag.fill", Color(hex: 0x7FE08A)),
+                               text: recap.clears > 0 ? RecapText.wins(recap.clears, upTo: station) : RecapText.stardust,
+                               detail: recap.stardust > 0 ? "+\(recap.stardust)" : nil,
+                               detailTint: Color(hex: 0xFFD35A), detailIsStardust: true))
+        }
+        return lines
     }
 }
 

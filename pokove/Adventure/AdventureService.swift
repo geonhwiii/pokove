@@ -41,41 +41,88 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         let move: Int
     }
 
+    /// One Pokémon's levels over the recap.
+    struct Growth: Codable, Equatable, Sendable {
+        let member: UUID
+        /// The species it is now, after any evolution.
+        var species: Int
+        let from: Int
+        var to: Int
+    }
+
+    struct Evolution: Codable, Equatable, Sendable {
+        let from: Int
+        let to: Int
+    }
+
+    /// When the first thing was recorded.
+    var since: Date?
     var clears = 0
+    /// The furthest station cleared.
+    var reached: StationPoint?
     var stardust = 0
-    var levels = 0
-    /// Species new to the dex, from discoveries.
+    var ultraBalls = 0
+    var growth: [Growth] = []
+    /// Species that joined: discoveries and legendaries.
     var discovered: [Int] = []
-    var evolved: [Int] = []
+    var evolutions: [Evolution] = []
     var learned: [Learned] = []
     var badges: [Int] = []
+    /// Bosses that won, by trainer ID, and how many times.
+    var losses: [String: Int] = [:]
     /// A boss that has won several times in a row, for the best-team hint.
     var stuck: String?
     /// Dungeon tiers cleared.
     var dungeon: [DungeonTier] = []
 
     var isEmpty: Bool {
-        clears == 0 && levels == 0 && discovered.isEmpty && evolved.isEmpty && badges.isEmpty && stuck == nil && dungeon.isEmpty
+        clears == 0 && growth.isEmpty && discovered.isEmpty && evolutions.isEmpty && badges.isEmpty && losses.isEmpty
+            && stuck == nil && dungeon.isEmpty
     }
 
     init() {}
 
-    private enum LegacyKeys: String, CodingKey { case coins }
+    private enum LegacyKeys: String, CodingKey { case coins, evolved }
 
     /// Tolerant, so a recap saved by an older version still reads.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+        since = try container.decodeIfPresent(Date.self, forKey: .since)
         clears = try container.decodeIfPresent(Int.self, forKey: .clears) ?? 0
+        reached = try container.decodeIfPresent(StationPoint.self, forKey: .reached)
         stardust = try container.decodeIfPresent(Int.self, forKey: .stardust) ?? legacy.decodeIfPresent(Int.self, forKey: .coins) ?? 0
-        levels = try container.decodeIfPresent(Int.self, forKey: .levels) ?? 0
+        ultraBalls = try container.decodeIfPresent(Int.self, forKey: .ultraBalls) ?? 0
+        growth = try container.decodeIfPresent([Growth].self, forKey: .growth) ?? []
         discovered = try container.decodeIfPresent([Int].self, forKey: .discovered) ?? []
-        evolved = try container.decodeIfPresent([Int].self, forKey: .evolved) ?? []
+        // Older recaps kept only what each Pokémon evolved into.
+        evolutions = try container.decodeIfPresent([Evolution].self, forKey: .evolutions)
+            ?? (legacy.decodeIfPresent([Int].self, forKey: .evolved) ?? []).map { Evolution(from: $0, to: $0) }
         learned = try container.decodeIfPresent([Learned].self, forKey: .learned) ?? []
         badges = try container.decodeIfPresent([Int].self, forKey: .badges) ?? []
+        losses = try container.decodeIfPresent([String: Int].self, forKey: .losses) ?? [:]
         stuck = try container.decodeIfPresent(String.self, forKey: .stuck)
         dungeon = try container.decodeIfPresent([DungeonTier].self, forKey: .dungeon) ?? []
     }
+}
+
+/// A finished challenge, for the battle scene's win or loss card.
+nonisolated struct ChallengeResult: Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
+        case boss(Trainer)
+        case legend(species: Int)
+        case dungeon(DungeonTier)
+    }
+
+    let kind: Kind
+    let cleared: Bool
+    var badge: Int?
+    /// The level cap before and after a badge raised it.
+    var cap: ClosedRange<Int>?
+    var stardust = 0
+    var ultraBall = false
+    /// The forecast for the next try, after a loss.
+    var chance: Double?
 }
 
 /// The adventure: a party of up to three rides a line of stations while a coding agent works,
@@ -99,6 +146,11 @@ final class AdventureService {
     /// The latest battle event, for the scene; `eventSerial` bumps on every one.
     private(set) var lastEvent: BattleEvent?
     private(set) var eventSerial = 0
+    /// The last challenge's outcome, for the scene's result card; `resultSerial` bumps on every one.
+    private(set) var lastResult: ChallengeResult?
+    private(set) var resultSerial = 0
+    /// While someone watches, battles wait here for a challenge's intro or result card to play.
+    private var holdUntil: Date?
     /// Three balls waiting for the user to pick one.
     private(set) var offer: [GachaCard]?
     private(set) var recap = AdventureRecap()
@@ -148,6 +200,9 @@ final class AdventureService {
     static let stationInterval: Double = 1.5
     /// Seconds per action in a challenge.
     static let challengeInterval: Double = 1.0
+    /// How long the scene's VS intro and result cards hold the battle, while someone watches.
+    static let introHold: Double = 2.4
+    static let resultHold: Double = 3.2
     static let maxParty = 3
     static let starters = [1, 4, 7]
 
@@ -485,6 +540,7 @@ final class AdventureService {
         // Something is always lined up, so the scene shows who's next even while agents rest.
         if battle == nil || battle?.isOver == true { lineUp(data, allowAuto: isAgentWorking()) }
         guard let target else { return }
+        if let holdUntil, Date() < holdUntil { return }
         let working = target.isChallenge || isAgentWorking()
         if isBattling != working { isBattling = working }
         guard working else { clock = 0; return }
@@ -565,15 +621,25 @@ final class AdventureService {
         if let foe = state.foeActive { seen.insert(foe.speciesID) }
         battle = state
         if next.isChallenge, !isBattling { isBattling = true }
+        if next.isChallenge, isWatching { hold(Self.introHold) }
+    }
+
+    /// Holds the battle for a card, after any hold already running.
+    private func hold(_ seconds: Double) {
+        let now = Date()
+        holdUntil = max(holdUntil ?? now, now).addingTimeInterval(seconds)
     }
 
     private func finish(cleared: Bool, data: GameData) {
         guard let target, let plan = battle?.plan else { return }
         var autoNext = true
+        let capBefore = levelCap
+        var result: ChallengeResult?
+        var reward = 0
         if cleared {
             clears += 1
             if target.isChallenge { award(challengeXP) }
-            let reward = Rewards.stardust(for: plan.kind)
+            reward = Rewards.stardust(for: plan.kind)
             stardust += reward
             note { $0.clears += 1; $0.stardust += reward }
         } else {
@@ -584,17 +650,35 @@ final class AdventureService {
         switch target {
         case .station(let point):
             progress.recordStation(point, cleared: cleared, chapters: data.chapters)
+            if cleared {
+                note { recap in
+                    if let reached = recap.reached, (reached.chapter, reached.station) >= (point.chapter, point.station) { return }
+                    recap.reached = point
+                }
+            }
         case .boss:
             let outcome = progress.recordBoss(cleared: cleared, chapters: data.chapters, partyLevel: partyLevel)
-            if !cleared, progress.losses >= AutoChallenge.hintAfterLosses, let trainer = plan.trainer { note { $0.stuck = trainer.id } }
-            if cleared { note { $0.stuck = nil } }
+            if let trainer = plan.trainer {
+                if cleared {
+                    note { $0.losses[trainer.id] = nil; $0.stuck = nil }
+                } else {
+                    let stuck = progress.losses >= AutoChallenge.hintAfterLosses
+                    note { recap in
+                        recap.losses[trainer.id, default: 0] += 1
+                        if stuck { recap.stuck = trainer.id }
+                    }
+                }
+            }
             // After a loss the party trains first; after a win in the League, AUTO goes straight on.
             autoNext = cleared
+            if let trainer = plan.trainer { result = ChallengeResult(kind: .boss(trainer), cleared: cleared, stardust: reward) }
             switch outcome {
             case .badge(let badge):
                 releaseBank()
                 note { $0.badges.append(badge) }
                 announceBadge(badge)
+                result?.badge = badge
+                if levelCap > capBefore { result?.cap = capBefore...levelCap }
             case .champion:
                 releaseBank()
                 announce(title: String(localized: "You're the Champion!"),
@@ -604,14 +688,17 @@ final class AdventureService {
             }
         case .legend(let id):
             progress.recordLegend(id, cleared: cleared)
+            if let spot = data.legend(id) { result = ChallengeResult(kind: .legend(species: spot.species), cleared: cleared, stardust: reward) }
             if cleared, let spot = data.legend(id), let species = dex.species(spot.species) {
                 let isNew = !caught.contains(spot.species)
                 receive(species, level: min(spot.level, levelCap), origin: .legend, announce: false)
+                note { $0.discovered.append(spot.species) }
                 let encounter = PokeEncounter(id: UUID(), speciesID: spot.species, level: spot.level, caught: true, isNew: isNew,
                                               isSpecial: true, date: Date())
                 announceDiscovery(encounter, title: String(localized: "\(species.name) joined your team!"))
             }
         case .dungeon(let tier):
+            result = ChallengeResult(kind: .dungeon(tier), cleared: cleared)
             if cleared, !isClaimed(tier) {
                 let today = DailyDungeon.day(of: Date())
                 if dungeonDay.day != today { dungeonDay = DungeonDay(day: today) }
@@ -619,14 +706,23 @@ final class AdventureService {
                 if let prize = DailyDungeon.stardust[tier] {
                     stardust += prize
                     note { $0.stardust += prize }
+                    result?.stardust = prize
                 } else {
                     ultraBalls += 1
+                    note { $0.ultraBalls += 1 }
+                    result?.ultraBall = true
                 }
                 note { $0.dungeon.append(tier) }
             }
         }
         battle = nil
         refreshReadiness()
+        if var result {
+            if !cleared, case .boss = result.kind { result.chance = readiness }
+            lastResult = result
+            resultSerial &+= 1
+            if isWatching { hold(Self.resultHold) }
+        }
         // The next battle lines up at once, so the scene never sits empty.
         lineUp(data, allowAuto: autoNext && (target.isChallenge || isAgentWorking()))
         saveNow()
@@ -658,7 +754,13 @@ final class AdventureService {
     private func grew(from before: OwnedPokemon, at index: Int) {
         let after = owned[index]
         guard after.level != before.level else { return }
-        note { $0.levels += after.level - before.level }
+        note { recap in
+            if let row = recap.growth.firstIndex(where: { $0.member == after.id }) {
+                recap.growth[row].to = after.level
+            } else {
+                recap.growth.append(.init(member: after.id, species: after.speciesID, from: before.level, to: after.level))
+            }
+        }
         checkEvolution(at: index)
         let member = owned[index]
         if let data, let species = data.dex[member.speciesID], let old = data.dex[before.speciesID] {
@@ -697,7 +799,10 @@ final class AdventureService {
         owned[index].speciesID = next.id
         caught.insert(next.id)
         seen.insert(next.id)
-        note { $0.evolved.append(next.id) }
+        note { recap in
+            recap.evolutions.append(.init(from: from, to: next.id))
+            if let row = recap.growth.firstIndex(where: { $0.member == member.id }) { recap.growth[row].species = next.id }
+        }
         announceEvolution(from: from, to: next.id)
         // Two-stage jumps (a high-level find) evolve all the way.
         checkEvolution(at: index)
@@ -753,6 +858,7 @@ final class AdventureService {
     /// Records something for "while you were away", unless the page is showing it right now.
     private func note(_ change: (inout AdventureRecap) -> Void) {
         guard !isWatching else { return }
+        if recap.since == nil { recap.since = Date() }
         change(&recap)
     }
 

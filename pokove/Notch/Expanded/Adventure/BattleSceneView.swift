@@ -14,6 +14,11 @@ struct BattleSceneView: View {
     @State private var lunging: UUID?
     @State private var struck: UUID?
     @State private var shake = false
+    /// A challenge's VS splash, then its result card, over the scene.
+    @State private var intro: StagePlan?
+    @State private var pendingIntro: StagePlan?
+    @State private var result: ChallengeResult?
+    @State private var cardSerial = 0
 
     var body: some View {
         let adventure = app.adventure
@@ -63,14 +68,61 @@ struct BattleSceneView: View {
             SceneTextBox(caption: caption)
                 .frame(width: layout.size.width)
                 .position(x: layout.size.width / 2, y: layout.size.height - SceneTextBox.height / 2)
+
+            if let result {
+                ChallengeResultView(result: result)
+                    .frame(width: layout.size.width, height: layout.size.height)
+                    .transition(.opacity)
+            } else if let intro {
+                ChallengeIntroView(plan: intro)
+                    .frame(width: layout.size.width, height: layout.size.height)
+                    .transition(.opacity)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .offset(x: shake ? 1.5 : 0)
         .animation(.linear(duration: 0.05).repeatCount(3, autoreverses: true), value: shake)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
         .onChange(of: adventure.eventSerial) { handle(adventure.lastEvent, layout: layout) }
-        .onChange(of: battle?.foes.first?.id) { introduce(adventure.battle) }
+        .onChange(of: battle?.foes.first?.id) {
+            introduce(adventure.battle)
+            if adventure.target?.isChallenge == true, let plan = adventure.battle?.plan { showIntro(plan) }
+        }
+        .onChange(of: adventure.resultSerial) { showResult(adventure.lastResult) }
         .onAppear { introduce(adventure.battle) }
+    }
+
+    // MARK: Challenge cards
+
+    private func showIntro(_ plan: StagePlan) {
+        // A result still showing goes first; the next challenge's splash follows it.
+        guard result == nil else { pendingIntro = plan; return }
+        withAnimation(.smooth(duration: 0.2)) { intro = plan }
+        cardSerial &+= 1
+        let serial = cardSerial
+        Task {
+            guard (try? await Task.sleep(for: .seconds(AdventureService.introHold - 0.2))) != nil, cardSerial == serial else { return }
+            withAnimation(.smooth(duration: 0.3)) { intro = nil }
+        }
+    }
+
+    private func showResult(_ value: ChallengeResult?) {
+        guard let value else { return }
+        if let intro { pendingIntro = intro }
+        withAnimation(.smooth(duration: 0.25)) {
+            intro = nil
+            result = value
+        }
+        cardSerial &+= 1
+        let serial = cardSerial
+        Task {
+            guard (try? await Task.sleep(for: .seconds(AdventureService.resultHold - 0.2))) != nil, cardSerial == serial else { return }
+            withAnimation(.smooth(duration: 0.3)) { result = nil }
+            if let next = pendingIntro {
+                pendingIntro = nil
+                showIntro(next)
+            }
+        }
     }
 
     private func isTrainerIntro(_ battle: BattleState) -> Bool {
