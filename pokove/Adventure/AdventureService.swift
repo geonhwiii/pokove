@@ -371,13 +371,25 @@ final class AdventureService {
     }
 
     /// The level a station's wild Pokémon are met at: its own, but never above the party. On a
-    /// terminus, the level of its last and strongest one.
+    /// terminus, its boss's, which doesn't follow the party.
     func foeLevel(_ station: Station, isTerminus: Bool = false) -> Int {
-        max(2, min(station.level, partyLevel - 1) + (isTerminus ? StagePlan.lastStationBoost : 0))
+        isTerminus ? max(2, station.level + StagePlan.lastStationBoost) : max(2, min(station.level, partyLevel - 1))
+    }
+
+    /// Wild Pokémon beaten at the next station, and how many open the one after.
+    var stationWins: (wins: Int, needed: Int)? {
+        guard !progress.isLooping, let station = chapters[safeChapter: progress.chapter]?.stations[safe: progress.station] else { return nil }
+        return (progress.wins, Chapter.winsNeeded(station, isTerminus: progress.station == Chapter.stationCount - 1))
     }
 
     /// Stations still to clear on the current line.
     var stationsLeft: Int { max(0, Chapter.stationCount - progress.station) }
+
+    /// Stations still to clear before the next boss's gym opens, across chapters.
+    var stationsToNextBoss: Int? {
+        guard let next = nextBoss, next.chapter >= progress.chapter else { return nil }
+        return (next.chapter - progress.chapter) * Chapter.stationCount + stationsLeft
+    }
 
     /// Legendaries whose branch the party has reached and hasn't beaten.
     func isLegendOpen(_ spot: LegendSpot) -> Bool {
@@ -802,9 +814,9 @@ final class AdventureService {
         switch target {
         case .station(let point):
             // Only the frontier counts as progress; repeats and training don't move the line.
-            let frontier = point == progress.frontier && progress.repeating == nil
             let wasOpen = progress.isBossOpen(data.chapters)
-            progress.recordStation(point, cleared: cleared, chapters: data.chapters)
+            let outcome = progress.recordStation(point, cleared: cleared, defeated: plan.foes.count, chapters: data.chapters)
+            let frontier = outcome == .advanced || outcome == .chapter
             if !wasOpen, progress.isBossOpen(data.chapters), let next = progress.nextBoss(data.chapters) {
                 note { $0.gymsOpened.append(next.chapter) }
             }
@@ -1246,6 +1258,7 @@ final class AdventureService {
         progress.badges = badges
         progress.training = 0
         progress.repeating = nil
+        progress.frontierWins = 0
         progress.moveOn(chapters)
         battle = nil
         target = nil
@@ -1275,7 +1288,8 @@ final class AdventureService {
     // MARK: Persistence
 
     private struct SaveFile: Codable {
-        var version = 3
+        /// 4 split each of Kanto's legs into three chapters.
+        var version = 4
         var starter: Int?
         var owned: [OwnedPokemon]
         var partyIDs: [UUID]
@@ -1332,6 +1346,7 @@ final class AdventureService {
                 stardust = file.stardust
                 ultraBalls = file.ultraBalls
                 progress = file.progress
+                if file.version < 4 { progress.splitChapters(into: Kanto.chaptersPerLeg) }
                 // Lines used to wait at their end for the gym; they now go on to the next chapter.
                 progress.moveOn(chapters)
                 if let state = file.dungeons { dungeons = state }
@@ -1365,6 +1380,7 @@ final class AdventureService {
         progress = JourneyProgress.migrated(fromNode: file.progress.frontier.node, stage: file.progress.frontier.stage,
                                             badges: file.progress.badges, isChampion: file.progress.isChampion,
                                             beatenLegends: file.progress.beatenLegends)
+        progress.splitChapters(into: Kanto.chaptersPerLeg)
         progress.moveOn(chapters)
         saveNow()
     }

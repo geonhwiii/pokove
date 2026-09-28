@@ -21,7 +21,8 @@ Where this conflicts with v3.2 or earlier, v3.3 wins.
   underway, else the next boss, else simply the strongest. Neutral, never lit.
 - **The line has no level gate.** "다음 역은 Lv N부터" read as odd, so stations no longer wait for the
   party's level. The user chose, over fixed-level walls (30% of fights lost in the sim) and keeping the
-  gate quietly: wild levels stay at `min(station, party − 1)` and every frontier win moves on. A loss
+  gate quietly: wild levels stay at `min(station, party − 1)`, and stations then came to take a
+  number of wins instead (below). A loss
   still means 3 clears at the station before; the footer says "4-8에서 연습 중" with **다음 역**, and
   the scene's top-right chip is now **다음 역 →** while repeating or training (`pushOn()`,
   `resumeJourney()`). The old "도전 N%" chip over the battle is gone; the gym tab's dot still says a
@@ -39,6 +40,22 @@ Where this conflicts with v3.2 or earlier, v3.3 wins.
   - Recap lines per dungeon ("별의모래 던전 5단계 클리어", or "…3번 클리어") with the total paid.
   - The save writes `dungeons` (`DungeonState`); v1.2's `dungeon` day and recap `dungeon` tiers are
     ignored when read, and older builds read the new save fine (both are optional there).
+- **Thirty chapters.** The line with no gate reached its last chapter in 1–8 h, so each of Kanto's ten
+  legs (`Kanto.leg`, one gym to the next) is now three chapters of ten stations (`Kanto.chaptersPerLeg`):
+  the same stretches and levels, split. The leg's boss is on its last chapter (3, 6, …, 24; the League
+  on 27), its legendary on its first; 28–30 open with the Champion. The user wanted the chapter count
+  up so the line doesn't sit on one chapter, and explicitly not new Pokémon tied to badges. Saves
+  before v4 are split on load (`JourneyProgress.splitChapters(into:)`; the v2 migration too). The
+  footer and the gym's lock count stations to the gym across chapters (`stationsToNextBoss`).
+- **Stations take wins, termini are checkpoints.** Thirty chapters alone still let the ungated line
+  reach chapter 27 in 1–8 h and loop there for 40 h, so each station now takes `Chapter.winsNeeded`
+  wild Pokémon beaten (2.5 × its level, at least 3; `JourneyProgress.frontierWins`, optional in the
+  save), shown as "12/40" in the footer. The terminus takes one win over its three, and its boss is at
+  the station's level +2 whatever the party's (the others still follow the party), so the chapters
+  before a gym build up to it; the user asked for gyms to come within reach gradually. Sim, six
+  runs: badge 1 at 0.8–1.5 h, badge 4 at 8–13 h, badge 8 at 33–40 h, Champion at 48–61 h (all six), the
+  line at chapter 27 by 45–50 h, 0–31 wipes, gyms mostly won on the first try (`SIM_WINS` sets the
+  wins per level; 1.5 ended the line at ~33 h, 1.0 at ~24 h).
 - **Sim** (`SIM_DUNGEON_XP` scales the EXP reward): each day climbs until a new stage beats the party,
   then spends the rest on its best stage. Six runs, 70 h: stardust dungeon ~570–880 a day; with the
   ungated line, Champion at 38–55 h in 5 of 6 runs (avg ~47 h; ~54 h with the gate, ~61 h+ before the dungeons),
@@ -322,12 +339,12 @@ Notes on the data:
 
 ## Rules (v3.2; tune with scripts/adventure-sim.swift)
 
-- **Journey:** `Kanto.chapters(starter:)` holds 10 chapters of 10 stations (`Chapter.stationCount`).
+- **Journey:** `Kanto.chapters(starter:)` holds 30 chapters of 10 stations (`Chapter.stationCount`), three per leg of Kanto (`Kanto.leg`, `Kanto.chaptersPerLeg`).
   - Stations take their wild pool and backdrop from a `Stretch` (FRLG areas); levels rise evenly across the chapter's range and are capped at the party level −1 when fought. One wild Pokémon a station; the 10th is a terminus with three, the last the stretch's strongest species at +2 (`StagePlan.station`).
-  - Every frontier win moves the line on; there is no level gate (`JourneyProgress.stationTarget(_:)`).
-  - Chapters 1–8 have a gym leader, chapter 9 the League (Lorelei, Bruno, Agatha, Lance, the rival). The line doesn't wait for them: N-10 leads to (N+1)-1. Chapter 10 (Cerulean Cave) has no boss, opens with the Champion and loops.
+  - There is no level gate (`JourneyProgress.stationTarget(_:)`): a station opens the next after `Chapter.winsNeeded` wild Pokémon beaten there (2.5 × its level); a terminus after one win, its boss at station level +2 regardless of the party.
+  - Chapters 3, 6, …, 24 have a gym leader, chapter 27 the League (Lorelei, Bruno, Agatha, Lance, the rival); the others have none. The line doesn't wait for them: N-10 leads to (N+1)-1. Chapters 28–30 (Cerulean Cave) have no boss, open with the Champion, and the last loops.
   - Trainers bring the **last three** of their original team (`Trainer.battleTeam`).
-  - **Legendaries** (`Kanto.legends`, `Chapter.legend`) are ★ branches on chapters 5, 6, 7, 9 and 10, open once the chapter is reached. 2.5× HP.
+  - **Legendaries** (`Kanto.legends`, `Chapter.legend`) are ★ branches on chapters 13, 16, 19, 25 and 28 (the first of their legs), open once the chapter is reached. 2.5× HP.
 - **Level cap by badges:** 16, 23, 27, 32, 45, 47, 50, 54, then 65 with 8 badges, and 100 as Champion.
   - XP past the cap goes into `OwnedPokemon.banked`. A badge releases it.
 - **Progress** (`JourneyProgress`): `chapter`, `station` (0–10; 10 only on the last open line, which loops), `boss` (League index), `training`, `repeating`, `cursor`, `badges`, `losses`.

@@ -31,6 +31,8 @@ struct AdventureSim {
         let isDuel = args.first == "duel"
         let hours = isDuel ? 0 : Double(args.first ?? "") ?? 70
         if !isDuel, args.count > 1, let scale = Double(args[1]) { PokeMath.xpScale = scale }
+        // SIM_WINS sets the wild wins a station takes per level of it.
+        if let wins = Double(ProcessInfo.processInfo.environment["SIM_WINS"] ?? "") { Chapter.winsPerLevel = wins }
         let starter = !isDuel && args.count > 2 ? Int(args[2]) ?? 4 : 4
         let seed = !isDuel && args.count > 3 ? UInt64(args[3]) ?? 42 : 42
         let hoursPerDay = !isDuel && args.count > 4 ? Double(args[4]) ?? 2.9 : 2.9
@@ -259,7 +261,9 @@ struct AdventureSim {
             case .cleared:
                 clears += 1
                 stardust += Rewards.stardust(for: battle!.plan.kind)
-                if case .station(let point) = target { progress.recordStation(point, cleared: true, chapters: chapters) }
+                if case .station(let point) = target {
+                    progress.recordStation(point, cleared: true, defeated: battle!.plan.foes.count, chapters: chapters)
+                }
                 battle = nil
             case .wiped:
                 if ProcessInfo.processInfo.environment["SIM_TRACE"] != nil, hour(tick) < (Double(ProcessInfo.processInfo.environment["SIM_TRACE"] ?? "") ?? 0) {

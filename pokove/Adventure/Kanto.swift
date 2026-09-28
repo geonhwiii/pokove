@@ -65,14 +65,24 @@ nonisolated struct LegendSpot: Identifiable, Equatable, Sendable {
     let scenery: Scenery
 }
 
-/// Ten stations in a row, then the chapter's boss: a gym leader, or the League's five.
+/// Ten stations in a row; every third chapter ends with a boss: a gym leader, or the League's five.
 nonisolated struct Chapter: Identifiable, Equatable, Sendable {
     static let stationCount = 10
+
+    /// Wild Pokémon to beat at a station before the line moves on, rising with its level, so early
+    /// stations go by in minutes and late ones in half an hour, and the line lasts about as long as
+    /// the journey to the Champion (see scripts/adventure-sim.swift). A terminus takes one win over
+    /// its three.
+    static func winsNeeded(_ station: Station, isTerminus: Bool) -> Int {
+        isTerminus ? StagePlan.lastStationFoes : max(3, Int((Double(station.level) * winsPerLevel).rounded()))
+    }
+
+    nonisolated(unsafe) static var winsPerLevel = 2.5
 
     /// 1-based, as shown ("1장").
     let number: Int
     let stations: [Station]
-    /// Empty for the chapter after the League, which loops.
+    /// Empty for the chapters between gyms, and after the League.
     let bosses: [Trainer]
     let legend: LegendSpot?
 
@@ -187,32 +197,45 @@ nonisolated enum Kanto {
     static let mewtwo = LegendSpot(id: "mewtwo", species: 150, level: 70, scenery: .cave)
     static let legends = [snorlax, zapdos, articuno, moltres, mewtwo]
 
-    /// Ten stations from the stretches in order, their levels rising evenly across `levels`.
-    private static func chapter(_ number: Int, _ levels: ClosedRange<Int>, _ parts: [(Stretch, Int)], bosses: [Trainer],
-                                legend: LegendSpot? = nil) -> Chapter {
-        let stretches = parts.flatMap { Array(repeating: $0.0, count: $0.1) }
-        precondition(stretches.count == Chapter.stationCount)
+    /// Chapters in each of Kanto's ten legs, from one gym to the next.
+    static let chaptersPerLeg = 3
+
+    /// A leg's stations from its stretches in order (parts in tenths of the leg), levels rising
+    /// evenly across `levels`, split into chapters of ten. The leg's first chapter has its legendary
+    /// and its last one the boss.
+    private static func leg(_ levels: ClosedRange<Int>, _ parts: [(Stretch, Int)], bosses: [Trainer],
+                            legend: LegendSpot? = nil) -> [(stations: [Station], bosses: [Trainer], legend: LegendSpot?)] {
+        let count = Chapter.stationCount * chaptersPerLeg
+        let stretches = parts.flatMap { Array(repeating: $0.0, count: $0.1 * chaptersPerLeg) }
+        precondition(stretches.count == count)
         let stations = stretches.enumerated().map { index, stretch in
-            let t = Double(index) / Double(stretches.count - 1)
+            let t = Double(index) / Double(count - 1)
             return Station(stretch: stretch, level: levels.lowerBound + Int((Double(levels.upperBound - levels.lowerBound) * t).rounded()))
         }
-        return Chapter(number: number, stations: stations, bosses: bosses, legend: legend)
+        return (0..<chaptersPerLeg).map { part in
+            (Array(stations[part * Chapter.stationCount..<(part + 1) * Chapter.stationCount]),
+             part == chaptersPerLeg - 1 ? bosses : [], part == 0 ? legend : nil)
+        }
     }
 
-    /// The journey, in FRLG order. The champion depends on the starter.
+    /// The journey, in FRLG order: thirty chapters, a gym at the end of every third. The champion
+    /// depends on the starter.
     static func chapters(starter: Int) -> [Chapter] {
-        [
-            chapter(1, 3...9, [(route1, 4), (viridianForest, 6)], bosses: [brock]),
-            chapter(2, 10...18, [(route3, 3), (mtMoon, 4), (route24, 3)], bosses: [misty]),
-            chapter(3, 17...23, [(route5, 5), (diglettsCave, 5)], bosses: [surge]),
-            chapter(4, 21...28, [(route9, 2), (rockTunnel, 3), (pokemonTower, 3), (route8, 2)], bosses: [erika]),
-            chapter(5, 28...36, [(route12, 5), (cyclingRoad, 5)], bosses: [koga], legend: snorlax),
-            chapter(6, 33...40, [(safariZone, 10)], bosses: [sabrina], legend: zapdos),
-            chapter(7, 38...46, [(seafoam, 5), (mansion, 5)], bosses: [blaine], legend: articuno),
-            chapter(8, 44...50, [(route21, 5), (route23, 5)], bosses: [giovanni]),
-            chapter(9, 48...54, [(victoryRoad, 10)], bosses: [lorelei, bruno, agatha, lance, champion(starter: starter)], legend: moltres),
-            chapter(10, 55...65, [(ceruleanCave, 10)], bosses: [], legend: mewtwo),
+        let legs = [
+            leg(3...9, [(route1, 4), (viridianForest, 6)], bosses: [brock]),
+            leg(10...18, [(route3, 3), (mtMoon, 4), (route24, 3)], bosses: [misty]),
+            leg(17...23, [(route5, 5), (diglettsCave, 5)], bosses: [surge]),
+            leg(21...28, [(route9, 2), (rockTunnel, 3), (pokemonTower, 3), (route8, 2)], bosses: [erika]),
+            leg(28...36, [(route12, 5), (cyclingRoad, 5)], bosses: [koga], legend: snorlax),
+            leg(33...40, [(safariZone, 10)], bosses: [sabrina], legend: zapdos),
+            leg(38...46, [(seafoam, 5), (mansion, 5)], bosses: [blaine], legend: articuno),
+            leg(44...50, [(route21, 5), (route23, 5)], bosses: [giovanni]),
+            leg(48...54, [(victoryRoad, 10)], bosses: [lorelei, bruno, agatha, lance, champion(starter: starter)], legend: moltres),
+            leg(55...65, [(ceruleanCave, 10)], bosses: [], legend: mewtwo),
         ]
+        return legs.joined().enumerated().map { index, part in
+            Chapter(number: index + 1, stations: part.stations, bosses: part.bosses, legend: part.legend)
+        }
     }
 
     // MARK: Rules tied to the journey
@@ -226,7 +249,9 @@ nonisolated enum Kanto {
 
     /// Pokémon that never turn up in the wild, only in the gacha, from the chapter (0-based) where
     /// the games give them away.
-    static let gachaOnly: [(species: Int, chapter: Int)] = [
+    static let gachaOnly: [(species: Int, chapter: Int)] = gachaOnlyByLeg.map { ($0.species, $0.leg * chaptersPerLeg) }
+
+    private static let gachaOnlyByLeg: [(species: Int, leg: Int)] = [
         (1, 0), (4, 0), (7, 0),
         (122, 0),                   // Mr. Mime, traded on Route 2
         (138, 1), (140, 1), (142, 1),  // fossils, Mt. Moon

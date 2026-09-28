@@ -52,6 +52,11 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
     var beatenLegends: [String] = []
     /// Losses in a row to the current boss.
     var losses = 0
+    /// Wild Pokémon beaten at the next station so far (optional so older saves still read).
+    var frontierWins: Int?
+
+    /// Wild Pokémon beaten at the next station so far; it opens at `Chapter.winsNeeded`.
+    var wins: Int { frontierWins ?? 0 }
 
     func hasReached(chapter index: Int) -> Bool { index <= chapter }
 
@@ -122,13 +127,20 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
         case legend(String)
     }
 
+    /// A battle at a station is over. At the next station, each win counts the Pokémon beaten, and
+    /// the line moves on once there are enough.
     @discardableResult
-    mutating func recordStation(_ point: StationPoint, cleared: Bool, chapters: [Chapter]) -> Outcome {
+    mutating func recordStation(_ point: StationPoint, cleared: Bool, defeated: Int = 1, chapters: [Chapter]) -> Outcome {
         if repeating == nil, training == 0, point == frontier, !isLooping {
             guard cleared else {
                 training = previous(point) != nil ? Losses.wildTraining : 0
                 return .none
             }
+            let needed = chapters.indices.contains(chapter) && chapters[chapter].stations.indices.contains(station)
+                ? Chapter.winsNeeded(chapters[chapter].stations[station], isTerminus: station == Chapter.stationCount - 1) : 1
+            frontierWins = wins + defeated
+            guard wins >= needed else { return .none }
+            frontierWins = 0
             station += 1
             guard isLooping else { return .advanced }
             return moveOn(chapters) ? .chapter : .advanced
@@ -149,6 +161,7 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
         chapter += 1
         station = 0
         cursor = 0
+        frontierWins = 0
         return true
     }
 
@@ -215,6 +228,25 @@ extension JourneyProgress {
         let before = routes.filter { $0 < node }.reduce(0) { $0 + legacy[$1].stages }
         progress.station = min(Chapter.stationCount - 1, (before + max(0, stage)) * Chapter.stationCount / max(1, total))
         return progress
+    }
+
+    /// A save from when each of Kanto's legs was one chapter: the same place, now in one of its
+    /// `parts` chapters.
+    mutating func splitChapters(into parts: Int) {
+        func split(_ point: StationPoint) -> StationPoint {
+            let position = point.station * parts
+            return StationPoint(chapter: point.chapter * parts + position / Chapter.stationCount, station: position % Chapter.stationCount)
+        }
+        if station >= Chapter.stationCount {
+            chapter = chapter * parts + parts - 1
+        } else {
+            let point = split(frontier)
+            chapter = point.chapter
+            station = point.station
+        }
+        cursor = 0
+        frontierWins = 0
+        repeating = repeating.map(split)
     }
 }
 

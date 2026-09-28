@@ -241,9 +241,10 @@ nonisolated struct StagePlan: Equatable, Sendable {
 
     static let legendHP = 2.5
 
-    /// One wild Pokémon, different on every visit; the chapter's last station has three, ending
-    /// with the strongest one around, two levels up. Wild Pokémon are at the station's level, but
-    /// never above a level below the party, so the line moves on with every win.
+    /// One wild Pokémon, different on every visit, at the station's level but never above a level
+    /// below the party. The chapter's last station has three, ending with its boss: the strongest
+    /// one around, two levels over the station whatever the party's level, so the last chapters
+    /// before a gym build up to it.
     static func station(_ station: Station, isLast: Bool, data: GameData, partyLevel: Int, rng: inout SeededRNG) -> StagePlan {
         let pool = data.encounters.pool(for: station.stretch, dex: data.dex)
         let level = min(station.level, partyLevel - 1)
@@ -253,7 +254,7 @@ nonisolated struct StagePlan: Equatable, Sendable {
         }
         var foes = (0..<lastStationFoes - 1).map { _ in Foe(species: random(&rng), level: max(2, level + rng.pick(-2...(-1)))) }
         let strongest = pool.max { (data.dex[$0.species]?.stats.total ?? 0) < (data.dex[$1.species]?.stats.total ?? 0) }
-        foes.append(Foe(species: strongest?.species ?? random(&rng), level: max(2, level + lastStationBoost)))
+        foes.append(Foe(species: strongest?.species ?? random(&rng), level: max(2, station.level + lastStationBoost)))
         return StagePlan(kind: .wild, foes: foes, scenery: station.stretch.scenery)
     }
 

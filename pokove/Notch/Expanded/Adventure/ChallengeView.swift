@@ -317,8 +317,9 @@ private struct StageLineView: View {
                 // waits for an agent; a pull when there's one.
                 let point = adventure.stationPoint
                 let station = adventure.chapters[point.chapter].stations[point.station]
-                let gym = adventure.nextBoss.flatMap { $0.chapter == progress.chapter ? $0.trainer.name : nil }
-                let onTheWay = gym.map { GuideText.stationsTo($0, adventure.stationsLeft) } ?? GuideText.stationsLeft(adventure.stationsLeft)
+                let onTheWay = adventure.nextBoss.flatMap { boss in
+                    adventure.stationsToNextBoss.map { GuideText.stationsTo(boss.trainer.name, $0) }
+                } ?? GuideText.stationsLeft(adventure.stationsLeft)
                 Image(systemName: adventure.isBattling ? "play.fill" : "moon.zzz.fill")
                     .foregroundStyle(adventure.isBattling ? Color(hex: 0xFFD35A) : .white.opacity(0.5))
                 Text(adventure.isBattling ? onTheWay : GuideText.resting)
@@ -329,9 +330,19 @@ private struct StageLineView: View {
                 if adventure.hasGachaWaiting {
                     fixPill(.gacha)
                 } else if adventure.isBattling {
-                    Text("Lv \(adventure.foeLevel(station, isTerminus: point.station == Chapter.stationCount - 1))")
-                        .font(.system(size: 8.5, weight: .bold).monospacedDigit())
-                        .foregroundStyle(.white.opacity(0.4))
+                    let isTerminus = point.station == Chapter.stationCount - 1
+                    if !isTerminus, point == progress.frontier, let count = adventure.stationWins {
+                        // Wild Pokémon beaten here, and how many move the line on.
+                        Text("\(count.wins)/\(count.needed)")
+                            .font(.system(size: 8.5, weight: .bold).monospacedDigit())
+                            .foregroundStyle(.white.opacity(0.55))
+                            .contentTransition(.numericText())
+                            .help("Wild Pokémon beaten at this station")
+                    } else {
+                        Text("Lv \(adventure.foeLevel(station, isTerminus: isTerminus))")
+                            .font(.system(size: 8.5, weight: .bold).monospacedDigit())
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
                 }
             } else {
                 Image(systemName: "checkmark").foregroundStyle(Self.lineColor)
@@ -758,7 +769,7 @@ private struct BossVSView: View {
                 GoButton(title: String(localized: "Challenge!")) { adventure.challengeBoss() }
                     .disabled(adventure.isChallenging)
             } else if isNext {
-                VSNote(symbol: "lock.fill", text: String(localized: "\(adventure.stationsLeft) stations left"))
+                VSNote(symbol: "lock.fill", text: String(localized: "\(adventure.stationsToNextBoss ?? adventure.stationsLeft) stations left"))
             } else {
                 VSNote(symbol: "lock.fill", text: String(localized: "Chapter \(entry.chapter + 1)"))
             }
