@@ -22,6 +22,11 @@ little under the party's level, so it doesn't break the balance.
   in four of six runs, while both Bulbasaur runs stalled at the League (68 h, and past 70 h).
   Fewer duplicates also means less duplicate experience than before.
 - Discovery (wild Pokémon joining at stations) still follows the line.
+- **Bulbasaur's rival stays as in the games** (Exeggutor 59, Gyarados 61, Charizard 63), by the
+  user's call: a party can bring others. It is the hardest of the three: against the same late
+  parties it gave 29/51/69/90% at Lv 55/58/61/64, next to 62/80/90/98% for Squirtle's rival and
+  80/98/100/100% for Charmander's, and the sim's player (who waits for 60%) sat at it for 15–19 h.
+  `SIM_BOSSES=1` prints every boss fight in the sim.
 
 ## v3.4: an easier start, and progress you can see (agreed with the user, 2026-09-28)
 
@@ -188,9 +193,16 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
 - **Drag and drop:** party slots reorder by dragging (swap places); an owned Pokémon dragged from the
   Pokédex onto a slot takes it (`place(_:at:)`). Payload is the owned Pokémon's UUID string.
 - **Pokédex "보유만"** shows only species in the box (`@AppStorage("dexOwnedOnly")`).
-- **Update check** (`UpdateChecker`): GitHub's latest release at launch and daily; a dot on the gear and
-  a button in Settings › About. `defaults write com.geonhwiii.pokove debugLatestVersion 9.9` fakes one in
-  Debug. No banner, by the user's choice. First release: v1.0.
+- **Updates** (`UpdateChecker`, Sparkle 2 since 1.2.5): the appcast at pokove.vercel.app/appcast.xml at
+  launch and daily. A found update opens no window (gentle reminders): a dot on the gear, and Settings ›
+  About's button opens Sparkle's window, which downloads, installs and relaunches. The zip is signed
+  with the EdDSA key in the login keychain; `Config/Info.plist` (merged into the generated Info.plist)
+  holds `SUFeedURL` and `SUPublicEDKey`. The app is signed with an Apple Development certificate and not
+  notarized: an update Sparkle installs carries no quarantine, so it opened without "Open Anyway" in a
+  local test (1.2.4 → a fake 9.9.0 from a local feed). Releases: `scripts/package.sh notes.md` (also
+  runs `scripts/appcast.py`), `gh release create`, then push `site/public/appcast.xml`. Debug builds
+  only update from `debugFeedURL`; `debugLatestVersion 9.9` fakes the dot; `update` checks at once.
+  1.2.4 and earlier still use the old GitHub check, whose button opens the release page.
 - **Shiny Pokémon** (`Shiny`): 1/128 per discovery and per gacha ball (rolled when dealt). A shiny
   duplicate makes the owned one shiny at its level. Shiny BW battle sprites (`animated/shiny`,
   `animated/back/shiny`); box icons have no shiny art, so they get a `ShinyMark` ✦. A shiny partner

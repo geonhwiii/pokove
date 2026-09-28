@@ -13,7 +13,7 @@ Claude Code나 Codex가 일하면 노치 안의 포켓몬 파티가 관동 지�
 1. [최신 릴리스](https://github.com/geonhwiii/pokove/releases/latest)에서 `pokove.zip`을 받아 압축을 풀어요.
 2. `pokove.app`을 응용 프로그램 폴더로 옮기고 실행해요.
 
-macOS 15 이상에서 돌아가요. 노치가 없는 화면에는 가상 노치가 생겨요. 새 버전이 나오면 노치의 톱니 아이콘에 점이 찍히고, 설정 › 정보에서 받을 수 있어요.
+macOS 15 이상에서 돌아가요. 노치가 없는 화면에는 가상 노치가 생겨요. 새 버전이 나오면 노치의 톱니 아이콘에 점이 찍혀요. 설정 › 정보에서 누르면 앱 안에서 받아 설치하고 다시 켜져요. 1.2.4 이하에서는 새 버전을 한 번 직접 받아야 해요.
 
 ## 포켓몬 모험
 
@@ -99,7 +99,7 @@ macOS 15 이상에서 돌아가요. 노치가 없는 화면에는 가상 노치�
 | 캘린더 페이지 | 캘린더 (처음 열 때 물어봐요) |
 | 지금 재생 중 | 필요 없어요. `/usr/bin/perl`에 올린 작은 브리지가 MediaRemote를 읽어요 |
 
-pokove는 하루에 한 번 GitHub API에서 최신 릴리스만 확인해요. 이 Mac에 대한 정보는 보내지 않아요.
+pokove는 하루에 한 번 사이트의 업데이트 목록(`appcast.xml`)만 확인해요. 앱 버전 말고는 이 Mac에 대한 정보를 보내지 않아요. 설정 › 정보에서 끌 수 있어요.
 
 pokove의 예전 이름은 dancove예요. 처음 실행할 때 dancove의 설정과 `~/Library/Application Support/dancove/`(세이브, 할 일, 클립보드 기록)를 복사해 오고 원본은 그대로 둬요. macOS는 새 앱으로 보기 때문에 손쉬운 사용과 캘린더 권한, 로그인 시 실행은 다시 켜 주세요.
 
@@ -119,7 +119,8 @@ xcodebuild -project pokove.xcodeproj -scheme pokove -configuration Release -deri
 ```
 
 - `scripts/install.sh`는 Release로 빌드해서 `~/Applications`에 설치하고 다시 실행해요.
-- `scripts/package.sh`는 릴리스용 `build/pokove.zip`을 만들고 `gh release create` 명령을 알려줘요.
+- `scripts/package.sh [notes.md]`는 릴리스용 `build/pokove.zip`을 만들고 `gh release create` 명령을 알려줘요. 릴리스 노트를 넘기면 `scripts/appcast.py`가 zip에 서명해서 `site/public/appcast.xml`에 새 버전을 더해요. 릴리스를 올린 뒤 appcast를 푸시하면, 설치된 앱이 앱 안에서 업데이트해요.
+  - 서명 키는 이 Mac의 로그인 키체인에 있어요(Sparkle `generate_keys`). 앱에는 공개키만 `Config/Info.plist`에 들어가요. 키를 잃으면 설치된 앱이 새 업데이트를 받지 못하니, `generate_keys -x <파일>`로 내보내서 안전한 곳에 백업해 두세요.
 - `scripts/adventure-sim.swift`는 게임 규칙을 수백 시간 돌려서 진행 속도를 맞춰요. 규칙과 조정 기록은 [`docs/pokemon-handoff.md`](docs/pokemon-handoff.md)에 있어요.
 - `swift scripts/make-icon.swift`는 앱 아이콘(노을 진 바닷가를 그린 44칸 픽셀 아트)을 다시 그려요.
 

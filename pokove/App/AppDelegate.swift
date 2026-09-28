@@ -194,6 +194,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         case "settings":
             SettingsWindowController.shared.show(app: app, pane: parts.count > 1 ? SettingsPane(rawValue: parts[1]) : nil)
+        case "update":
+            app.updates.debugCheckInBackground()
         default:
             break
         }

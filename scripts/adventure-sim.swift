@@ -178,8 +178,14 @@ struct AdventureSim {
             lastBossTry = tick
             bossTries += 1
             while let plan = bossPlan() {
-                let won = challenge(plan, ids: party())
+                let ids = party()
+                let won = challenge(plan, ids: ids)
                 if !won { wipes += 1 }
+                // SIM_BOSSES prints every boss fight with the party that took it on.
+                if ProcessInfo.processInfo.environment["SIM_BOSSES"] != nil, let trainer = plan.trainer {
+                    print(String(format: "%5.1fh %@ %@", hour(tick), won ? "beat" : "lost to", trainer.id),
+                          ids.map { "\(dex[box[$0]!.speciesID]!.nameEn) \(box[$0]!.level)" }, "vs", plan.foes.map { "\(dex[$0.species]!.nameEn) \($0.level)" })
+                }
                 stardust += won ? Rewards.stardust(for: plan.kind) : 0
                 switch progress.recordBoss(cleared: won, chapters: chapters) {
                 case .badge(let badge):

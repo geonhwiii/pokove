@@ -1053,6 +1053,26 @@
         }
       }
     },
+    "Check for Updates": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 확인"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "자동으로 업데이트 확인"
+          }
+        }
+      }
+    },
     "Choose a port between 1024 and 65535.": {
       "localizations": {
         "ko": {
@@ -1779,16 +1799,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "몬스터볼 3개 받기"
-          }
-        }
-      }
-    },
-    "Get Version %@": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 버전 받기"
           }
         }
       }
@@ -3597,6 +3607,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "업데이트"
+          }
+        }
+      }
+    },
+    "Update to Version %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 버전으로 업데이트"
           }
         }
       }

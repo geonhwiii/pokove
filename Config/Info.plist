@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged into the Info.plist Xcode generates: the keys it has no build settings for. -->
+<plist version="1.0">
+<dict>
+	<!-- Sparkle: the appcast scripts/appcast.py writes into the site, and the public half of the
+	     key in this Mac's login keychain that signs each release's zip. -->
+	<key>SUFeedURL</key>
+	<string>https://pokove.vercel.app/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>Blbj5vNOYQhbXinZSGS5Smhdt/OhX0xlT/7uifCBRaY=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+</dict>
+</plist>

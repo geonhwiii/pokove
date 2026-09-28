@@ -13,7 +13,7 @@ While Claude Code or Codex works, a Pokémon party in the notch rides through Ka
 1. Download `pokove.zip` from the [latest release](https://github.com/geonhwiii/pokove/releases/latest) and unzip it.
 2. Move `pokove.app` to Applications and open it.
 
-It runs on macOS 15 or later. Displays without a notch get a simulated one. When a new version is out, the notch's gear gets a dot and Settings › About links to it.
+It runs on macOS 15 or later. Displays without a notch get a simulated one. When a new version is out, the notch's gear gets a dot, and Settings › About downloads it, installs it and relaunches, all in the app. From 1.2.4 or earlier, download the new version once by hand.
 
 ## Pokémon adventure
 
@@ -100,7 +100,7 @@ The open notch shows one page at a time and reopens on the page you picked last;
 | Calendar page | Calendars (asked the first time you open it) |
 | Now Playing | None: a tiny bridge loaded into `/usr/bin/perl` reads MediaRemote (see below) |
 
-Once a day pokove asks GitHub's API for the latest release. Nothing about your Mac is sent.
+Once a day pokove reads the site's update feed (`appcast.xml`). Nothing about your Mac is sent beyond the app's version. Settings › About turns it off.
 
 pokove was called dancove until September 2026. On its first launch it copies dancove's settings and `~/Library/Application Support/dancove/` (saves, to-dos, clipboard history) and leaves the originals in place. macOS treats it as a new app, so grant Accessibility and Calendars again, and turn **Launch at Login** back on. Claude hooks installed by dancove keep working and show as outdated until you reinstall them.
 
@@ -124,7 +124,7 @@ pokove/
   Services/
     Claude/       ClaudeHookServer (loopback HTTP), ClaudeSessionStore, ClaudeHookInstaller
     Agents/       AgentTranscriptWatcher (FSEvents over Claude Code and Codex session files)
-    Updates/      UpdateChecker (GitHub's latest release)
+    Updates/      UpdateChecker (Sparkle, from the site's appcast)
     Todo/         TodoStore
     Media/        NowPlayingService, AudioOutputDevices, AudioRouteMonitor + BluetoothDeviceInfo (device card)
     HUD/          MediaKeyInterceptor (CGEventTap), SystemVolume (CoreAudio), DisplayBrightness
@@ -164,7 +164,8 @@ xcodebuild -project pokove.xcodeproj -scheme pokove -configuration Release -deri
 ```
 
 - `scripts/install.sh` builds Release, installs it to `~/Applications` and relaunches it.
-- `scripts/package.sh` builds `build/pokove.zip` for a release and prints the `gh release create` command.
+- `scripts/package.sh [notes.md]` builds `build/pokove.zip` for a release and prints the `gh release create` command. Given the release notes, `scripts/appcast.py` signs the zip and adds the version to `site/public/appcast.xml`; push that after the release is up and installed copies update themselves.
+  - The signing key lives in this Mac's login keychain (Sparkle's `generate_keys`); only its public half is in the app, in `Config/Info.plist`. Losing it means installed copies can't take new updates, so back it up with `generate_keys -x <file>` somewhere safe.
 - `swift scripts/make-icon.swift` regenerates the app icon: a dark bezel around a pixel-art screen (a 44-cell grid, like a GBA scene) of dusk over a cove, with the notch, a stardust sparkle and a sail on the horizon. Pass a path to render a single 1024 px preview instead.
 
 **Localization:** pokove follows the system language and ships in English and Korean. **Settings → General → Language** can override it (this needs a relaunch). Strings live in `pokove/Localizable.xcstrings` and `pokove/InfoPlist.xcstrings`. Battle, recap and guide lines that need Korean particles are built in `pokove/Adventure/BattleText.swift`. After adding UI text:
@@ -191,7 +192,7 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
   - Page: `poke pane challenge|dex|gacha|history|toast` (toast replays the newest history entry), `poke mode stage|gym|dungeon|tower|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/pokove-state.txt`), `select <dex number>`.
 - **Settings:** `settings claude|adventure|about|…`.
 
-`defaults write com.geonhwiii.pokove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugLatestVersion` pretends a newer release is out. `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.
+`defaults write com.geonhwiii.pokove debugHoldOpen -bool true` keeps the open notch up while you click elsewhere (for screenshots). `debugLatestVersion` pretends a newer release is out. Debug builds only update from `debugFeedURL` (a test appcast), and `update` runs a check at once. `debugClaudeProjectsPath` and `debugCodexSessionsPath` point the session watcher at scratch folders, so simulated sessions never touch the real ones. `debugClipboardPasteboard` points the clipboard history at a named pasteboard, so tests never touch the real clipboard.
 
 ## Logos
 

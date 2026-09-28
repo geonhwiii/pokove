@@ -1,67 +1,107 @@
-import Foundation
+import AppKit
 import Observation
+import Sparkle
 
-/// Looks for a newer release on GitHub at launch and once a day. Nothing about this Mac is sent;
-/// it only reads the latest release's version and page.
+/// Looks for a newer pokove at launch and once a day through Sparkle, from the appcast on the site
+/// (`scripts/appcast.py` writes it), and installs it in place when asked: Sparkle downloads the zip,
+/// checks its signature against `SUPublicEDKey`, swaps the app and relaunches it. Nothing about this
+/// Mac is sent beyond the app's version in the request.
+///
+/// pokove lives in the notch, so a new version found in the background opens no window: the
+/// Settings gear gets a dot, and Settings › About has the button that shows Sparkle's window.
 @Observable
-final class UpdateChecker {
+final class UpdateChecker: NSObject {
     struct Release: Equatable {
         let version: String
-        let page: URL
     }
 
     /// The newest release, when it's newer than this build.
     private(set) var available: Release?
+    /// False until the updater runs, and while Sparkle is busy, so a second check can't start.
+    private(set) var canCheck = false
 
     let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 
-    static let feed = URL(string: "https://api.github.com/repos/geonhwiii/pokove/releases/latest")!
-    static let releasesPage = URL(string: "https://github.com/geonhwiii/pokove/releases/latest")!
-    private static let interval: TimeInterval = 24 * 60 * 60
-
-    @ObservationIgnored private var task: Task<Void, Never>?
-
-    func start() {
-        guard task == nil else { return }
-        task = Task { [weak self] in
-            while !Task.isCancelled {
-                await self?.check()
-                guard (try? await Task.sleep(for: .seconds(Self.interval))) != nil else { return }
-            }
+    /// Sparkle keeps this in the app's defaults.
+    var checksAutomatically: Bool {
+        get {
+            access(keyPath: \.checksAutomatically)
+            return controller.updater.automaticallyChecksForUpdates
+        }
+        set {
+            withMutation(keyPath: \.checksAutomatically) { controller.updater.automaticallyChecksForUpdates = newValue }
         }
     }
 
-    func check() async {
+    @ObservationIgnored private lazy var controller = SPUStandardUpdaterController(
+        startingUpdater: false, updaterDelegate: self, userDriverDelegate: self)
+    @ObservationIgnored private var busy: NSKeyValueObservation?
+
+    func start() {
+        guard busy == nil else { return }
         #if DEBUG
         // `defaults write com.geonhwiii.pokove debugLatestVersion 9.9` pretends a release is out.
         if let version = UserDefaults.standard.string(forKey: "debugLatestVersion") {
-            available = Self.isNewer(version, than: current) ? Release(version: version, page: Self.releasesPage) : nil
+            available = Release(version: version)
             return
         }
+        // A Debug build only updates from `defaults write com.geonhwiii.pokove debugFeedURL <url>`,
+        // so it never replaces itself with a release.
+        guard UserDefaults.standard.string(forKey: "debugFeedURL") != nil else { return }
         #endif
-        var request = URLRequest(url: Self.feed, timeoutInterval: 20)
-        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("pokove/\(current)", forHTTPHeaderField: "User-Agent")
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
-              (response as? HTTPURLResponse)?.statusCode == 200,
-              let latest = try? JSONDecoder().decode(Latest.self, from: data) else { return }
-        let version = latest.tag_name.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
-        available = Self.isNewer(version, than: current) ? Release(version: version, page: latest.html_url) : nil
-    }
-
-    private struct Latest: Decodable {
-        let tag_name: String
-        let html_url: URL
-    }
-
-    /// Compares dotted versions number by number, so 1.10 is newer than 1.9.
-    nonisolated static func isNewer(_ version: String, than other: String) -> Bool {
-        let parts = { (text: String) in text.split(separator: ".").map { Int($0.prefix { $0.isNumber }) ?? 0 } }
-        let a = parts(version), b = parts(other)
-        for index in 0..<max(a.count, b.count) {
-            let x = index < a.count ? a[index] : 0, y = index < b.count ? b[index] : 0
-            if x != y { return x > y }
+        controller.startUpdater()
+        busy = controller.updater.observe(\.canCheckForUpdates, options: [.initial, .new]) { [weak self] updater, _ in
+            MainActor.assumeIsolated { self?.canCheck = updater.canCheckForUpdates }
         }
-        return false
+    }
+
+    #if DEBUG
+    /// A scheduled check right now, as if a day had passed.
+    func debugCheckInBackground() {
+        controller.updater.checkForUpdatesInBackground()
+    }
+    #endif
+
+    /// Sparkle's window: checking, then the new version's notes with Install, or "up to date".
+    func checkNow() {
+        guard canCheck else { return }
+        NSApp.activate()
+        controller.checkForUpdates(nil)
+    }
+}
+
+extension UpdateChecker: SPUUpdaterDelegate {
+    #if DEBUG
+    func feedURLString(for updater: SPUUpdater) -> String? {
+        UserDefaults.standard.string(forKey: "debugFeedURL")
+    }
+    #endif
+
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        available = Release(version: item.displayVersionString)
+    }
+
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+        available = nil
+    }
+
+    func updater(_ updater: SPUUpdater, userDidMake choice: SPUUserUpdateChoice, forUpdate updateItem: SUAppcastItem,
+                 state: SPUUserUpdateState) {
+        // Skipped for good; a dismissed one keeps its dot.
+        if choice == .skip { available = nil }
+    }
+}
+
+extension UpdateChecker: @preconcurrency SPUStandardUserDriverDelegate {
+    var supportsGentleScheduledUpdateReminders: Bool { true }
+
+    /// A scheduled check never opens Sparkle's window by itself; the gear's dot does the telling.
+    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
+        false
+    }
+
+    func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem,
+                                                   state: SPUUserUpdateState) {
+        available = Release(version: update.displayVersionString)
     }
 }

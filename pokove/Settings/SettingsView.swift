@@ -579,10 +579,9 @@ private struct BatterySettingsPane: View {
 
 private struct AboutSettingsPane: View {
     @Environment(AppModel.self) private var app
-    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        let updates = app.updates
+        @Bindable var updates = app.updates
         VStack(spacing: 14) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
@@ -596,9 +595,15 @@ private struct AboutSettingsPane: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 320)
             if let release = updates.available {
-                Button("Get Version \(release.version)") { openURL(release.page) }
+                Button("Update to Version \(release.version)") { updates.checkNow() }
                     .buttonStyle(.borderedProminent)
+            } else {
+                Button("Check for Updates") { updates.checkNow() }
+                    .disabled(!updates.canCheck)
             }
+            Toggle("Check for updates automatically", isOn: $updates.checksAutomatically)
+                .toggleStyle(.checkbox)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
