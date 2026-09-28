@@ -480,8 +480,8 @@ nonisolated struct DungeonState: Codable, Equatable, Sendable {
         experience.tries = DailyDungeon.triesPerDay
     }
 
-    /// A try is over. Clearing a new stage moves the climb up and gives the try back; a loss, or
-    /// going back to the best stage, uses it. True when the stage was cleared for the first time.
+    /// A try is over. Clearing a new stage moves the climb up and gives the try back; a loss uses
+    /// it. True when the stage was cleared for the first time.
     @discardableResult
     mutating func record(_ kind: DungeonKind, stage: Int, cleared: Bool) -> Bool {
         let isNew = cleared && stage == self[kind].next
@@ -492,11 +492,19 @@ nonisolated struct DungeonState: Codable, Equatable, Sendable {
         }
         return isNew
     }
+
+    /// Clears the best stage again without the battle, for one try. The stage swept, while there
+    /// is one and a try left.
+    mutating func sweep(_ kind: DungeonKind) -> Int? {
+        guard self[kind].best > 0, self[kind].tries > 0 else { return nil }
+        self[kind].tries -= 1
+        return self[kind].best
+    }
 }
 
 /// Stages that climb two levels at a time, three Pokémon each, the last a boss. Each dungeon has
 /// three tries a day; clearing a new stage gives the try back, so a strong party climbs until it
-/// loses, then can spend what's left on its best stage for the reward again.
+/// loses, then can sweep its best stage with what's left, for the reward without the battle.
 nonisolated enum DailyDungeon {
     static let resetHour = 4
     static let triesPerDay = 3

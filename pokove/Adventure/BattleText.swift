@@ -178,8 +178,11 @@ nonisolated enum ChallengeText {
     static func stage(_ stage: Int) -> String { korean ? "\(stage)단계" : "Stage \(stage)" }
     /// The VS intro's line under the dungeon's name: "5단계 · 불꽃".
     static func stage(_ stage: Int, types: String) -> String { korean ? "\(stage)단계 · \(types)" : "Stage \(stage) · \(types)" }
-    /// Another try at the best stage, for its reward.
-    static func redo(_ stage: Int) -> String { korean ? "\(stage)단계 다시" : "Redo \(stage)" }
+    /// The best stage's reward again, without the battle.
+    static var sweep: String { korean ? "소탕" : "Sweep" }
+    static func sweepHelp(_ stage: Int) -> String {
+        korean ? "싸우지 않고 \(stage)단계 보상을 받아요" : "Get stage \(stage)'s reward without a battle"
+    }
     static func tries(_ count: Int) -> String { korean ? "오늘 남은 도전 \(count)회" : count == 1 ? "1 try left today" : "\(count) tries left today" }
     static var triesTomorrow: String { korean ? "4시에 다시 3회" : "3 more at 4:00" }
     static func xpEach(_ xp: Int) -> String { korean ? "모두 EXP +\(xp)" : "EXP +\(xp) each" }

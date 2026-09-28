@@ -89,7 +89,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case "poke":
             // poke starter <id> | poke catch [id] | poke xp <n> | poke stardust <n> | poke ultra
             // | poke jump <chapter> <station, 11 = line cleared> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
-            // | poke challenge | poke legend <id> | poke dungeon stardust|experience [stage] | poke dungeonreset [stages]
+            // | poke challenge | poke legend <id> | poke dungeon stardust|experience | poke sweep stardust|experience
+            // | poke dungeonreset [stages]
             // | poke pane challenge|dex|gacha|history|toast | poke mode stage|gym|dungeon|tower|legend:<id> | poke reset
             // | poke fx <move slug> [foe]: plays a move's effect in the battle on screen
             let arguments = parts.dropFirst(2).compactMap { Int($0) }
@@ -121,10 +122,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "fx": NotificationCenter.default.post(name: .pokoveDebugMoveEffect, object: parts.dropFirst(2).first,
                                                        userInfo: ["foe": parts.last == "foe"])
             case "challenge": adventure.challengeBoss()
-            case "dungeon":
-                if let kind = DungeonKind(rawValue: parts.dropFirst(2).first ?? "") {
-                    adventure.enterDungeon(kind, stage: arguments.first ?? adventure.climb(kind).next ?? adventure.climb(kind).best)
-                }
+            case "dungeon": if let kind = DungeonKind(rawValue: parts.dropFirst(2).first ?? "") { adventure.enterDungeon(kind) }
+            case "sweep": if let kind = DungeonKind(rawValue: parts.dropFirst(2).first ?? "") { adventure.sweepDungeon(kind) }
             case "dungeonreset": adventure.debugResetDungeon(stages: parts.last == "stages")
             case "mode": NotificationCenter.default.post(name: .pokoveDebugChallengeMode, object: parts.dropFirst(2).first)
             case "badgebanner": adventure.debugBadgeBanner(arguments.first ?? 1)

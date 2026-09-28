@@ -882,8 +882,8 @@ private struct DungeonView: View {
     }
 }
 
-/// One dungeon: its next stage and what it pays, the tries left, a try at the next stage, and
-/// another go at the best one.
+/// One dungeon: its next stage and what it pays, the tries left, a try at the next stage, and a
+/// sweep of the best one.
 private struct DungeonCard: View {
     let kind: DungeonKind
 
@@ -972,9 +972,9 @@ private struct DungeonCard: View {
             HStack(spacing: 4) {
                 if climb.best > 0 {
                     Button {
-                        withAnimation(.smooth(duration: 0.25)) { adventure.enterDungeon(kind, stage: climb.best) }
+                        withAnimation(.smooth(duration: 0.25)) { adventure.sweepDungeon(kind) }
                     } label: {
-                        Text(ChallengeText.redo(climb.best))
+                        Text(ChallengeText.sweep)
                             .font(.system(size: 8.5, weight: .heavy))
                             .foregroundStyle(.white.opacity(0.9))
                             .padding(.horizontal, 7)
@@ -984,9 +984,10 @@ private struct DungeonCard: View {
                             .fixedSize()
                     }
                     .buttonStyle(.plain)
+                    .help(ChallengeText.sweepHelp(climb.best))
                 }
-                if let next = climb.next {
-                    GoButton(title: String(localized: "Go!")) { adventure.enterDungeon(kind, stage: next) }
+                if climb.next != nil {
+                    GoButton(title: String(localized: "Go!")) { adventure.enterDungeon(kind) }
                 }
             }
             .disabled(adventure.isChallenging)

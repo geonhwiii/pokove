@@ -3,6 +3,20 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v3.6: dungeons sweep the best stage (agreed with the user, 2026-09-29)
+
+- The "N단계 다시" button (a battle at the best stage) is now **소탕** / Sweep: the user didn't want
+  to fight the best stage again just for its reward. One try, one sweep; no sweep-all, since there
+  are only three tries. `DungeonState.sweep(_:)` uses the try, `AdventureService.sweepDungeon(_:)` pays what a
+  clear pays (the stage's stardust or EXP, plus the three foes' knockout EXP; never the Ultra Ball,
+  which is for a first clear) and shows the same win card over the scene. The label has no stage
+  number (the user: players know it's the best stage); the tooltip has it.
+- Battles only take on the next stage now (`enterDungeon(_:)`). Debug: `poke sweep stardust|experience`.
+- Sim, same six seeds: a sweep can't lose, while a go at the best stage often did on another
+  weekday's types, so the stardust dungeon pays ~980–1025 a day instead of ~610–740. Pulls by 48 h
+  ~105 (was ~97), the first 8 h about the same; badge 8 and the Champion unchanged within the
+  noise (Champion 46–61 h, was 44–57 h).
+
 ## v3.5: the gacha holds every unevolved Pokémon from the start (agreed with the user, 2026-09-28)
 
 Where this conflicts with v3.4 or earlier, v3.5 wins. The user disliked that the gacha only held what
@@ -83,7 +97,7 @@ Where this conflicts with v3.2 or earlier, v3.3 wins.
     with 1.5× HP from the three strongest of the types in their most evolved form. Seeded by day, kind
     and stage, so a retry faces the same three.
   - Three tries a day each, refilled at 04:00. A try at the next stage that clears it gives the try
-    back; a loss, or a go at the best stage again, uses one. Climbs keep their best stage across days.
+    back; a loss, or a sweep of the best stage (v3.6), uses one. Climbs keep their best stage across days.
   - Stardust dungeon: the weekday's types, 80 + 8n stardust a clear, an Ultra Ball on the first clear
     of every tenth stage. EXP dungeon: Normal and Fairy, a sixth of a level at the stage's level for
     each of the party (half a level made the Champion 40% sooner in the sim).
@@ -107,7 +121,7 @@ Where this conflicts with v3.2 or earlier, v3.3 wins.
   line at chapter 27 by 45–50 h, 0–31 wipes, gyms mostly won on the first try (`SIM_WINS` sets the
   wins per level; 1.5 ended the line at ~33 h, 1.0 at ~24 h).
 - **Sim** (`SIM_DUNGEON_XP` scales the EXP reward): each day climbs until a new stage beats the party,
-  then spends the rest on its best stage. Six runs, 70 h: stardust dungeon ~570–880 a day; with the
+  then spends the rest on its best stage (sweeps since v3.6). Six runs, 70 h: stardust dungeon ~570–880 a day; with the
   ungated line, Champion at 38–55 h in 5 of 6 runs (avg ~47 h; ~54 h with the gate, ~61 h+ before the dungeons),
   badge 4 at 2–8 h, the line at 9-10 by 1–8 h, 55–450 wipes. Reaching late areas early brings their
   species to discoveries and the gacha, which is most of the speed-up.

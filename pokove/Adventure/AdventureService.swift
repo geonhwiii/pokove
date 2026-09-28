@@ -586,12 +586,34 @@ final class AdventureService {
         start(.tower(1), data: data)
     }
 
-    /// A try at a dungeon: the next stage, or the best one again for its reward.
-    func enterDungeon(_ kind: DungeonKind, stage: Int) {
+    /// A try at a dungeon's next stage.
+    func enterDungeon(_ kind: DungeonKind) {
         let climb = climb(kind)
-        guard !isChallenging, climb.tries > 0, stage >= 1, stage == climb.next || stage == climb.best, let data else { return }
+        guard !isChallenging, climb.tries > 0, let stage = climb.next, let data else { return }
         dungeons.refill(for: DailyDungeon.day(of: Date()))
         start(.dungeon(kind, stage: stage), data: data)
+    }
+
+    /// Sweeps a dungeon's best stage for one try: what beating it would pay, at once, with the same
+    /// card over the scene.
+    func sweepDungeon(_ kind: DungeonKind) {
+        guard !isChallenging, let data else { return }
+        dungeons.refill(for: DailyDungeon.day(of: Date()))
+        guard let stage = dungeons.sweep(kind) else { return }
+        let plan = DailyDungeon.plan(kind, stage: stage, on: Date(), data: data)
+        let level = partyLevel
+        award(plan.foes.reduce(0) { xp, foe in
+            xp + (dex.species(foe.species).map {
+                PokeMath.defeatXP(baseExperience: $0.baseExperience, level: foe.level, partyLevel: level, kind: plan.kind)
+            } ?? 0)
+        })
+        var result = ChallengeResult(kind: .dungeon(kind, stage: stage), cleared: true)
+        payDungeon(kind, stage: stage, isNew: false, into: &result)
+        refreshReadiness()
+        lastResult = result
+        resultSerial &+= 1
+        if isWatching { hold(Self.resultHold) }
+        saveNow()
     }
 
     /// Repeats a cleared station, to meet its Pokémon.
@@ -893,33 +915,10 @@ final class AdventureService {
                 announceDiscovery(encounter, title: String(localized: "\(species.name) joined your team!"))
             }
         case .dungeon(let kind, let stage):
-            result = ChallengeResult(kind: .dungeon(kind, stage: stage), cleared: cleared)
+            var card = ChallengeResult(kind: .dungeon(kind, stage: stage), cleared: cleared)
             let isNew = dungeons.record(kind, stage: stage, cleared: cleared)
-            if cleared {
-                var clear = AdventureRecap.DungeonClear(kind: kind, stage: stage)
-                switch kind {
-                case .stardust:
-                    let prize = DailyDungeon.stardust(stage: stage)
-                    stardust += prize
-                    clear.stardust = prize
-                    result?.stardust = prize
-                    if isNew, DailyDungeon.paysUltraBall(stage: stage) {
-                        ultraBalls += 1
-                        clear.ultraBall = true
-                        result?.ultraBall = true
-                    }
-                case .experience:
-                    let xp = DailyDungeon.experience(stage: stage)
-                    award(xp)
-                    clear.xp = xp
-                    result?.xp = xp
-                }
-                note { recap in
-                    recap.stardust += clear.stardust
-                    if clear.ultraBall { recap.ultraBalls += 1 }
-                    recap.dungeonStages.append(clear)
-                }
-            }
+            if cleared { payDungeon(kind, stage: stage, isNew: isNew, into: &card) }
+            result = card
         case .tower(let floor):
             if cleared {
                 tower.best = max(tower.best, floor)
@@ -946,6 +945,33 @@ final class AdventureService {
         // The next battle lines up at once, so the scene never sits empty.
         lineUp(data, goOn: goOn)
         saveNow()
+    }
+
+    /// A dungeon stage's prize, cleared or swept, onto its card and into the recap.
+    private func payDungeon(_ kind: DungeonKind, stage: Int, isNew: Bool, into result: inout ChallengeResult) {
+        var clear = AdventureRecap.DungeonClear(kind: kind, stage: stage)
+        switch kind {
+        case .stardust:
+            let prize = DailyDungeon.stardust(stage: stage)
+            stardust += prize
+            clear.stardust = prize
+            result.stardust = prize
+            if isNew, DailyDungeon.paysUltraBall(stage: stage) {
+                ultraBalls += 1
+                clear.ultraBall = true
+                result.ultraBall = true
+            }
+        case .experience:
+            let xp = DailyDungeon.experience(stage: stage)
+            award(xp)
+            clear.xp = xp
+            result.xp = xp
+        }
+        note { recap in
+            recap.stardust += clear.stardust
+            if clear.ultraBall { recap.ultraBalls += 1 }
+            recap.dungeonStages.append(clear)
+        }
     }
 
     // MARK: Growth
