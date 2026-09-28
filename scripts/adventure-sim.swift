@@ -319,7 +319,7 @@ struct AdventureSim {
                 let level = partyLevel()
                 var levelRNG = SeededRNG(seed: rng.next())
                 let lines = Set(box.values.map { dex.base(of: $0.speciesID) })
-                let cards = Gacha.draw(pool: pool, level: { id in Discovery.level(of: dex[id]!, partyLevel: level, cap: cap(), rng: &levelRNG) },
+                let cards = Gacha.draw(pool: pool, level: { _ in Gacha.level(partyLevel: level, cap: cap(), rng: &levelRNG) },
                                        isOwned: { lines.contains(dex.base(of: $0)) }, duplicateWeight: pulls == 1 ? 0 : 0.3,
                                        floor: ultra ? .rare : .common, rng: &rng)
                 let pick = cards.filter { !lines.contains(dex.base(of: $0.species)) }.max { dex[$0.species]!.stats.total < dex[$1.species]!.stats.total } ?? cards.first

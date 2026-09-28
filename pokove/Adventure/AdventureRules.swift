@@ -369,24 +369,25 @@ nonisolated enum Gacha {
     /// A new journey starts with one pull's worth.
     static let startingStardust = price
 
-    /// Every species met so far on the journey, plus gacha-only ones unlocked along the way.
+    /// Every Pokémon that starts a line, from the first pull: pulls come a little under the party's
+    /// level, so a strong one early grows with the rest instead of carrying them. Rarity follows how
+    /// often it's met anywhere in Kanto, and one never met in the wild is rare. Evolved forms come
+    /// from evolving, the legendaries by beating them, and Mew once you're the Champion.
     static func pool(progress: JourneyProgress, data: GameData) -> [(species: Int, rarity: GachaCard.Rarity)] {
         var best: [Int: Double] = [:]
         var stretches: Set<String> = []
-        for (index, chapter) in data.chapters.enumerated() where progress.hasReached(chapter: index) {
-            let reached = index < progress.chapter ? chapter.stations.count : min(progress.station + 1, chapter.stations.count)
-            for station in chapter.stations.prefix(reached) where stretches.insert(station.stretch.id).inserted {
-                for entry in data.encounters.pool(for: station.stretch, dex: data.dex) {
-                    best[entry.species] = max(best[entry.species] ?? 0, entry.share)
-                }
+        for station in data.chapters.flatMap(\.stations) where stretches.insert(station.stretch.id).inserted {
+            for entry in data.encounters.pool(for: station.stretch, dex: data.dex) {
+                best[entry.species] = max(best[entry.species] ?? 0, entry.share)
             }
         }
-        var pool: [(species: Int, rarity: GachaCard.Rarity)] = best.map { species, share in
-            (species, share >= 15 ? .common : (share >= 5 ? .uncommon : .rare))
-        }
-        for (species, chapter) in Kanto.gachaOnly where progress.hasReached(chapter: chapter) && best[species] == nil {
-            pool.append((species, .rare))
-        }
+        let legends = Set(Kanto.legends.map(\.species))
+        var pool: [(species: Int, rarity: GachaCard.Rarity)] = data.dex.species
+            .filter { $0.evolvesFrom == nil && !$0.isSpecial && !legends.contains($0.id) }
+            .map { species in
+                let share = best[species.id] ?? 0
+                return (species.id, share >= 15 ? .common : (share >= 5 ? .uncommon : .rare))
+            }
         if progress.isChampion { pool.append((Kanto.mew, .mythical)) }
         return pool.sorted { $0.species < $1.species }
     }
@@ -413,6 +414,12 @@ nonisolated enum Gacha {
 
     /// Picking one you already have: about half a level for it.
     static func duplicateXP(level: Int) -> Int { max(40, 2 * level * level) }
+
+    /// One to three levels under the party, so a strong pull joins the others rather than carrying
+    /// them. Further under (as discoveries come) left it too weak to use for hours in the sim.
+    static func level(partyLevel: Int, cap: Int, rng: inout SeededRNG) -> Int {
+        min(cap, PokeMath.maxLevel, max(3, partyLevel - 2 + rng.pick(-1...1)))
+    }
 }
 
 // MARK: Rewards
@@ -689,9 +696,8 @@ nonisolated enum Matchup: Equatable, Sendable {
 
 /// Where a species can be met, for Pokédex entries you don't have.
 nonisolated enum Habitat: Equatable, Sendable {
+    case gacha
     /// Chapters are 0-based.
-    case wild(chapter: Int)
-    case gacha(chapter: Int)
     case legend(chapter: Int)
     case mythical
     case evolves(from: Int, level: Int?)
@@ -751,15 +757,9 @@ nonisolated enum Guidance {
         for (index, chapter) in data.chapters.enumerated() {
             if let legend = chapter.legend { found[legend.species] = found[legend.species] ?? .legend(chapter: index) }
         }
-        var stretches: Set<String> = []
-        for (index, chapter) in data.chapters.enumerated() {
-            for station in chapter.stations where stretches.insert(station.stretch.id).inserted {
-                for entry in data.encounters.pool(for: station.stretch, dex: data.dex) where found[entry.species] == nil {
-                    found[entry.species] = .wild(chapter: index)
-                }
-            }
+        for entry in Gacha.pool(progress: JourneyProgress(), data: data) where found[entry.species] == nil {
+            found[entry.species] = .gacha
         }
-        for (species, chapter) in Kanto.gachaOnly where found[species] == nil { found[species] = .gacha(chapter: chapter) }
         if found[Kanto.mew] == nil { found[Kanto.mew] = .mythical }
         for species in data.dex.species where found[species.id] == nil {
             found[species.id] = species.evolvesFrom.map { .evolves(from: $0, level: species.evolveLevel) } ?? .unknown

@@ -3,6 +3,26 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v3.5: the gacha holds every unevolved Pokémon from the start (agreed with the user, 2026-09-28)
+
+Where this conflicts with v3.4 or earlier, v3.5 wins. The user disliked that the gacha only held what
+the line had reached, and the Pokédex hints like "5장부터 뽑기에서 나와요": a strong pull comes a
+little under the party's level, so it doesn't break the balance.
+
+- `Gacha.pool` is every species without a pre-evolution (73), apart from the legendaries and the ★
+  spots' species (Snorlax); Mew stays mythical after the Champion. Evolved forms come from evolving.
+  `Kanto.gachaOnly` and its chapter unlocks are gone.
+- Rarity is the best encounter share anywhere in Kanto: 19 common, 23 uncommon, 31 rare (never wild
+  counts as rare: the starters, fossils, Eevee, Lapras, trades). Rare is 18% of balls.
+- The Pokédex says "뽑기에서 나와요" for all of them, "X가 Lv N에 진화하면 돼요" for evolved forms,
+  and keeps the ★ legendary's chapter; `Habitat.wild(chapter:)` and the chapter on `.gacha` are gone.
+- Pulls come one to three levels under the party (`Gacha.level`), not at the discovery level (85% −1
+  ±2): with every rare in the pool, Auto kept fielding a low pull for its matchup against the next
+  boss, and badge 8 slipped from 31–39 h to 36–51 h. At −2 ±1 it is 36–40 h; the Champion 47–52 h
+  in four of six runs, while both Bulbasaur runs stalled at the League (68 h, and past 70 h).
+  Fewer duplicates also means less duplicate experience than before.
+- Discovery (wild Pokémon joining at stations) still follows the line.
+
 ## v3.4: an easier start, and progress you can see (agreed with the user, 2026-09-28)
 
 Where this conflicts with v3.3 or earlier, v3.4 wins. After a fresh start the user sat at 1-1 on 4 of
@@ -392,7 +412,7 @@ Notes on the data:
 - **Discovery:** each station action has a chance of 1.5 s / mean interval (6 min until you own 3 Pokémon, then 20 min), from the current station's stretch.
   - It joins at 85% of the party level −1 ±2, at least at its evolve level, and at most the cap. A duplicate line gives its owned copy L² XP.
 - **Gacha:** 400 stardust buy three Poké Balls, drawn without replacement by rarity weight (common 10, uncommon 5, rare 2.2, mythical 0.2).
-  - Tiers come from the best encounter share of the stretches reached: ≥ 15% common, ≥ 5% uncommon, rarer are rare. `Kanto.gachaOnly` species are rare (unlocked by chapter); Mew is mythical after the Champion.
+  - The pool is every unevolved species from the first pull (v3.5): not the legendaries or the ★ spots' species (Snorlax), and Mew only as mythical after the Champion. Tiers come from the best encounter share anywhere in Kanto: ≥ 15% common, ≥ 5% uncommon, rarer or never wild are rare. Pulls come one to three levels under the party (`Gacha.level`).
   - Owned lines weigh ×0.3, and ×0 on the first pull. A duplicate gives 2L² XP. A new journey starts with 400 stardust.
 - **Stardust:** station +1, a new station reached +20, a terminus cleared +100, boss +30, legendary +60, the stardust dungeon by stage.
 - **Evolution** happens by level as in v1: item → 30, trade → 36, other → 22. Eevee branches at random.

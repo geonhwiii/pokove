@@ -40,13 +40,13 @@ Your party holds up to three Pokémon. It only moves along the line while an age
 Getting a Pokémon never fails.
 
 - **Discovery:** about every 20 minutes of agent work, a Pokémon from the current area joins on the spot. One from a line you have gives experience instead.
-- **Gacha:** 400 stardust opens one of three Poké Balls. A line you have gives experience instead. The pool is everything met on the journey plus gacha-only Pokémon (the other starters, Eevee, fossils, Lapras and more), and Mew, very rarely, after the Champion.
+- **Gacha:** 400 stardust opens one of three Poké Balls. A line you have gives experience instead. Every unevolved Pokémon is in it from the start, the other starters, Eevee, fossils and Lapras included, one to three levels under the party. Evolved forms come from evolving, legendaries from beating them at their ★, and Mew, very rarely, after the Champion.
 - **Shinies:** 1 in 128 discoveries and gacha balls. A shiny from a line you have makes yours shine at its level.
 - **Pokédex rewards:** an Ultra Ball for every ten species caught.
 
 ![The Pokédex and a Pokémon's card](docs/images/pokedex.png)
 
-A Pokémon's card shows its next evolution, its next move, the experience left to the next level, the level cap and how it fares against the next boss. Pokémon you don't have yet show where to meet them. Drag party slots to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in. **Auto**, next to the party, sets up the best three for what's next.
+A Pokémon's card shows its next evolution, its next move, the experience left to the next level, the level cap and how it fares against the next boss. Pokémon you don't have yet show how to get them. Drag party slots to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in. **Auto**, next to the party, sets up the best three for what's next.
 
 ![The gacha](docs/images/gacha.png)
 

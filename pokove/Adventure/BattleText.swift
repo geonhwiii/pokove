@@ -286,10 +286,7 @@ nonisolated enum GuideText {
 
     static func habitat(_ habitat: Habitat, name: (Int) -> String) -> String {
         switch habitat {
-        case .wild(let chapter): return korean ? "\(chapter + 1)장 역에서 만나요" : "Found at the stations of chapter \(chapter + 1)"
-        case .gacha(let chapter):
-            if chapter == 0 { return korean ? "뽑기에서 나와요" : "Comes from the gacha" }
-            return korean ? "\(chapter + 1)장부터 뽑기에서 나와요" : "Comes from the gacha from chapter \(chapter + 1)"
+        case .gacha: return korean ? "뽑기에서 나와요" : "Comes from the gacha"
         case .legend(let chapter): return korean ? "\(chapter + 1)장 ★ 전설에게 이기면 동료가 돼요" : "Beat chapter \(chapter + 1)'s ★ legendary to add it"
         case .mythical: return korean ? "챔피언이 된 뒤 뽑기에서 아주 드물게 나와요" : "Very rarely from the gacha, once you're Champion"
         case .evolves(let from, let level):

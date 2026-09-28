@@ -250,21 +250,6 @@ nonisolated enum Kanto {
         return caps[min(max(0, badges), caps.count - 1)]
     }
 
-    /// Pokémon that never turn up in the wild, only in the gacha, from the chapter (0-based) where
-    /// the games give them away.
-    static let gachaOnly: [(species: Int, chapter: Int)] = gachaOnlyByLeg.map { ($0.species, $0.leg * chaptersPerLeg) }
-
-    private static let gachaOnlyByLeg: [(species: Int, leg: Int)] = [
-        (1, 0), (4, 0), (7, 0),
-        (122, 0),                   // Mr. Mime, traded on Route 2
-        (138, 1), (140, 1), (142, 1),  // fossils, Mt. Moon
-        (124, 2),                   // Jynx, traded in Cerulean
-        (83, 2),                    // Farfetch'd, traded in Vermilion
-        (133, 4), (137, 4),         // Eevee and Porygon, Celadon
-        (108, 4),                   // Lickitung, traded on Route 18
-        (106, 6), (107, 6), (131, 6),  // Fighting Dojo, Silph Co.
-    ]
-
     /// Mew only shows up in the gacha once you're the champion.
     static let mew = 151
 

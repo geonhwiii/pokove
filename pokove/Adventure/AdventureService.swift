@@ -632,8 +632,8 @@ final class AdventureService {
         var levels = SeededRNG(seed: rng.next())
         let partyLevel = partyLevel, cap = levelCap
         // The first pull always brings someone new.
-        var cards = Gacha.draw(pool: pool, level: { id in
-            data.dex[id].map { Discovery.level(of: $0, partyLevel: partyLevel, cap: cap, rng: &levels) } ?? 5
+        var cards = Gacha.draw(pool: pool, level: { _ in
+            Gacha.level(partyLevel: partyLevel, cap: cap, rng: &levels)
         }, isOwned: { self.owned(family: $0) != nil }, duplicateWeight: pulls == 1 ? 0 : 0.3, floor: floor, rng: &rng)
         for index in cards.indices { cards[index].shiny = Shiny.roll(&rng) }
         offer = cards
