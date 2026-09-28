@@ -67,8 +67,10 @@ private struct SettingsIcon: View {
 // MARK: General
 
 private struct GeneralSettingsPane: View {
+    @Environment(AppModel.self) private var app
     @Environment(Preferences.self) private var preferences
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var confirmsUninstall = false
 
     /// Quits, then reopens from a detached helper once this process is gone, so the new instance
     /// can take over the Claude hook port.
@@ -147,10 +149,16 @@ private struct GeneralSettingsPane: View {
 
             Section {
                 HStack {
+                    Button("Uninstall pokove…", role: .destructive) { confirmsUninstall = true }
                     Spacer()
                     Button("Quit pokove") { NSApp.terminate(nil) }
                 }
             }
+        }
+        .confirmationDialog("Uninstall pokove?", isPresented: $confirmsUninstall) {
+            Button("Uninstall", role: .destructive) { Uninstaller.run(app: app) }
+        } message: {
+            Text("Your adventure, to-dos, clipboard history and settings go to the Trash with the app, and the Claude hooks and login item are removed. Empty the Trash to delete them for good. pokove stays in System Settings’ permission lists until you remove it there.")
         }
     }
 }

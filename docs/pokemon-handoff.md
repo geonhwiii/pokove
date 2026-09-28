@@ -203,6 +203,12 @@ round with mockups; where this conflicts with v3 below, v3.1 wins.
   runs `scripts/appcast.py`), `gh release create`, then push `site/public/appcast.xml`. Debug builds
   only update from `debugFeedURL`; `debugLatestVersion 9.9` fakes the dot; `update` checks at once.
   1.2.4 and earlier still use the old GitHub check, whose button opens the release page.
+- **Uninstall** (`Uninstaller`, Settings › General › Uninstall pokove…, since 1.2.6): stops the app,
+  removes the Claude hooks only if they're there (so settings.json isn't rewritten for nothing), the
+  login item, then moves to the Trash Application Support/pokove, Caches, HTTPStorages, WebKit, the
+  preference files and the app itself, for both pokove and dancove (dancove's folder would otherwise be
+  copied back by `LegacyMigration` on a reinstall), and exits without the save on quit. Tested for
+  real on the user's Mac with a backup; nothing named pokove or dancove was left in ~/Library.
 - **Shiny Pokémon** (`Shiny`): 1/128 per discovery and per gacha ball (rolled when dealt). A shiny
   duplicate makes the owned one shiny at its level. Shiny BW battle sprites (`animated/shiny`,
   `animated/back/shiny`); box icons have no shiny art, so they get a `ShinyMark` ✦. A shiny partner

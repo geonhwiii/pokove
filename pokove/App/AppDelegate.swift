@@ -196,6 +196,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             SettingsWindowController.shared.show(app: app, pane: parts.count > 1 ? SettingsPane(rawValue: parts[1]) : nil)
         case "update":
             app.updates.debugCheckInBackground()
+        case "uninstall":
+            // Really uninstalls this Debug build and everything the app keeps; the dialog is skipped.
+            Uninstaller.run(app: app)
         default:
             break
         }

@@ -3581,6 +3581,36 @@
         }
       }
     },
+    "Uninstall": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제거"
+          }
+        }
+      }
+    },
+    "Uninstall pokove?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove를 제거할까요?"
+          }
+        }
+      }
+    },
+    "Uninstall pokove…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pokove 제거…"
+          }
+        }
+      }
+    },
     "Unpin": {
       "localizations": {
         "ko": {
@@ -3787,6 +3817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "포켓몬, 도감, 여정이 모두 지워져요. 되돌릴 수 없어요."
+          }
+        }
+      }
+    },
+    "Your adventure, to-dos, clipboard history and settings go to the Trash with the app, and the Claude hooks and login item are removed. Empty the Trash to delete them for good. pokove stays in System Settings’ permission lists until you remove it there.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모험 저장, 할 일, 클립보드 기록, 설정이 앱과 함께 휴지통으로 가고, Claude 훅과 로그인 항목은 없어져요. 휴지통을 비우면 완전히 지워져요. 시스템 설정의 권한 목록에 남은 pokove는 거기서 빼면 돼요."
           }
         }
       }
