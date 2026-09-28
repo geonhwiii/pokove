@@ -5,6 +5,16 @@
     <link>https://pokove.vercel.app/appcast.xml</link>
     <language>ko</language>
     <item>
+      <title>pokove 1.2.7</title>
+      <pubDate>Tue, 29 Sep 2026 01:16:04 +0900</pubDate>
+      <sparkle:version>10</sparkle:version>
+      <sparkle:shortVersionString>1.2.7</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>던전의 &quot;다시&quot; 버튼이 소탕으로 바뀌었어요. 가장 높이 깬 단계의 보상을 싸우지 않고 바로 받고, 도전 횟수를 하나 써요</li><li>소탕해도 클리어할 때와 같은 승리 화면이 나와요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>The dungeons&#x27; &quot;Redo&quot; button is now Sweep: it takes your best stage&#x27;s reward at once, without the battle, for one try</li><li>A sweep shows the same victory card as a clear</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.2.7/pokove.zip" type="application/octet-stream" sparkle:edSignature="w7f+BZqxN+i4DxBaYLjbMuKlllEM57hxkAkuvTznQ/z10C6tynMVpMH/XRPDssVeffh9zQ35msvVOjc0eolDAw==" length="4063391"/>
+    </item>
+    <item>
       <title>pokove 1.2.6</title>
       <pubDate>Mon, 28 Sep 2026 21:06:18 +0900</pubDate>
       <sparkle:version>9</sparkle:version>
