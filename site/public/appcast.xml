@@ -5,6 +5,16 @@
     <link>https://pokove.vercel.app/appcast.xml</link>
     <language>ko</language>
     <item>
+      <title>pokove 1.2.8</title>
+      <pubDate>Tue, 29 Sep 2026 01:20:12 +0900</pubDate>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>1.2.8</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>던전 도전 횟수를 다 쓰면 &quot;04:00 초기화&quot;라고 보여요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>A dungeon with no tries left says &quot;Resets at 04:00&quot;</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.2.8/pokove.zip" type="application/octet-stream" sparkle:edSignature="BAxfMmiJYAeAa8nKTYKUGpej+M8Jan62j+G+7PXJCTMChjCQGX3K8DeruW7Nrt81fmeTVLG7C3nfZhXSWrZ6DA==" length="4063342"/>
+    </item>
+    <item>
       <title>pokove 1.2.7</title>
       <pubDate>Tue, 29 Sep 2026 01:16:04 +0900</pubDate>
       <sparkle:version>10</sparkle:version>
