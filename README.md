@@ -122,6 +122,7 @@ xcodebuild -project pokove.xcodeproj -scheme pokove -configuration Release -deri
 - `scripts/package.sh [notes.md]`는 릴리스용 `build/pokove.dmg`(직접 받는 용)와 `build/pokove.zip`(앱 안 업데이트용)을 만들고 `gh release create` 명령을 알려줘요. 릴리스 노트를 넘기면 `scripts/appcast.py`가 zip에 서명해서 `site/public/appcast.xml`에 새 버전을 더해요. 릴리스를 올린 뒤 appcast를 푸시하면, 설치된 앱이 앱 안에서 업데이트해요.
   - 서명 키는 이 Mac의 로그인 키체인에 있어요(Sparkle `generate_keys`). 앱에는 공개키만 `Config/Info.plist`에 들어가요. 키를 잃으면 설치된 앱이 새 업데이트를 받지 못하니, `generate_keys -x <파일>`로 내보내서 안전한 곳에 백업해 두세요.
 - `scripts/adventure-sim.swift`는 게임 규칙을 수백 시간 돌려서 진행 속도를 맞춰요. 규칙과 조정 기록은 [`docs/pokemon-handoff.md`](docs/pokemon-handoff.md)에 있어요.
+- `scripts/make-dmg.py`와 `Config/dmg-settings.py`가 DMG 창을 꾸며요(`dmgbuild`, `build/` 안 전용 환경). 배경은 `swift scripts/make-dmg-background.swift`가 그려요. 속성색 몬스터볼 세 개가 놓인 연구소 탁자예요.
 - `swift scripts/make-icon.swift`는 앱 아이콘(노을 진 바닷가를 그린 44칸 픽셀 아트)을 다시 그려요.
 
 **번역:** 앱은 시스템 언어를 따르고 영어와 한국어를 지원해요. 설정 › 일반 › 언어에서 바꿀 수 있어요. 문구는 `pokove/Localizable.xcstrings`에 있어요. UI 문구를 더했다면:

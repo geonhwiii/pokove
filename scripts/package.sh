@@ -17,14 +17,14 @@ VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP/Co
 rm -f build/pokove.zip
 ditto -c -k --sequesterRsrc --keepParent "$APP" build/pokove.zip
 
-# The download people get by hand: the app beside a link to Applications, to drag it onto.
-# In-app updates keep using the zip.
-rm -rf build/dmg build/pokove.dmg
-mkdir -p build/dmg
-ditto "$APP" build/dmg/pokove.app
-ln -s /Applications build/dmg/Applications
-hdiutil create -volname pokove -srcfolder build/dmg -format UDZO -quiet build/pokove.dmg
-rm -rf build/dmg
+# The download people get by hand: the app beside Applications over the starters' table, to drag
+# it across (scripts/make-dmg.py). In-app updates keep using the zip.
+if [[ ! -x build/dmgbuild-venv/bin/python ]]; then
+  /usr/bin/python3 -m venv build/dmgbuild-venv
+  build/dmgbuild-venv/bin/pip install -q "dmgbuild==1.6.4"
+fi
+rm -f build/pokove.dmg
+build/dmgbuild-venv/bin/python scripts/make-dmg.py "$APP" build/pokove.dmg
 
 echo "Wrote build/pokove.zip and build/pokove.dmg (version $VERSION)"
 if [[ $# -ge 1 ]]; then scripts/appcast.py "$1"; fi
