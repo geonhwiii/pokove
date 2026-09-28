@@ -33,6 +33,13 @@ struct AdventureSim {
         if !isDuel, args.count > 1, let scale = Double(args[1]) { PokeMath.xpScale = scale }
         // SIM_WINS sets the wild wins a station takes per level of it.
         if let wins = Double(ProcessInfo.processInfo.environment["SIM_WINS"] ?? "") { Chapter.winsPerLevel = wins }
+        // SIM_HEADSTART sets how far under a station's level its count starts; SIM_ARRIVAL the
+        // stardust for a new station and for a terminus, as "20,100".
+        if let start = Double(ProcessInfo.processInfo.environment["SIM_HEADSTART"] ?? "") { Chapter.winsHeadStart = start }
+        if let pay = ProcessInfo.processInfo.environment["SIM_ARRIVAL"]?.split(separator: ",").compactMap({ Int($0) }), pay.count == 2 {
+            Rewards.arrivalStation = pay[0]
+            Rewards.arrivalTerminus = pay[1]
+        }
         let starter = !isDuel && args.count > 2 ? Int(args[2]) ?? 4 : 4
         let seed = !isDuel && args.count > 3 ? UInt64(args[3]) ?? 42 : 42
         let hoursPerDay = !isDuel && args.count > 4 ? Double(args[4]) ?? 2.9 : 2.9
@@ -262,7 +269,14 @@ struct AdventureSim {
                 clears += 1
                 stardust += Rewards.stardust(for: battle!.plan.kind)
                 if case .station(let point) = target {
-                    progress.recordStation(point, cleared: true, defeated: battle!.plan.foes.count, chapters: chapters)
+                    let outcome = progress.recordStation(point, cleared: true, defeated: battle!.plan.foes.count, chapters: chapters)
+                    if outcome == .advanced || outcome == .chapter {
+                        stardust += Rewards.arrival(terminus: point.station == Chapter.stationCount - 1)
+                        if ProcessInfo.processInfo.environment["SIM_LINE"] != nil, point.chapter < 6 {
+                            print(String(format: "%5.2fh %d-%d cleared (stardust %d, pulls %d, party Lv %d)", hour(tick), point.chapter + 1,
+                                         point.station + 1, stardust, pulls, partyLevel()))
+                        }
+                    }
                 }
                 battle = nil
             case .wiped:

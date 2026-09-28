@@ -259,6 +259,14 @@ nonisolated enum GuideText {
     static func xpLeft(_ amount: Int) -> String { korean ? "EXP \(amount) 남음" : "\(amount) EXP to go" }
     static func xpLeftLong(_ amount: Int) -> String { korean ? "다음 레벨까지 EXP \(amount)" : "EXP \(amount) to the next level" }
     static func xpGained(_ amount: Int) -> String { "EXP +\(amount)" }
+    /// "1-3 도착 · 별의모래 +20", or "1장 클리어 · 별의모래 +100" for a terminus.
+    static func arrived(_ arrival: Arrival) -> String {
+        let chapter = arrival.cleared.chapter + 1
+        let place = arrival.terminus
+            ? (korean ? "\(chapter)장 클리어" : "Chapter \(chapter) cleared")
+            : (korean ? "\(chapter)-\(arrival.cleared.station + 2) 도착" : "On to \(chapter)-\(arrival.cleared.station + 2)")
+        return korean ? "\(place) · 별의모래 +\(arrival.stardust)" : "\(place) · Stardust +\(arrival.stardust)"
+    }
 
     // The Pokédex.
     static var ownedOnly: String { korean ? "보유만" : "Owned" }

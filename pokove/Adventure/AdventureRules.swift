@@ -428,6 +428,13 @@ nonisolated enum Rewards {
         case .tower: BattleTower.stardustPerFloor
         }
     }
+
+    /// Stardust for reaching a new station, or for clearing a line's terminus. Early stations go
+    /// by in minutes, so this pays most at the start and fades as stations take longer.
+    static func arrival(terminus: Bool) -> Int { terminus ? arrivalTerminus : arrivalStation }
+
+    nonisolated(unsafe) static var arrivalStation = 20
+    nonisolated(unsafe) static var arrivalTerminus = 100
 }
 
 // MARK: Daily dungeons
@@ -558,16 +565,22 @@ nonisolated enum DailyDungeon {
         return matching.isEmpty ? dex.species.filter { !$0.isSpecial && ($0.evolveLevel ?? 0) <= level } : matching
     }
 
-    /// The same three all day for a stage, so a retry faces what beat you: two a little below the
-    /// stage's level, then one of the strongest around at it.
+    /// One Pokémon on stage 1 and two on stage 2, so a lone starter can clear the first; three from
+    /// stage 3, the last a boss.
+    static func foes(stage: Int) -> Int { min(foesPerStage, max(1, stage)) }
+
+    /// The same foes all day for a stage, so a retry faces what beat you: a little below the stage's
+    /// level, then, from stage 3, one of the strongest around at it.
     static func plan(_ kind: DungeonKind, stage: Int, on date: Date, data: GameData) -> StagePlan {
         let key = "\(day(of: date))-\(kind.rawValue)-\(stage)"
         var rng = SeededRNG(seed: key.unicodeScalars.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1.value)) &* 1099511628211 })
         let types = types(kind, on: date)
         let level = level(stage: stage)
-        let foes = (0..<foesPerStage).map { index -> StagePlan.Foe in
-            let isBoss = index == foesPerStage - 1
-            let foeLevel = max(2, level - (foesPerStage - 1) + index)
+        let count = foes(stage: stage)
+        let foes = (0..<count).map { index -> StagePlan.Foe in
+            let isBoss = count == foesPerStage && index == count - 1
+            // A short stage starts lower still: Lv 2, then Lv 4–5, then Lv 7–9 with the boss.
+            let foeLevel = max(2, level - (foesPerStage - 1) + index - (foesPerStage - count))
             var candidates = species(types: types, level: foeLevel, evolved: isBoss, dex: data.dex)
             if isBoss { candidates = Array(candidates.sorted { $0.stats.total > $1.stats.total }.prefix(3)) }
             let pick = candidates.isEmpty ? 19 : candidates[Int(rng.next() % UInt64(candidates.count))].id

@@ -69,15 +69,18 @@ nonisolated struct LegendSpot: Identifiable, Equatable, Sendable {
 nonisolated struct Chapter: Identifiable, Equatable, Sendable {
     static let stationCount = 10
 
-    /// Wild Pokémon to beat at a station before the line moves on, rising with its level, so early
-    /// stations go by in minutes and late ones in half an hour, and the line lasts about as long as
-    /// the journey to the Champion (see scripts/adventure-sim.swift). A terminus takes one win over
-    /// its three.
+    /// Wild Pokémon to beat at a station before the line moves on, rising with its level, so the
+    /// first stations go by in about a minute and late ones in half an hour, and the line lasts about
+    /// as long as the journey to the Champion (see scripts/adventure-sim.swift). Counting from a bit
+    /// under the level lightens the first chapters and barely touches the late ones. A terminus
+    /// takes one win over its three.
     static func winsNeeded(_ station: Station, isTerminus: Bool) -> Int {
-        isTerminus ? StagePlan.lastStationFoes : max(3, Int((Double(station.level) * winsPerLevel).rounded()))
+        isTerminus ? StagePlan.lastStationFoes
+            : max(3, Int(((Double(station.level) - winsHeadStart) * winsPerLevel).rounded()))
     }
 
     nonisolated(unsafe) static var winsPerLevel = 2.5
+    nonisolated(unsafe) static var winsHeadStart = 1.5
 
     /// 1-based, as shown ("1장").
     let number: Int

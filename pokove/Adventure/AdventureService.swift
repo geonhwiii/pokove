@@ -156,6 +156,13 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     }
 }
 
+/// A station left behind for the next one, or a terminus cleared, and the stardust it paid.
+nonisolated struct Arrival: Equatable, Sendable {
+    let cleared: StationPoint
+    let terminus: Bool
+    let stardust: Int
+}
+
 /// A finished challenge, for the battle scene's win or loss card.
 nonisolated struct ChallengeResult: Equatable, Sendable {
     enum Kind: Equatable, Sendable {
@@ -208,6 +215,9 @@ final class AdventureService {
     /// The last challenge's outcome, for the scene's result card; `resultSerial` bumps on every one.
     private(set) var lastResult: ChallengeResult?
     private(set) var resultSerial = 0
+    /// The last new station reached and what it paid, for the scene; `arrivalSerial` bumps on every one.
+    private(set) var lastArrival: Arrival?
+    private(set) var arrivalSerial = 0
     /// While someone watches, battles wait here for a challenge's intro or result card to play.
     private var holdUntil: Date?
     /// Three balls waiting for the user to pick one.
@@ -817,6 +827,14 @@ final class AdventureService {
             let wasOpen = progress.isBossOpen(data.chapters)
             let outcome = progress.recordStation(point, cleared: cleared, defeated: plan.foes.count, chapters: data.chapters)
             let frontier = outcome == .advanced || outcome == .chapter
+            if frontier {
+                let terminus = point.station == Chapter.stationCount - 1
+                let prize = Rewards.arrival(terminus: terminus)
+                stardust += prize
+                note { $0.stardust += prize }
+                lastArrival = Arrival(cleared: point, terminus: terminus, stardust: prize)
+                arrivalSerial &+= 1
+            }
             if !wasOpen, progress.isBossOpen(data.chapters), let next = progress.nextBoss(data.chapters) {
                 note { $0.gymsOpened.append(next.chapter) }
             }

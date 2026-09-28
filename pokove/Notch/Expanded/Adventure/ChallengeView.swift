@@ -226,7 +226,8 @@ private struct StageLineView: View {
             } label: {
                 VStack(spacing: 3) {
                     StationDot(state: state, isHere: isHere && here.station == station, isSelected: selected == point,
-                               isTerminus: station == Chapter.stationCount - 1)
+                               isTerminus: station == Chapter.stationCount - 1,
+                               gauge: gauge(at: station, here: here, isHere: isHere))
                         .frame(height: 18)
                     Text("\(station + 1)")
                         .font(.system(size: 9, weight: .heavy, design: .rounded).monospacedDigit())
@@ -246,6 +247,15 @@ private struct StageLineView: View {
                 .animation(.smooth(duration: 0.4), value: here)
                 .allowsHitTesting(false)
         }
+    }
+
+    /// How far the party is through the station it's on, 0–1: the frontier's wins so far over
+    /// what it takes. Nil on a terminus, a repeat or training, which don't fill up.
+    private func gauge(at station: Int, here: StationPoint, isHere: Bool) -> CGFloat? {
+        let adventure = app.adventure
+        guard isHere, here.station == station, here == adventure.progress.frontier, station < Chapter.stationCount - 1,
+              let count = adventure.stationWins, count.needed > 0 else { return nil }
+        return CGFloat(min(count.wins, count.needed)) / CGFloat(count.needed)
     }
 
     static let lineColor = Color(hex: 0x3DBB6A)
@@ -331,18 +341,9 @@ private struct StageLineView: View {
                     fixPill(.gacha)
                 } else if adventure.isBattling {
                     let isTerminus = point.station == Chapter.stationCount - 1
-                    if !isTerminus, point == progress.frontier, let count = adventure.stationWins {
-                        // Wild Pokémon beaten here, and how many move the line on.
-                        Text("\(count.wins)/\(count.needed)")
-                            .font(.system(size: 8.5, weight: .bold).monospacedDigit())
-                            .foregroundStyle(.white.opacity(0.55))
-                            .contentTransition(.numericText())
-                            .help("Wild Pokémon beaten at this station")
-                    } else {
-                        Text("Lv \(adventure.foeLevel(station, isTerminus: isTerminus))")
-                            .font(.system(size: 8.5, weight: .bold).monospacedDigit())
-                            .foregroundStyle(.white.opacity(0.4))
-                    }
+                    Text("Lv \(adventure.foeLevel(station, isTerminus: isTerminus))")
+                        .font(.system(size: 8.5, weight: .bold).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.4))
                 }
             } else {
                 Image(systemName: "checkmark").foregroundStyle(Self.lineColor)
@@ -415,6 +416,8 @@ private struct StationDot: View {
     let isSelected: Bool
     /// The line's last station, drawn as a bigger terminus.
     var isTerminus = false
+    /// The wild Pokémon beaten here so far, 0–1, filling a ring around the dot; nil draws none.
+    var gauge: CGFloat?
 
     @State private var pulse = false
 
@@ -422,7 +425,18 @@ private struct StationDot: View {
         let size: CGFloat = isTerminus ? 16 : 12
         let ring: CGFloat = isTerminus ? 3.5 : 2.5
         ZStack {
-            if isHere {
+            if isHere, let gauge {
+                // Each win fills the ring a little more; a full ring moves the line on.
+                Circle().fill(Color(hex: 0xFFD35A).opacity(pulse ? 0.06 : 0.22)).frame(width: pulse ? size + 12 : size + 7, height: pulse ? size + 12 : size + 7)
+                Circle().fill(.black).frame(width: size + 5, height: size + 5)
+                Circle().stroke(.white.opacity(0.22), lineWidth: 3).frame(width: size + 2, height: size + 2)
+                Circle().trim(from: 0, to: gauge)
+                    .stroke(Color(hex: 0xFFD35A), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: size + 2, height: size + 2)
+                    .animation(.smooth(duration: 0.45), value: gauge)
+                Circle().fill(Color(hex: 0xFFD35A)).frame(width: size - 6, height: size - 6)
+            } else if isHere {
                 Circle().fill(Color(hex: 0xFFD35A).opacity(pulse ? 0.08 : 0.35)).frame(width: pulse ? size + 10 : size + 4, height: pulse ? size + 10 : size + 4)
                 Circle().fill(Color(hex: 0xFFD35A)).frame(width: size + 2, height: size + 2)
                 Circle().strokeBorder(.white, lineWidth: 3).frame(width: size + 3, height: size + 3)
@@ -948,7 +962,7 @@ private struct DungeonCard: View {
     @ViewBuilder
     private func actions(_ adventure: AdventureService, climb: DungeonClimb, running: Int?) -> some View {
         if running != nil, let battle = adventure.battle {
-            Text("\(min(battle.foeIndex + 1, DailyDungeon.foesPerStage))/\(DailyDungeon.foesPerStage)")
+            Text("\(min(battle.foeIndex + 1, battle.plan.foes.count))/\(battle.plan.foes.count)")
                 .font(.system(size: 9.5, weight: .heavy).monospacedDigit())
                 .foregroundStyle(Color(hex: 0xFFD35A))
                 .frame(height: 19)

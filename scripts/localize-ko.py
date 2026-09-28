@@ -344,7 +344,6 @@ KO = {
     "Journey": "여정",
     "Level cap raised to %lld.": "레벨 상한이 %lld까지 올랐어요.",
     "Next station": "다음 역",
-    "Wild Pokémon beaten at this station": "이 역에서 이긴 야생 포켓몬",
     "Take on the next station now": "지금 다음 역에 도전해요",
     "Training at %lld-%lld": "%1$lld-%2$lld에서 연습 중",
     "Not yet reached": "아직 못 감",

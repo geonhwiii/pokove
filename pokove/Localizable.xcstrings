@@ -3721,16 +3721,6 @@
         }
       }
     },
-    "Wild Pokémon beaten at this station": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 역에서 이긴 야생 포켓몬"
-          }
-        }
-      }
-    },
     "Works with Music, Spotify, browsers and any app that reports to Control Center.": {
       "localizations": {
         "ko": {

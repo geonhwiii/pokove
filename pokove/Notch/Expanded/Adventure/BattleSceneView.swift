@@ -28,6 +28,9 @@ struct BattleSceneView: View {
     @State private var cardSerial = 0
     @State private var sparkling = false
     @State private var sparkleSerial = 0
+    /// A new station reached, and its stardust, across the middle of the scene for a moment.
+    @State private var arrival: Arrival?
+    @State private var arrivalSerial = 0
 
     var body: some View {
         let adventure = app.adventure
@@ -79,6 +82,13 @@ struct BattleSceneView: View {
             // Numbers over the plates, so a big hit is never hidden.
             ForEach(popups) { popup in
                 ScenePopupView(popup: popup).position(popup.point)
+            }
+
+            if let arrival {
+                ArrivalBanner(arrival: arrival)
+                    .position(x: layout.size.width / 2, y: layout.size.height * 0.5)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                    .allowsHitTesting(false)
             }
 
             SceneChrome()
@@ -134,6 +144,7 @@ struct BattleSceneView: View {
             if adventure.target?.showsIntro == true, let plan = adventure.battle?.plan { showIntro(plan) }
         }
         .onChange(of: adventure.resultSerial) { showResult(adventure.lastResult) }
+        .onChange(of: adventure.arrivalSerial) { showArrival(adventure.lastArrival) }
         #if DEBUG
         .onReceive(NotificationCenter.default.publisher(for: .pokoveDebugMoveEffect)) { note in
             debugEffect(slug: note.object as? String, byFoe: note.userInfo?["foe"] as? Bool == true, layout: layout)
@@ -153,6 +164,17 @@ struct BattleSceneView: View {
         Task {
             guard (try? await Task.sleep(for: .seconds(AdventureService.introHold - 0.2))) != nil, cardSerial == serial else { return }
             withAnimation(.smooth(duration: 0.3)) { intro = nil }
+        }
+    }
+
+    private func showArrival(_ value: Arrival?) {
+        guard let value else { return }
+        withAnimation(.smooth(duration: 0.25)) { arrival = value }
+        arrivalSerial &+= 1
+        let serial = arrivalSerial
+        Task {
+            guard (try? await Task.sleep(for: .seconds(1.8))) != nil, arrivalSerial == serial else { return }
+            withAnimation(.smooth(duration: 0.4)) { arrival = nil }
         }
     }
 
@@ -525,8 +547,9 @@ private struct SceneChrome: View {
         case .legend(let id):
             return "★ " + (adventure.data?.legend(id).flatMap { adventure.dex.species($0.species)?.name } ?? "")
         case .dungeon(let kind, let stage):
-            let foe = min((adventure.battle?.foeIndex ?? 0) + 1, DailyDungeon.foesPerStage)
-            return "\(ChallengeText.dungeon(kind)) \(ChallengeText.stage(stage)) · \(foe)/\(DailyDungeon.foesPerStage)"
+            let count = adventure.battle?.plan.foes.count ?? DailyDungeon.foes(stage: stage)
+            let foe = min((adventure.battle?.foeIndex ?? 0) + 1, count)
+            return "\(ChallengeText.dungeon(kind)) \(ChallengeText.stage(stage)) · \(foe)/\(count)"
         case .tower(let floor):
             return "\(ChallengeText.tower) · \(ChallengeText.floor(floor))"
         }
@@ -691,6 +714,25 @@ private struct SceneShake {
     var seconds: Double
     /// Earthquakes rock the scene up and down too.
     var vertical: CGFloat { amount >= 3 ? 1 : 0.3 }
+}
+
+/// "1-3 도착 · 별의모래 +20" on a dark pill.
+private struct ArrivalBanner: View {
+    let arrival: Arrival
+
+    var body: some View {
+        HStack(spacing: 3) {
+            StardustIcon(size: 11)
+            Text(GuideText.arrived(arrival))
+                .font(.system(size: 9.5, weight: .heavy, design: .rounded).monospacedDigit())
+                .foregroundStyle(Color(hex: 0xFFE14D))
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 19)
+        .background(.black.opacity(0.62), in: Capsule())
+        .overlay(Capsule().strokeBorder(Color(hex: 0xFFE14D).opacity(0.45), lineWidth: 1))
+        .fixedSize()
+    }
 }
 
 struct ScenePopup: Identifiable, Equatable {

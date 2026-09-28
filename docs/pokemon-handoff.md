@@ -3,6 +3,31 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v3.4: an easier start, and progress you can see (agreed with the user, 2026-09-28)
+
+Where this conflicts with v3.3 or earlier, v3.4 wins. After a fresh start the user sat at 1-1 on 4 of
+8 wins with no sign that wins counted, and 400 stardust for a pull was out of reach early on. The ask
+was a curve that is quick at first and harder later, not just lower numbers.
+
+- **Each station's dot is a ring gauge** (`StationDot.gauge`): each win fills it, and a full ring moves
+  the line on. The "12/40" count in the footer is gone; the user found a bare count unclear.
+  A ring on the line's narrow gaps read better than filling the track between dots, which showed a few
+  pixels.
+- **Wins count from 1.5 levels under the station** (`Chapter.winsHeadStart`):
+  `max(3, round((level − 1.5) × 2.5))`, so 1-1 takes 4 (was 8), chapter 1 ~50 (was 88), and late
+  stations barely change (Lv 50: 121, was 125). The user picked "a bit faster": chapter 1 in ~12 min,
+  the first badge in about an hour.
+- **Reaching a new station pays stardust** (`Rewards.arrival`): 20 a station, 100 for a terminus.
+  The scene shows "1-4 도착 · 별의모래 +20" for a moment (`Arrival`, `ArrivalBanner`). Early stations
+  go by in a minute or two, so this pays most at the start and fades as stations get longer.
+- **Dungeon stages 1 and 2 are short** (`DailyDungeon.foes(stage:)`): one Lv 2 Pokémon, then two at
+  Lv 4–5, no boss; three with the boss from stage 3 (Lv 7–9). A lone Lv 5 starter lost stage 1
+  (three with a 1.5×-HP boss) every time, spending the first day's tries for nothing; it now wins
+  stage 1 ~97% of the time. The strongest-species pick lost 80% to type alone at low levels.
+- **Sim, six 70 h runs:** badge 1 at 0.8–1.3 h, badge 4 at 9–13 h, badge 8 at 31–39 h, Champion at
+  51–59 h (v3.3: 48–61 h). Pulls by 1 h: 3–5 (v3.3: 1, the free one); by 8 h ~20 (was ~10); by 48 h
+  ~95 (was ~72). The gacha only draws species already met, so more pulls don't bring strong ones early.
+
 ## v3.3: bigger hits, move effects, two staged dungeons, an ungated line (agreed with the user, 2026-09-28)
 
 Where this conflicts with v3.2 or earlier, v3.3 wins.
@@ -337,11 +362,11 @@ Notes on the data:
   - Items (`sprites/items/poke-ball.png` etc., 30×30) and badges (`sprites/badges/1…8.png`) come from the same repo.
   - Trainers come from Showdown: `play.pokemonshowdown.com/sprites/trainers/<name>-gen3.png`.
 
-## Rules (v3.2; tune with scripts/adventure-sim.swift)
+## Rules (v3.4; tune with scripts/adventure-sim.swift)
 
 - **Journey:** `Kanto.chapters(starter:)` holds 30 chapters of 10 stations (`Chapter.stationCount`), three per leg of Kanto (`Kanto.leg`, `Kanto.chaptersPerLeg`).
   - Stations take their wild pool and backdrop from a `Stretch` (FRLG areas); levels rise evenly across the chapter's range and are capped at the party level −1 when fought. One wild Pokémon a station; the 10th is a terminus with three, the last the stretch's strongest species at +2 (`StagePlan.station`).
-  - There is no level gate (`JourneyProgress.stationTarget(_:)`): a station opens the next after `Chapter.winsNeeded` wild Pokémon beaten there (2.5 × its level); a terminus after one win, its boss at station level +2 regardless of the party.
+  - There is no level gate (`JourneyProgress.stationTarget(_:)`): a station opens the next after `Chapter.winsNeeded` wild Pokémon beaten there (2.5 × (its level − 1.5), at least 3), shown as a ring around its dot; a terminus after one win, its boss at station level +2 regardless of the party.
   - Chapters 3, 6, …, 24 have a gym leader, chapter 27 the League (Lorelei, Bruno, Agatha, Lance, the rival); the others have none. The line doesn't wait for them: N-10 leads to (N+1)-1. Chapters 28–30 (Cerulean Cave) have no boss, open with the Champion, and the last loops.
   - Trainers bring the **last three** of their original team (`Trainer.battleTeam`).
   - **Legendaries** (`Kanto.legends`, `Chapter.legend`) are ★ branches on chapters 13, 16, 19, 25 and 28 (the first of their legs), open once the chapter is reached. 2.5× HP.
@@ -363,13 +388,13 @@ Notes on the data:
   - **AI:** party, trainers and the dungeon pick the best expected damage. Wild Pokémon pick at random 40% of the time.
   - HP carries through a battle and heals after it. All three party members get the XP.
 - **XP per knockout:** `1.1 × √baseExp × (0.4 + 0.6 × min(1, foeLv/partyLv))`, ×1.5 from trainers, ×3 from legends, ×1.25 in the dungeons. Curve L³.
-- **Daily dungeons** (`DailyDungeon`): see v3.3 above. Stage n is Lv 3 + 2n; stardust 80 + 8n, an Ultra Ball (`Gacha.draw(floor: .rare)`) on the first clear of every tenth; EXP a sixth of a level at the stage's level. Three tries a day each; a new stage cleared gives its try back. Days turn at 04:00 local.
+- **Daily dungeons** (`DailyDungeon`): see v3.3 and v3.4 above. Stage n is Lv 3 + 2n, its foes two, one and zero levels under; stage 1 is one Lv 2 Pokémon and stage 2 two at Lv 4–5, no boss; stardust 80 + 8n, an Ultra Ball (`Gacha.draw(floor: .rare)`) on the first clear of every tenth; EXP a sixth of a level at the stage's level. Three tries a day each; a new stage cleared gives its try back. Days turn at 04:00 local.
 - **Discovery:** each station action has a chance of 1.5 s / mean interval (6 min until you own 3 Pokémon, then 20 min), from the current station's stretch.
   - It joins at 85% of the party level −1 ±2, at least at its evolve level, and at most the cap. A duplicate line gives its owned copy L² XP.
 - **Gacha:** 400 stardust buy three Poké Balls, drawn without replacement by rarity weight (common 10, uncommon 5, rare 2.2, mythical 0.2).
   - Tiers come from the best encounter share of the stretches reached: ≥ 15% common, ≥ 5% uncommon, rarer are rare. `Kanto.gachaOnly` species are rare (unlocked by chapter); Mew is mythical after the Champion.
   - Owned lines weigh ×0.3, and ×0 on the first pull. A duplicate gives 2L² XP. A new journey starts with 400 stardust.
-- **Stardust:** station +1, boss +30, legendary +60, the stardust dungeon by stage.
+- **Stardust:** station +1, a new station reached +20, a terminus cleared +100, boss +30, legendary +60, the stardust dungeon by stage.
 - **Evolution** happens by level as in v1: item → 30, trade → 36, other → 22. Eevee branches at random.
 
 ## Tuning (scripts/adventure-sim.swift: stations 1.5 s per action on agent time, AUTO with the suggested party, challenges and the dungeon off agent time, 2.9 agent hours a day)
