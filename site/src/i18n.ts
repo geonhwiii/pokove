@@ -53,7 +53,7 @@ const en = {
     features: [
       { art: 'badge', name: 'Gym leaders', text: 'Clear a chapter and its gym leader is ready for you.' },
       { art: 'master-ball', name: 'Legendaries', text: 'Beat one on a side branch and it joins your party.' },
-      { art: 'escape-rope', name: 'Daily dungeon', text: 'Five floors, a different type every day.' },
+      { art: 'escape-rope', name: 'Daily dungeons', text: 'Stardust and EXP, stage by stage, three tries a day.' },
       { art: 'poke-ball', name: 'New teammates', text: 'Someone new joins about every 20 minutes of work.' },
     ],
     note: 'Losing costs nothing, and you can turn the adventure off in Settings.',
@@ -179,7 +179,7 @@ const ko: Strings = {
     features: [
       { art: 'badge', name: '체육관 관장', text: '장을 다 지나면 그 장의 관장에게 도전할 수 있어요.' },
       { art: 'master-ball', name: '전설의 포켓몬', text: '갈림길에 숨어 있고, 이기면 동료가 돼요.' },
-      { art: 'escape-rope', name: '데일리 던전', text: '매일 타입이 바뀌는 5층짜리 던전이에요.' },
+      { art: 'escape-rope', name: '데일리 던전', text: '별의모래와 경험치 던전을 한 단계씩, 하루 세 번 도전해요.' },
       { art: 'poke-ball', name: '새 동료', text: '에이전트가 20분쯤 일할 때마다 포켓몬이 합류해요.' },
     ],
     note: '져도 잃는 건 없고, 모험은 설정에서 끌 수 있어요.',

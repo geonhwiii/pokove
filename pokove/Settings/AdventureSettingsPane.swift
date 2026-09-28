@@ -23,7 +23,7 @@ struct AdventureSettingsPane: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Pokémon adventure")
                             .font(.headline)
-                        Text("While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and a daily dungeon are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.")
+                        Text("While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and two daily dungeons are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }

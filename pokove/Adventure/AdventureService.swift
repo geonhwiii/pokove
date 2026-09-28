@@ -94,10 +94,8 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     var gymsOpened: [Int] = []
     /// Bosses that won, by trainer ID, and how many times.
     var losses: [String: Int] = [:]
-    /// A boss that has won several times in a row, for the best-team hint.
-    var stuck: String?
-    /// Dungeon tiers cleared.
-    var dungeon: [DungeonTier] = []
+    /// Dungeon stages cleared, and what they paid.
+    var dungeonStages: [DungeonClear] = []
     /// Shinies met: newcomers, and ones you had that started to shine.
     var shinies: [Int] = []
     /// Pokédex milestones reached (10, 20, …), each worth an Ultra Ball.
@@ -107,13 +105,22 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
 
     var isEmpty: Bool {
         clears == 0 && growth.isEmpty && discovered.isEmpty && evolutions.isEmpty && badges.isEmpty && gymsOpened.isEmpty && losses.isEmpty
-            && stuck == nil && dungeon.isEmpty && shinies.isEmpty && dexMilestones.isEmpty && tower == nil
+            && dungeonStages.isEmpty && shinies.isEmpty && dexMilestones.isEmpty && tower == nil
     }
 
     /// Worth a line over the battle when the page opens; the rest waits in the history.
     var isNotable: Bool {
-        !badges.isEmpty || !gymsOpened.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeon.isEmpty
+        !badges.isEmpty || !gymsOpened.isEmpty || !evolutions.isEmpty || !discovered.isEmpty || !losses.isEmpty || !dungeonStages.isEmpty
             || !shinies.isEmpty || !dexMilestones.isEmpty
+    }
+
+    /// A dungeon stage cleared while the page was closed.
+    struct DungeonClear: Codable, Equatable, Sendable {
+        let kind: DungeonKind
+        let stage: Int
+        var stardust = 0
+        var xp = 0
+        var ultraBall = false
     }
 
     init() {}
@@ -142,8 +149,7 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         badges = try container.decodeIfPresent([Int].self, forKey: .badges) ?? []
         gymsOpened = try container.decodeIfPresent([Int].self, forKey: .gymsOpened) ?? []
         losses = try container.decodeIfPresent([String: Int].self, forKey: .losses) ?? [:]
-        stuck = try container.decodeIfPresent(String.self, forKey: .stuck)
-        dungeon = try container.decodeIfPresent([DungeonTier].self, forKey: .dungeon) ?? []
+        dungeonStages = try container.decodeIfPresent([DungeonClear].self, forKey: .dungeonStages) ?? []
         shinies = try container.decodeIfPresent([Int].self, forKey: .shinies) ?? []
         dexMilestones = try container.decodeIfPresent([Int].self, forKey: .dexMilestones) ?? []
         tower = try container.decodeIfPresent(Int.self, forKey: .tower)
@@ -155,7 +161,7 @@ nonisolated struct ChallengeResult: Equatable, Sendable {
     enum Kind: Equatable, Sendable {
         case boss(Trainer)
         case legend(species: Int)
-        case dungeon(DungeonTier)
+        case dungeon(DungeonKind, stage: Int)
         /// The floor a Battle Tower run ended on.
         case tower(Int)
     }
@@ -168,13 +174,15 @@ nonisolated struct ChallengeResult: Equatable, Sendable {
     /// The level cap before and after a badge raised it.
     var cap: ClosedRange<Int>?
     var stardust = 0
+    /// Experience for each of the party, from the experience dungeon.
+    var xp = 0
     var ultraBall = false
     /// The forecast for the next try, after a loss.
     var chance: Double?
 }
 
 /// The adventure: a party of up to three rides a line of stations while a coding agent works,
-/// battling wild Pokémon in a 1:1 relay. Gym leaders, the League, legendaries and the daily dungeon
+/// battling wild Pokémon in a 1:1 relay. Gym leaders, the League, legendaries and the daily dungeons
 /// are challenges the user starts, which then play out on their own. Pokémon join through discoveries and the
 /// gacha; badges raise the level cap.
 @Observable
@@ -184,7 +192,7 @@ final class AdventureService {
     private(set) var seen: Set<Int> = []
     private(set) var caught: Set<Int> = []
     private(set) var stardust = 0
-    /// Won in the dungeon: each opens a gacha round of rare balls.
+    /// Won in the stardust dungeon, the tower and the Pokédex: each opens a gacha round of rare balls.
     private(set) var ultraBalls = 0
     private(set) var progress = JourneyProgress()
     private(set) var starter: Int?
@@ -217,16 +225,14 @@ final class AdventureService {
     private(set) var tower = TowerState()
     /// Pokédex milestones already paid out.
     private(set) var dexRewards = 0
-    /// Which dungeon tiers have paid out today.
-    private(set) var dungeonDay = DungeonDay(day: DailyDungeon.day(of: Date()))
+    /// The two dungeons' stages and today's tries.
+    private(set) var dungeons = DungeonState(day: DailyDungeon.day(of: Date()))
     /// True while a battle is playing: at a station while an agent works, or any challenge.
     private(set) var isBattling = false
     /// Forecast chance of beating the next boss with the current party.
     private(set) var readiness: Double?
     /// The level the party needs for the next boss, while its chance is poor.
     private(set) var levelHint: LevelHint?
-    /// The box holds a better party for the next boss than the one out now.
-    private(set) var hasBetterTeam = false
 
     let dex: PokeDexStore
     /// Set by the app: whether any coding agent is mid-turn right now.
@@ -353,18 +359,10 @@ final class AdventureService {
     var isChallenging: Bool { target?.isChallenge == true && battle.map { !$0.isOver } == true }
 
     /// The station the stage line is on, whether or not it's being fought right now.
-    var stationPoint: StationPoint { progress.stationTarget(chapters, partyLevel: partyLevel) }
+    var stationPoint: StationPoint { progress.stationTarget(chapters) }
 
-    /// The party fights behind the next station until it's up to that station's level.
-    var isHoldingBack: Bool {
-        progress.repeating == nil && !progress.isLooping && !progress.isTraining && stationPoint != progress.frontier
-    }
-
-    /// The level the next station takes, while the party isn't there yet.
-    var nextStationLevel: Int? {
-        guard isHoldingBack else { return nil }
-        return chapters[safeChapter: progress.chapter]?.stations[safe: progress.station]?.level
-    }
+    /// Repeating a cleared station, or training after a loss: the next one waits.
+    var isBehindFrontier: Bool { !progress.isLooping && stationPoint != progress.frontier }
 
     /// The next boss and its trainer, once or before the line is cleared.
     var nextBoss: (chapter: Int, index: Int, trainer: Trainer)? {
@@ -387,12 +385,18 @@ final class AdventureService {
         return progress.hasReached(chapter: index) && !progress.beatenLegends.contains(spot.id)
     }
 
-    var dungeonTypes: [PokeType] { DailyDungeon.types(on: Date()) }
+    func dungeonTypes(_ kind: DungeonKind) -> [PokeType] { DailyDungeon.types(kind, on: Date()) }
 
-    func dungeonLevel(_ tier: DungeonTier) -> Int { DailyDungeon.level(tier, partyLevel: partyLevel, cap: levelCap) }
+    /// A dungeon's climb, with today's tries even before the first tick of the day.
+    func climb(_ kind: DungeonKind) -> DungeonClimb {
+        var state = dungeons
+        state.refill(for: DailyDungeon.day(of: Date()))
+        return state[kind]
+    }
 
-    func isClaimed(_ tier: DungeonTier) -> Bool {
-        dungeonDay.day == DailyDungeon.day(of: Date()) && dungeonDay.claimed.contains(tier)
+    /// A dungeon's three for a stage today.
+    func dungeonFoes(_ kind: DungeonKind, stage: Int) -> [StagePlan.Foe] {
+        data.map { DailyDungeon.plan(kind, stage: stage, on: Date(), data: $0).foes } ?? []
     }
 
     /// Forecast chance of winning a challenge with the current party (or another), cached per party.
@@ -427,8 +431,8 @@ final class AdventureService {
         return habitatCache?[species] ?? .unknown
     }
 
-    /// The easiest dungeon tier still paying out today.
-    var openDungeonTier: DungeonTier? { DungeonTier.allCases.first { !isClaimed($0) } }
+    /// A dungeon with tries left today, stardust first.
+    var openDungeon: DungeonKind? { DungeonKind.allCases.first { climb($0).tries > 0 } }
 
     /// The backdrop behind the scene.
     var scenery: Scenery {
@@ -512,30 +516,25 @@ final class AdventureService {
         partyChanged()
     }
 
-    /// Swaps in the three best for a challenge: the one given, the one underway, or the next boss.
-    func recommendParty(for goal: BattleTarget? = nil) {
-        let picks = recommendedParty(for: goal)
-        guard !picks.isEmpty, picks != partyIDs else { return }
-        partyIDs = picks
-        partyChanged()
-    }
-
-    private func recommendedParty(for goal: BattleTarget? = nil) -> [UUID] {
-        guard let data else { return [] }
+    /// Sets up the best three for what's next: the challenge underway, else the next boss, else
+    /// simply the strongest.
+    func autoParty() {
+        guard let data else { return }
         let candidates = owned.compactMap { member in
             data.dex[member.speciesID].map { Recommend.Candidate(id: member.id, species: $0, level: member.level) }
         }
         let foes: [StagePlan.Foe]
-        if let goal, let plan = plan(for: goal, data: data, forecast: true) {
-            foes = plan.foes
-        } else if let battle, target?.isChallenge == true {
+        if let battle, target?.isChallenge == true {
             foes = battle.plan.foes
         } else if let next = nextBoss {
             foes = StagePlan.boss(next.trainer, scenery: .gym).foes
         } else {
             foes = []
         }
-        return Recommend.party(from: candidates, against: foes, data: data, size: Self.maxParty)
+        let picks = Recommend.party(from: candidates, against: foes, data: data, size: Self.maxParty)
+        guard !picks.isEmpty, picks != partyIDs else { return }
+        partyIDs = picks
+        partyChanged()
     }
 
     private func partyChanged() {
@@ -565,9 +564,12 @@ final class AdventureService {
         start(.tower(1), data: data)
     }
 
-    func enterDungeon(_ tier: DungeonTier) {
-        guard !isChallenging, !isClaimed(tier), let data else { return }
-        start(.dungeon(tier), data: data)
+    /// A try at a dungeon: the next stage, or the best one again for its reward.
+    func enterDungeon(_ kind: DungeonKind, stage: Int) {
+        let climb = climb(kind)
+        guard !isChallenging, climb.tries > 0, stage >= 1, stage == climb.next || stage == climb.best, let data else { return }
+        dungeons.refill(for: DailyDungeon.day(of: Date()))
+        start(.dungeon(kind, stage: stage), data: data)
     }
 
     /// Repeats a cleared station, to meet its Pokémon.
@@ -578,9 +580,10 @@ final class AdventureService {
         scheduleSave()
     }
 
+    /// Back to the next station: stops repeating one, or training after a loss.
     func resumeJourney() {
-        guard progress.repeating != nil else { return }
-        progress.repeating = nil
+        guard progress.repeating != nil || progress.isTraining else { return }
+        progress.pushOn()
         if !isChallenging { battle = nil }
         scheduleSave()
     }
@@ -667,8 +670,7 @@ final class AdventureService {
 
     private func tick() {
         guard isEnabled, hasStarted, let data else { return }
-        let today = DailyDungeon.day(of: Date())
-        if dungeonDay.day != today { dungeonDay = DungeonDay(day: today) }
+        dungeons.refill(for: DailyDungeon.day(of: Date()))
         // Something is always lined up, so the scene shows who's next even while agents rest.
         if battle == nil || battle?.isOver == true { lineUp(data) }
         guard let target else { return }
@@ -729,7 +731,7 @@ final class AdventureService {
         } else if let goOn {
             start(goOn, data: data)
         } else {
-            start(.station(progress.stationTarget(data.chapters, partyLevel: partyLevel)), data: data)
+            start(.station(progress.stationTarget(data.chapters)), data: data)
         }
     }
 
@@ -744,8 +746,8 @@ final class AdventureService {
             return StagePlan.boss(chapter.bosses[index], scenery: chapter.bossScenery)
         case .legend(let id):
             return data.legend(id).map(StagePlan.legend)
-        case .dungeon(let tier):
-            return DailyDungeon.plan(tier, on: Date(), partyLevel: partyLevel, cap: levelCap, data: data)
+        case .dungeon(let kind, let stage):
+            return DailyDungeon.plan(kind, stage: stage, on: Date(), data: data)
         case .tower(let floor):
             return BattleTower.plan(floor: floor, on: Date(), data: data)
         }
@@ -822,13 +824,9 @@ final class AdventureService {
             let outcome = progress.recordBoss(cleared: cleared, chapters: data.chapters)
             if let trainer = plan.trainer {
                 if cleared {
-                    note { $0.losses[trainer.id] = nil; $0.stuck = nil }
+                    note { $0.losses[trainer.id] = nil }
                 } else {
-                    let stuck = progress.losses >= Losses.hintAfter
-                    note { recap in
-                        recap.losses[trainer.id, default: 0] += 1
-                        if stuck { recap.stuck = trainer.id }
-                    }
+                    note { $0.losses[trainer.id, default: 0] += 1 }
                 }
             }
             if let trainer = plan.trainer { result = ChallengeResult(kind: .boss(trainer), cleared: cleared, stardust: reward) }
@@ -864,22 +862,33 @@ final class AdventureService {
                                               isSpecial: true, date: Date())
                 announceDiscovery(encounter, title: String(localized: "\(species.name) joined your team!"))
             }
-        case .dungeon(let tier):
-            result = ChallengeResult(kind: .dungeon(tier), cleared: cleared)
-            if cleared, !isClaimed(tier) {
-                let today = DailyDungeon.day(of: Date())
-                if dungeonDay.day != today { dungeonDay = DungeonDay(day: today) }
-                dungeonDay.claimed.append(tier)
-                if let prize = DailyDungeon.stardust[tier] {
+        case .dungeon(let kind, let stage):
+            result = ChallengeResult(kind: .dungeon(kind, stage: stage), cleared: cleared)
+            let isNew = dungeons.record(kind, stage: stage, cleared: cleared)
+            if cleared {
+                var clear = AdventureRecap.DungeonClear(kind: kind, stage: stage)
+                switch kind {
+                case .stardust:
+                    let prize = DailyDungeon.stardust(stage: stage)
                     stardust += prize
-                    note { $0.stardust += prize }
+                    clear.stardust = prize
                     result?.stardust = prize
-                } else {
-                    ultraBalls += 1
-                    note { $0.ultraBalls += 1 }
-                    result?.ultraBall = true
+                    if isNew, DailyDungeon.paysUltraBall(stage: stage) {
+                        ultraBalls += 1
+                        clear.ultraBall = true
+                        result?.ultraBall = true
+                    }
+                case .experience:
+                    let xp = DailyDungeon.experience(stage: stage)
+                    award(xp)
+                    clear.xp = xp
+                    result?.xp = xp
                 }
-                note { $0.dungeon.append(tier) }
+                note { recap in
+                    recap.stardust += clear.stardust
+                    if clear.ultraBall { recap.ultraBalls += 1 }
+                    recap.dungeonStages.append(clear)
+                }
             }
         case .tower(let floor):
             if cleared {
@@ -1063,7 +1072,7 @@ final class AdventureService {
 
     private func refreshReadiness() {
         guard let next = progress.nextBoss(chapters) else {
-            readiness = nil; levelHint = nil; hasBetterTeam = false; forecastKey = nil
+            readiness = nil; levelHint = nil; forecastKey = nil
             return
         }
         // The box size counts too: a newcomer may make a better team.
@@ -1072,8 +1081,6 @@ final class AdventureService {
         forecastKey = key
         let goal = BattleTarget.boss(chapter: next.chapter, index: next.index)
         readiness = winChance(goal)
-        let picks = recommendedParty(for: goal)
-        hasBetterTeam = !picks.isEmpty && picks != partyIDs
         refreshLevelHint(goal)
     }
 
@@ -1190,10 +1197,9 @@ final class AdventureService {
         clears = 0
         wipes = 0
         pulls = 0
-        dungeonDay = DungeonDay(day: DailyDungeon.day(of: Date()))
+        dungeons = DungeonState(day: DailyDungeon.day(of: Date()))
         readiness = nil
         levelHint = nil
-        hasBetterTeam = false
         forecastKey = nil
         forecasts = [:]
         cachedData = nil
@@ -1248,7 +1254,13 @@ final class AdventureService {
         saveNow()
     }
 
-    func debugResetDungeon() { dungeonDay = DungeonDay(day: DailyDungeon.day(of: Date())); saveNow() }
+    /// Gives both dungeons their tries back; `stages` also starts their climbs over.
+    func debugResetDungeon(stages: Bool) {
+        let kept = dungeons
+        dungeons = DungeonState(day: DailyDungeon.day(of: Date()))
+        if !stages { dungeons.stardust.best = kept.stardust.best; dungeons.experience.best = kept.experience.best }
+        saveNow()
+    }
 
     /// Plays battle actions without waiting for an agent or the clock.
     func debugTicks(_ count: Int) {
@@ -1283,7 +1295,7 @@ final class AdventureService {
         var clears: Int
         var wipes: Int
         var pulls: Int
-        var dungeon: DungeonDay?
+        var dungeons: DungeonState?
     }
 
     /// v2's save: the same box, coins instead of stardust, and a position on the old map.
@@ -1322,7 +1334,7 @@ final class AdventureService {
                 progress = file.progress
                 // Lines used to wait at their end for the gym; they now go on to the next chapter.
                 progress.moveOn(chapters)
-                if let day = file.dungeon { dungeonDay = day }
+                if let state = file.dungeons { dungeons = state }
                 history = file.history ?? []
                 historyUnread = file.historyUnread ?? false
                 tower = file.tower ?? TowerState()
@@ -1388,7 +1400,7 @@ final class AdventureService {
                             stardust: stardust, ultraBalls: ultraBalls, progress: progress, offer: offer,
                             recap: recap, history: history, historyUnread: historyUnread, tower: tower, dexRewards: dexRewards,
                             clears: clears, wipes: wipes, pulls: pulls,
-                            dungeon: dungeonDay)
+                            dungeons: dungeons)
         do {
             try FileManager.default.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder.adventure.encode(file).write(to: storeURL, options: .atomic)

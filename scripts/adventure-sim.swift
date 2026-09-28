@@ -5,7 +5,7 @@
 //     pokove/Adventure/Kanto.swift pokove/Adventure/PokeMoves.swift pokove/Adventure/PokeDex.swift
 //   /tmp/adventure-sim [hours] [xpScale] [starter] [seed] [agentHoursPerDay]
 //   /tmp/adventure-sim duel <chapter> <station 1-10 | b1-b5> <level> <species>...
-// Stations run on agent time (1.5 s per action). Gyms, legendaries and the daily dungeon don't need
+// Stations run on agent time (1.5 s per action). Gyms, legendaries and the daily dungeons don't need
 // an agent, so they cost no agent time here. The player takes a gym on once the forecast says 60%
 // (SIM_TRY=0.4 for a bolder one), or every hour or so once the party is stuck at the level cap; the
 // League's five run back to back.
@@ -84,7 +84,8 @@ struct AdventureSim {
         var box: [UUID: Member] = [UUID(): Member(speciesID: starter, xp: PokeMath.xp(forLevel: 5))]
         var progress = JourneyProgress()
         var stardust = Gacha.startingStardust, ultraBalls = 0, pulls = 0, discoveries = 0, wipes = 0, clears = 0
-        var bossTries = 0, dungeonWins: [DungeonTier: Int] = [:], dungeonDays = 0, dungeonTries = 0, dungeonStardust = 0
+        var bossTries = 0, dungeonDays = 0, dungeonRuns = 0, dungeonStardust = 0, dungeonXP = 0, dungeonUltraBalls = 0
+        var dungeons = DungeonState(day: "")
         let secondsPerTick = 1.5
         let totalTicks = Int(hours * 3600 / secondsPerTick)
         let ticksPerDay = Int(hoursPerDay * 3600 / secondsPerTick)
@@ -193,23 +194,37 @@ struct AdventureSim {
         func stuckAtCap() -> Bool { party().allSatisfy { box[$0]!.level >= cap() } }
 
         for tick in 0..<totalTicks {
-            // A new day: the dungeon, three tiers, a couple of tries each.
+            // A new day: each dungeon climbs until a new stage beats the party, then spends what's
+            // left on its best stage.
             if tick % ticksPerDay == 0 {
-                for tier in DungeonTier.allCases {
-                    for _ in 0..<2 {
-                        let level = partyLevel()
-                        let plan = DailyDungeon.plan(tier, on: day, partyLevel: level, cap: cap(), data: data)
-                        dungeonTries += 1
+                dungeons.refill(for: DailyDungeon.day(of: day))
+                for kind in DungeonKind.allCases {
+                    var stuck = false
+                    while dungeons[kind].tries > 0 {
+                        let climb = dungeons[kind]
+                        guard let stage = stuck || climb.next == nil ? (climb.best > 0 ? climb.best : climb.next) : climb.next else { break }
+                        let plan = DailyDungeon.plan(kind, stage: stage, on: day, data: data)
+                        dungeonRuns += 1
                         let ids = party(against: plan.foes)
                         let won = challenge(plan, ids: ids)
                         if !won, ProcessInfo.processInfo.environment["SIM_DUNGEON"] != nil {
-                            print("dungeon \(tier) lost day \(dungeonDays):", plan.foes.map { "\(dex[$0.species]!.nameEn) \($0.level)" },
+                            print("\(kind) stage \(stage) lost day \(dungeonDays):", plan.foes.map { "\(dex[$0.species]!.nameEn) \($0.level)" },
                                   "vs", ids.map { "\(dex[box[$0]!.speciesID]!.nameEn) \(box[$0]!.level)" })
                         }
-                        if won {
-                            dungeonWins[tier, default: 0] += 1
-                            if tier == .hard { ultraBalls += 1 } else { stardust += DailyDungeon.stardust[tier] ?? 0; dungeonStardust += DailyDungeon.stardust[tier] ?? 0 }
-                            break
+                        let isNew = dungeons.record(kind, stage: stage, cleared: won)
+                        if !won, stage == climb.next { stuck = true }
+                        guard won else { continue }
+                        switch kind {
+                        case .stardust:
+                            stardust += DailyDungeon.stardust(stage: stage)
+                            dungeonStardust += DailyDungeon.stardust(stage: stage)
+                            if isNew, DailyDungeon.paysUltraBall(stage: stage) { ultraBalls += 1; dungeonUltraBalls += 1 }
+                        case .experience:
+                            // SIM_DUNGEON_XP scales the experience dungeon's reward, to try others.
+                            let share = Double(ProcessInfo.processInfo.environment["SIM_DUNGEON_XP"] ?? "") ?? 1
+                            let xp = Int(Double(DailyDungeon.experience(stage: stage)) * share)
+                            dungeonXP += xp
+                            for id in ids { grant(xp, to: id) }
                         }
                     }
                 }
@@ -221,7 +236,7 @@ struct AdventureSim {
                    readiness() >= tryAt || (stuckAtCap() && tick - lastBossTry >= 2400) {
                     fightBoss(tick)
                 }
-                let point = progress.stationTarget(chapters, partyLevel: partyLevel())
+                let point = progress.stationTarget(chapters)
                 target = .station(point)
                 let ids = party()
                 let plan = StagePlan.station(chapters[point.chapter].stations[point.station], isLast: point.station == Chapter.stationCount - 1,
@@ -271,7 +286,7 @@ struct AdventureSim {
             }
             // Discovery.
             if rng.unit() < secondsPerTick / Discovery.meanInterval(boxCount: box.count) {
-                let pool = Discovery.pool(at: progress.stationTarget(chapters, partyLevel: partyLevel()), data: data)
+                let pool = Discovery.pool(at: progress.stationTarget(chapters), data: data)
                 if let speciesID = Discovery.roll(pool: pool, rng: &rng), let species = dex[speciesID] {
                     let level = Discovery.level(of: species, partyLevel: partyLevel(), cap: cap(), rng: &rng)
                     if receive(speciesID, level: level, duplicateXP: Discovery.duplicateXP(level: level)) { discoveries += 1 }
@@ -303,6 +318,8 @@ struct AdventureSim {
             }
         }
         print(events.joined(separator: "\n"))
-        print("dungeon over \(dungeonDays) days: easy \(dungeonWins[.easy] ?? 0), normal \(dungeonWins[.normal] ?? 0), hard \(dungeonWins[.hard] ?? 0) wins; \(dungeonTries) runs, \(dungeonStardust) stardust")
+        print("dungeons over \(dungeonDays) days: stardust stage \(dungeons.stardust.best), experience stage \(dungeons.experience.best); "
+              + "\(dungeonRuns) runs, \(dungeonStardust) stardust (\(dungeonStardust / max(1, dungeonDays))/day), "
+              + "\(dungeonUltraBalls) Ultra Balls, \(dungeonXP) EXP each")
     }
 }

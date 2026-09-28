@@ -3,6 +3,48 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v3.3: bigger hits, move effects, two staged dungeons, an ungated line (agreed with the user, 2026-09-28)
+
+Where this conflicts with v3.2 or earlier, v3.3 wins.
+
+- **HP and damage ×10** (`PokeMath.hpFactor`) so hits read as more than a digit. Numbers pop in big and
+  settle; critical yellow, super effective orange, resisted grey. Each hit of a multi-hit move shows its
+  own number, and a knockout shows the whole blow (`BattleAction.strikes`), not the HP that was left.
+- **Move effects by shape** (`MoveShape`, `MoveEffects.swift`): 17 shapes from the move's name (strike,
+  blow, slash, lash, bite, stab, beam, stream, orb, volley, bolt, quake, wave, wind, drain, bind, storm)
+  in the type's colors, with outlines so they read on every backdrop. Targets flash white and get
+  knocked back; big or critical hits flash and shake the scene (off with Reduce Motion). HP bars and
+  fainting wait a moment for the hit to land. `poke fx <slug> [foe]` plays one in the Debug build.
+- **Recommend buttons removed** (the 👍 in the gym and legendary VS screens, the footer pill, the
+  recap's best-team pill after three losses; `Losses.hintAfter`, `recap.stuck`, `hasBetterTeam` gone).
+  The party bar keeps one button, **자동 / Auto** (`autoParty()`): the best three for the challenge
+  underway, else the next boss, else simply the strongest. Neutral, never lit.
+- **The line has no level gate.** "다음 역은 Lv N부터" read as odd, so stations no longer wait for the
+  party's level. The user chose, over fixed-level walls (30% of fights lost in the sim) and keeping the
+  gate quietly: wild levels stay at `min(station, party − 1)` and every frontier win moves on. A loss
+  still means 3 clears at the station before; the footer says "4-8에서 연습 중" with **다음 역**, and
+  the scene's top-right chip is now **다음 역 →** while repeating or training (`pushOn()`,
+  `resumeJourney()`). The old "도전 N%" chip over the battle is gone; the gym tab's dot still says a
+  gym is open.
+- **Dungeons: 별의모래 던전 and 경험치 던전** instead of Easy/Normal/Hard (`DungeonKind`,
+  `DungeonClimb`, `DungeonState`, `DailyDungeon`):
+  - Stages 1–50 at Lv 3 + 2n (to 100), three foes each at −2, −1 and the stage level, the last a boss
+    with 1.5× HP from the three strongest of the types in their most evolved form. Seeded by day, kind
+    and stage, so a retry faces the same three.
+  - Three tries a day each, refilled at 04:00. A try at the next stage that clears it gives the try
+    back; a loss, or a go at the best stage again, uses one. Climbs keep their best stage across days.
+  - Stardust dungeon: the weekday's types, 80 + 8n stardust a clear, an Ultra Ball on the first clear
+    of every tenth stage. EXP dungeon: Normal and Fairy, a sixth of a level at the stage's level for
+    each of the party (half a level made the Champion 40% sooner in the sim).
+  - Recap lines per dungeon ("별의모래 던전 5단계 클리어", or "…3번 클리어") with the total paid.
+  - The save writes `dungeons` (`DungeonState`); v1.2's `dungeon` day and recap `dungeon` tiers are
+    ignored when read, and older builds read the new save fine (both are optional there).
+- **Sim** (`SIM_DUNGEON_XP` scales the EXP reward): each day climbs until a new stage beats the party,
+  then spends the rest on its best stage. Six runs, 70 h: stardust dungeon ~570–880 a day; with the
+  ungated line, Champion at 38–55 h in 5 of 6 runs (avg ~47 h; ~54 h with the gate, ~61 h+ before the dungeons),
+  badge 4 at 2–8 h, the line at 9-10 by 1–8 h, 55–450 wipes. Reaching late areas early brings their
+  species to discoveries and the gacha, which is most of the speed-up.
+
 ## v3.2: stages and gyms apart (agreed with the user, 2026-09-28)
 
 The user found the balance off from the start: the line ran to its 10th station and then hit a gym
@@ -200,7 +242,11 @@ session. It supersedes the v1 rules further down wherever they differ.
 - Pokémon use their real FRLG level-up moves, with Korean names from PokéAPI and Gen 3 power, accuracy and type.
 - The AI picks the best move for the matchup.
 - Strong moves have short cooldowns, so the moveset rotates.
-- Effects: per-type visuals, crits, move names on screen, and "super effective" text.
+- Effects: every move has a shape from its name (`MoveShape`: strike, blow, slash, lash, bite, stab, beam, stream, orb,
+  volley, bolt, quake, wave, wind, drain, bind, storm) drawn in its type's colors, so each Pokémon's moves look like its
+  own. Hits flash the target white and knock it back, big or critical ones flash and shake the scene (not with Reduce
+  Motion), and each hit of a multi-hit move shows its own number. Numbers grow and turn orange (super effective) or
+  yellow (critical).
 - Status conditions are for later.
 
 **Gyms.**
@@ -278,33 +324,35 @@ Notes on the data:
 
 - **Journey:** `Kanto.chapters(starter:)` holds 10 chapters of 10 stations (`Chapter.stationCount`).
   - Stations take their wild pool and backdrop from a `Stretch` (FRLG areas); levels rise evenly across the chapter's range and are capped at the party level −1 when fought. One wild Pokémon a station; the 10th is a terminus with three, the last the stretch's strongest species at +2 (`StagePlan.station`).
-  - The line moves to the next station once the party's average level reaches that station's level; until then it fights at the station before (`JourneyProgress.stationTarget(_:partyLevel:)`).
+  - Every frontier win moves the line on; there is no level gate (`JourneyProgress.stationTarget(_:)`).
   - Chapters 1–8 have a gym leader, chapter 9 the League (Lorelei, Bruno, Agatha, Lance, the rival). The line doesn't wait for them: N-10 leads to (N+1)-1. Chapter 10 (Cerulean Cave) has no boss, opens with the Champion and loops.
   - Trainers bring the **last three** of their original team (`Trainer.battleTeam`).
   - **Legendaries** (`Kanto.legends`, `Chapter.legend`) are ★ branches on chapters 5, 6, 7, 9 and 10, open once the chapter is reached. 2.5× HP.
 - **Level cap by badges:** 16, 23, 27, 32, 45, 47, 50, 54, then 65 with 8 badges, and 100 as Champion.
   - XP past the cap goes into `OwnedPokemon.banked`. A badge releases it.
 - **Progress** (`JourneyProgress`): `chapter`, `station` (0–10; 10 only on the last open line, which loops), `boss` (League index), `training`, `repeating`, `cursor`, `badges`, `losses`.
-  - A frontier clear advances the line. A loss on the line means 3 clears of the station before (`Losses.wildTraining`).
-  - The next boss follows the badges (`nextBoss`) and opens once its chapter's line is cleared (`isBossOpen`). The user starts every gym; a loss costs nothing and changes nothing but `losses`. After 3 losses in a row the recap shows the best-team hint (`Losses.hintAfter`). A League win goes straight on to the next of the five.
+  - A frontier clear advances the line. A loss on the line means 3 clears of the station before (`Losses.wildTraining`); **다음 역** (`pushOn()`) skips them, and stops a repeat.
+  - The next boss follows the badges (`nextBoss`) and opens once its chapter's line is cleared (`isBossOpen`). The user starts every gym; a loss costs nothing and changes nothing but `losses`. A League win goes straight on to the next of the five.
 - **Challenges** (`BattleTarget.isChallenge`: boss, legend, dungeon) play at 1 s per action regardless of agents; stations at 1.5 s only while an agent works. The service ticks every 0.5 s. XP from a challenge is held and granted only on a win.
 - **Battle** (`BattleState`, 1:1 relay):
   - Each round both actives choose a move. Order is by priority, then speed.
   - **Damage** is the Gen 3 formula: STAB 1.5, 2× crit (1/16, or 1/8 for high-crit moves), random 0.85–1.
+    - HP and damage are ten times the games' (`PokeMath.hpFactor`), so a hit is tens early and thousands late. Fixed
+      damage (Sonic Boom, Seismic Toss) scales too; every ratio is as it was.
     - Multi-hit uses Gen 3 odds; drain and recoil apply.
     - Immune means 0 damage. With no move that lands, the Pokémon uses Struggle, which is typeless here, with 25% recoil.
   - **Movesets** are the best four damaging moves learned by the current level (`PokeMove.rating`), at most two per type.
   - **Cooldowns:** power ≥ 60 rests 1 round, ≥ 75 rests 2, ≥ 95 rests 3; fixed-damage moves rest 1.
   - **AI:** party, trainers and the dungeon pick the best expected damage. Wild Pokémon pick at random 40% of the time.
   - HP carries through a battle and heals after it. All three party members get the XP.
-- **XP per knockout:** `1.1 × √baseExp × (0.4 + 0.6 × min(1, foeLv/partyLv))`, ×1.5 from trainers, ×3 from legends, ×1.25 in the dungeon. Curve L³.
-- **Daily dungeon** (`DailyDungeon`): tier level = party level −6 / −2 / +3 (Easy / Normal / Hard), capped at the level cap. Floors climb from tier level −3 to the tier level; the boss is tier level +1 with 1.5× (Easy) or 2× HP, one of the three strongest of the day's types in its most evolved form. Floors are seeded by day and tier, so a retry faces the same ones. Days turn at 04:00 local. Rewards: 60 / 120 stardust / an Ultra Ball (`Gacha.draw(floor: .rare)`).
+- **XP per knockout:** `1.1 × √baseExp × (0.4 + 0.6 × min(1, foeLv/partyLv))`, ×1.5 from trainers, ×3 from legends, ×1.25 in the dungeons. Curve L³.
+- **Daily dungeons** (`DailyDungeon`): see v3.3 above. Stage n is Lv 3 + 2n; stardust 80 + 8n, an Ultra Ball (`Gacha.draw(floor: .rare)`) on the first clear of every tenth; EXP a sixth of a level at the stage's level. Three tries a day each; a new stage cleared gives its try back. Days turn at 04:00 local.
 - **Discovery:** each station action has a chance of 1.5 s / mean interval (6 min until you own 3 Pokémon, then 20 min), from the current station's stretch.
   - It joins at 85% of the party level −1 ±2, at least at its evolve level, and at most the cap. A duplicate line gives its owned copy L² XP.
 - **Gacha:** 400 stardust buy three Poké Balls, drawn without replacement by rarity weight (common 10, uncommon 5, rare 2.2, mythical 0.2).
   - Tiers come from the best encounter share of the stretches reached: ≥ 15% common, ≥ 5% uncommon, rarer are rare. `Kanto.gachaOnly` species are rare (unlocked by chapter); Mew is mythical after the Champion.
   - Owned lines weigh ×0.3, and ×0 on the first pull. A duplicate gives 2L² XP. A new journey starts with 400 stardust.
-- **Stardust:** station +1, boss +30, legendary +60, dungeon per tier.
+- **Stardust:** station +1, boss +30, legendary +60, the stardust dungeon by stage.
 - **Evolution** happens by level as in v1: item → 30, trade → 36, other → 22. Eevee branches at random.
 
 ## Tuning (scripts/adventure-sim.swift: stations 1.5 s per action on agent time, AUTO with the suggested party, challenges and the dungeon off agent time, 2.9 agent hours a day)
@@ -332,11 +380,11 @@ Six runs (three starters × two seeds), hours of agent work:
 | `pokove/Adventure/PokeMoves.swift` | `PokeMove` (Gen 3 values, damage kinds, cooldown, rating), `MoveDex` (learnsets, movesets), the moves query |
 | `pokove/Adventure/Kanto.swift` | trainers and teams, `Stretch`, `Station`, `Chapter`, `LegendSpot`, the chapters, level caps, gacha-only list, badge names, `EncounterDex` and its query |
 | `pokove/Adventure/BattleEngine.swift` | `SeededRNG`, `PokeMath` (stats, XP), `GameData`, `DexView`, `Combatant`, `StagePlan` (station, boss, legend), `BattleState` (1:1 relay) |
-| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `Losses`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonTier`, `DailyDungeon`, `Recommend`, `Guidance` (level hint, weaknesses, matchups, habitats, next move) |
+| `pokove/Adventure/AdventureRules.swift` | `StationPoint`, `BattleTarget`, `JourneyProgress` (+ v2 migration), `Losses`, `Forecast`, `Discovery`, `Gacha`, `Rewards`, `DungeonKind`, `DungeonClimb`, `DungeonState`, `DailyDungeon`, `Recommend`, `Guidance` (level hint, weaknesses, matchups, habitats, next move) |
 | `pokove/Adventure/BattleText.swift` | battle, recap, challenge and guide (`GuideText`) lines with Korean particles (이/가, 을/를, 은/는, 로/으로, 이면/면) |
-| `pokove/Adventure/AdventureService.swift` | game state, tick loop (stations on agent time, challenges on their own), growth, discovery, gacha and Ultra Balls, dungeon day, recap, banners, save (`adventure-v3.json`, migrating v2) |
+| `pokove/Adventure/AdventureService.swift` | game state, tick loop (stations on agent time, challenges on their own), growth, discovery, gacha and Ultra Balls, dungeon climbs, recap, banners, save (`adventure-v3.json`, migrating v2) |
 | `pokove/Adventure/PokeSprites.swift` | sprite cache (Pokémon, back sprites, trainers, items, badges) and views |
-| `pokove/Notch/Expanded/Adventure/` | `AdventurePageView` (layout, tabs, history button and pane, recap toast, party bar, dex, detail card), `ChallengeView` (mode picker, stage line, VS screens, dungeon, `StardustIcon`), `BattleSceneView`, `MoveEffects`, `GachaView` |
+| `pokove/Notch/Expanded/Adventure/` | `AdventurePageView` (layout, tabs, history button and pane, recap toast, party bar, dex, detail card), `ChallengeView` (mode picker, stage line, VS screens, dungeon cards, `StardustIcon`), `BattleSceneView` (scene, damage numbers, shake), `MoveEffects` (`MoveShape` and its painter), `GachaView` |
 | `pokove/Shared/PixelSparkles.swift` | `PixelSparkles`, `PokeBallGlyph` (tab, settings and banner icon) |
 
 ## Progress (v3)

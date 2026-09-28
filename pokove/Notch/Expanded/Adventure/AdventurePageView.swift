@@ -12,6 +12,7 @@ extension Notification.Name {
     static let pokoveDebugAdventurePane = Notification.Name("pokoveDebugAdventurePane")
     static let pokoveDebugOpenBall = Notification.Name("pokoveDebugOpenBall")
     static let pokoveDebugChallengeMode = Notification.Name("pokoveDebugChallengeMode")
+    static let pokoveDebugMoveEffect = Notification.Name("pokoveDebugMoveEffect")
     #endif
 }
 
@@ -185,7 +186,7 @@ private struct PaneTabs: View {
                     .foregroundStyle(.white.opacity(0.75))
                     .contentTransition(.numericText())
             }
-            .help("Stardust, from stations, bosses and the dungeon. \(Gacha.price) buy three Poké Balls.")
+            .help("Stardust, from stations, bosses and the stardust dungeon. \(Gacha.price) buy three Poké Balls.")
         }
     }
 }
@@ -277,7 +278,7 @@ private struct RecapToast: View {
 
     private var summary: String {
         GuideText.summary(badges: recap.badges.count, gyms: recap.gymsOpened.count, evolved: recap.evolutions.count, joined: recap.discovered.count,
-                          losses: recap.losses.values.reduce(0, +), dungeons: recap.dungeon.count, shinies: recap.shinies.count)
+                          losses: recap.losses.values.reduce(0, +), dungeons: recap.dungeonStages.count, shinies: recap.shinies.count)
     }
 }
 
@@ -376,22 +377,6 @@ private struct RecapRow: View {
                 .lineLimit(1)
                 .fixedSize()
             }
-            if line.offersBestTeam {
-                Button {
-                    withAnimation(.smooth(duration: 0.25)) { app.adventure.recommendParty() }
-                } label: {
-                    HStack(spacing: 2) {
-                        Image(systemName: "hand.thumbsup.fill").font(.system(size: 7.5, weight: .bold))
-                        Text(RecapText.bestTeam).font(.system(size: 9, weight: .heavy))
-                    }
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 6)
-                    .frame(height: 15)
-                    .background(Color(hex: 0xFFD35A), in: Capsule())
-                }
-                .buttonStyle(.plain)
-                .fixedSize()
-            }
         }
         .frame(height: 17)
     }
@@ -442,7 +427,6 @@ struct RecapLine: Identifiable {
     var detail: String?
     var detailTint: Color = .white.opacity(0.5)
     var detailIsStardust = false
-    var offersBestTeam = false
     /// Big enough for the line over the battle.
     var isNotable = false
 
@@ -478,12 +462,10 @@ struct RecapLine: Identifiable {
                                    isNotable: true))
             }
         }
-        // A boss that keeps winning comes early: it's the one line with something to do.
         for (trainerID, times) in recap.losses.sorted(by: { $0.key < $1.key }) {
             guard let trainer = trainers.first(where: { $0.id == trainerID }) else { continue }
-            let stuck = recap.stuck == trainerID
             lines.append(.init(id: "lost\(trainerID)", icon: .symbol("shield.lefthalf.filled.slash", Color(hex: 0xFF9E6B)),
-                               text: RecapText.lost(to: trainer.name, times: times), offersBestTeam: stuck, isNotable: true))
+                               text: RecapText.lost(to: trainer.name, times: times), isNotable: true))
         }
         for (i, step) in recap.evolutions.enumerated() {
             lines.append(.init(id: "evolved\(i)", icon: .pokemon(step.to),
@@ -499,12 +481,14 @@ struct RecapLine: Identifiable {
             lines.append(.init(id: "joined", icon: recap.discovered.count == 1 ? .pokemon(recap.discovered[0]) : .team(recap.discovered),
                                text: RecapText.joined(recap.discovered.map(name)), isNotable: true))
         }
-        for tier in recap.dungeon {
-            let prize = DailyDungeon.stardust[tier]
-            lines.append(.init(id: "dungeon\(tier.rawValue)", icon: .symbol("door.left.hand.open", Color(hex: 0xB9A4FF)),
-                               text: RecapText.dungeon(tier.title),
-                               detail: prize.map { "+\($0)" } ?? RecapText.ultraBall,
-                               detailTint: Color(hex: 0xFFD35A), detailIsStardust: prize != nil, isNotable: true))
+        for kind in DungeonKind.allCases {
+            let clears = recap.dungeonStages.filter { $0.kind == kind }
+            guard !clears.isEmpty else { continue }
+            let detail = kind == .stardust ? "+\(clears.map(\.stardust).reduce(0, +))" : "EXP +\(clears.map(\.xp).reduce(0, +))"
+            lines.append(.init(id: "dungeon\(kind.rawValue)", icon: .symbol("door.left.hand.open", Color(hex: 0xB9A4FF)),
+                               text: RecapText.dungeon(ChallengeText.dungeon(kind), stages: clears.map(\.stage)),
+                               detail: detail, detailTint: kind == .stardust ? Color(hex: 0xFFD35A) : Color(hex: 0x7FC8FF),
+                               detailIsStardust: kind == .stardust, isNotable: true))
         }
         for (i, learned) in recap.learned.prefix(namedLimit).enumerated() {
             let move = adventure.data?.moves.move(learned.move)?.name ?? ""
@@ -671,23 +655,21 @@ private struct PartyBar: View {
                     if targeted { dropTarget = slot } else if dropTarget == slot { dropTarget = nil }
                 }
             }
-            // Lit when the box holds a better team for the next boss than the one out now.
-            let better = adventure.hasBetterTeam
             Button {
-                withAnimation(.smooth(duration: 0.25)) { adventure.recommendParty() }
+                withAnimation(.smooth(duration: 0.25)) { adventure.autoParty() }
             } label: {
                 VStack(spacing: 1) {
-                    Image(systemName: "hand.thumbsup.fill").font(.system(size: 8, weight: .bold))
-                    Text(GuideText.recommend).font(.system(size: 8, weight: .heavy))
+                    Image(systemName: "wand.and.stars").font(.system(size: 8, weight: .bold))
+                    Text(GuideText.auto).font(.system(size: 8, weight: .heavy))
                 }
-                .foregroundStyle(better ? .black : .white.opacity(0.75))
+                .foregroundStyle(.white.opacity(0.75))
                 .frame(width: 30, height: Self.height)
-                .background(better ? Color(hex: 0xFFD35A) : .white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(adventure.owned.count < 2)
-            .help("Best team for what's next")
+            .help("The best three for what's next")
         }
         .frame(height: Self.height)
     }

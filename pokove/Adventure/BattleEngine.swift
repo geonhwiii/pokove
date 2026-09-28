@@ -48,11 +48,15 @@ nonisolated struct PokeStats: Codable, Equatable, Sendable {
 nonisolated enum PokeMath {
     static let maxLevel = 100
 
-    /// Main-series stat formulas without IVs, EVs or natures.
+    /// HP, and so damage, run ten times the games' numbers, so a hit reads as more than a digit
+    /// and grows from tens to thousands over the journey. Every ratio stays as it was.
+    static let hpFactor = 10
+
+    /// Main-series stat formulas without IVs, EVs or natures, with HP times `hpFactor`.
     static func stats(_ base: BaseStats, level: Int) -> PokeStats {
         func other(_ value: Int) -> Int { 2 * value * level / 100 + 5 }
         return PokeStats(
-            hp: 2 * base.hp * level / 100 + level + 10,
+            hp: (2 * base.hp * level / 100 + level + 10) * hpFactor,
             attack: other(base.attack),
             defense: other(base.defense),
             spAttack: other(base.spAttack),
@@ -219,7 +223,7 @@ nonisolated struct StagePlan: Equatable, Sendable {
         case wild
         case trainer(Trainer)
         case legend
-        case dungeon(DungeonTier)
+        case dungeon(DungeonKind, stage: Int)
         case tower(Int)
     }
 
@@ -238,9 +242,8 @@ nonisolated struct StagePlan: Equatable, Sendable {
     static let legendHP = 2.5
 
     /// One wild Pokémon, different on every visit; the chapter's last station has three, ending
-    /// with the strongest one around, two levels up. Wild Pokémon otherwise stay a level below the
-    /// party, and the line only moves on once the party is up to a station's level
-    /// (`JourneyProgress.stationTarget`), so it keeps pace with the party instead of walling it.
+    /// with the strongest one around, two levels up. Wild Pokémon are at the station's level, but
+    /// never above a level below the party, so the line moves on with every win.
     static func station(_ station: Station, isLast: Bool, data: GameData, partyLevel: Int, rng: inout SeededRNG) -> StagePlan {
         let pool = data.encounters.pool(for: station.stretch, dex: data.dex)
         let level = min(station.level, partyLevel - 1)
@@ -290,6 +293,9 @@ nonisolated struct BattleAction: Equatable, Sendable {
     let attackerFainted: Bool
     /// A status the hit left the target with.
     var inflicted: Ailment?
+    /// Each hit's full damage, for the numbers on screen: a knockout shows the whole blow, not
+    /// just the HP that was left.
+    var strikes: [Int] = []
 }
 
 /// A status condition at work: just inflicted, hurting at the end of a round, or stopping a move.
@@ -459,7 +465,7 @@ nonisolated struct BattleState: Equatable, Sendable {
 
     private mutating func hurt(_ side: BattleSide) -> BattleEvent? {
         guard var pokemon = active(side), !pokemon.isFainted, let status = pokemon.status, status != .paralysis else { return nil }
-        let amount = min(pokemon.hp, max(1, pokemon.maxHP / 8))
+        let amount = min(pokemon.hp, max(PokeMath.hpFactor, pokemon.maxHP / 8))
         pokemon.hp -= amount
         if side == .party { party[partyIndex] = pokemon } else { foes[foeIndex] = pokemon }
         if pokemon.isFainted {
@@ -493,14 +499,16 @@ nonisolated struct BattleState: Equatable, Sendable {
         var missed = false
         if let accuracy = move.accuracy, rng.unit() * 100 >= Double(accuracy) { missed = true }
 
-        var damage = 0, hits = 0, critical = false
+        var damage = 0, hits = 0, critical = false, strikes: [Int] = []
         if !missed, effectiveness > 0 {
             let count = Self.hitCount(move, rng: &rng)
             for _ in 0..<count where !defender.isFainted {
                 let crit = Self.rollCritical(move, rng: &rng)
-                let dealt = min(defender.hp, Self.damage(move, from: attacker, to: defender, critical: crit, rng: &rng))
+                let blow = Self.damage(move, from: attacker, to: defender, critical: crit, rng: &rng)
+                let dealt = min(defender.hp, blow)
                 defender.hp -= dealt
                 damage += dealt
+                strikes.append(blow)
                 hits += 1
                 critical = critical || crit
             }
@@ -525,7 +533,7 @@ nonisolated struct BattleState: Equatable, Sendable {
         return BattleAction(
             attackerID: attacker.id, targetID: defender.id, move: move, byParty: side == .party, missed: missed,
             hits: hits, damage: damage, effectiveness: effectiveness, critical: critical, healed: healed, recoil: recoil,
-            targetFainted: defender.isFainted, attackerFainted: attacker.isFainted, inflicted: inflicted
+            targetFainted: defender.isFainted, attackerFainted: attacker.isFainted, inflicted: inflicted, strikes: strikes
         )
     }
 
@@ -549,12 +557,14 @@ nonisolated struct BattleState: Equatable, Sendable {
         guard effectiveness > 0 else { return 0 }
         let hits: Double = move.minHits == move.maxHits ? Double(move.minHits) : (move.minHits == 2 && move.maxHits == 5 ? 3 : Double(move.minHits + move.maxHits) / 2)
         let chance = Double(move.accuracy ?? 100) / 100
+        let factor = Double(PokeMath.hpFactor)
         switch move.damage {
-        case .fixed(let amount): return Double(amount) * chance
-        case .level: return Double(attacker.level) * chance
+        case .fixed(let amount): return Double(amount) * factor * chance
+        case .level: return Double(attacker.level) * factor * chance
         case .halfHP: return Double(defender.hp) / 2 * chance
         case .power(let power):
-            return baseDamage(power: power, move: move, from: attacker, to: defender) * modifier(move, attacker: attacker, effectiveness: effectiveness) * 0.925 * hits * chance
+            return baseDamage(power: power, move: move, from: attacker, to: defender) * modifier(move, attacker: attacker, effectiveness: effectiveness)
+                * factor * 0.925 * hits * chance
         }
     }
 
@@ -574,15 +584,15 @@ nonisolated struct BattleState: Equatable, Sendable {
 
     static func damage(_ move: PokeMove, from attacker: Combatant, to defender: Combatant, critical: Bool, rng: inout SeededRNG) -> Int {
         switch move.damage {
-        case .fixed(let amount): return amount
-        case .level: return attacker.level
+        case .fixed(let amount): return amount * PokeMath.hpFactor
+        case .level: return attacker.level * PokeMath.hpFactor
         case .halfHP: return max(1, defender.hp / 2)
         case .power(let power):
             let effectiveness = effectiveness(of: move, against: defender)
             let spread = 0.85 + rng.unit() * 0.15
             let value = baseDamage(power: power, move: move, from: attacker, to: defender)
                 * modifier(move, attacker: attacker, effectiveness: effectiveness) * (critical ? 2 : 1) * spread
-            return max(1, Int(value))
+            return max(PokeMath.hpFactor, Int(value * Double(PokeMath.hpFactor)))
         }
     }
 

@@ -126,8 +126,13 @@ nonisolated enum RecapText {
         if korean { return "\(trainer)에게 \(times)번 졌어요" }
         return times == 1 ? "Lost to \(trainer)" : "Lost to \(trainer) \(times) times"
     }
-    static var bestTeam: String { korean ? "추천 팀" : "Best team" }
-    static func dungeon(_ tier: String) -> String { korean ? "던전 \(tier) 클리어" : "Cleared the \(tier) dungeon" }
+    /// "별의모래 던전 5단계 클리어", or "별의모래 던전 3번 클리어" for several.
+    static func dungeon(_ name: String, stages: [Int]) -> String {
+        if stages.count == 1, let stage = stages.first {
+            return korean ? "\(name) \(stage)단계 클리어" : "\(name) stage \(stage) cleared"
+        }
+        return korean ? "\(name) \(stages.count)번 클리어" : "\(name) cleared \(stages.count) times"
+    }
     static var ultraBall: String { korean ? "울트라볼" : "Ultra Ball" }
     static func learned(_ name: String, _ move: String) -> String {
         korean ? "\(name.subjectParticle) \(move.objectParticle) 배웠어요" : "\(name) learned \(move)"
@@ -164,8 +169,20 @@ nonisolated enum ChallengeText {
     private static var korean: Bool { PokeLanguage.isKorean }
 
     static var legendary: String { korean ? "전설의 포켓몬" : "Legendary Pokémon" }
-    static func dungeon(_ tier: String) -> String { korean ? "\(tier) 던전" : "\(tier) dungeon" }
-    static func floors(_ count: Int, types: String) -> String { korean ? "\(count)층 · \(types)" : "\(count) floors · \(types)" }
+    static func dungeon(_ kind: DungeonKind) -> String {
+        switch kind {
+        case .stardust: korean ? "별의모래 던전" : "Stardust dungeon"
+        case .experience: korean ? "경험치 던전" : "EXP dungeon"
+        }
+    }
+    static func stage(_ stage: Int) -> String { korean ? "\(stage)단계" : "Stage \(stage)" }
+    /// The VS intro's line under the dungeon's name: "5단계 · 불꽃".
+    static func stage(_ stage: Int, types: String) -> String { korean ? "\(stage)단계 · \(types)" : "Stage \(stage) · \(types)" }
+    /// Another try at the best stage, for its reward.
+    static func redo(_ stage: Int) -> String { korean ? "\(stage)단계 다시" : "Redo \(stage)" }
+    static func tries(_ count: Int) -> String { korean ? "오늘 남은 도전 \(count)회" : count == 1 ? "1 try left today" : "\(count) tries left today" }
+    static var triesTomorrow: String { korean ? "4시에 다시 3회" : "3 more at 4:00" }
+    static func xpEach(_ xp: Int) -> String { korean ? "모두 EXP +\(xp)" : "EXP +\(xp) each" }
     static var victory: String { korean ? "승리!" : "Victory!" }
     static var defeat: String { korean ? "패배" : "Defeated" }
     static func gotBadge(_ badge: String) -> String { korean ? "\(badge.objectParticle) 받았어요" : "Got the \(badge)" }
@@ -192,8 +209,6 @@ nonisolated enum GuideText {
     static func stationsTo(_ boss: String, _ count: Int) -> String {
         korean ? "\(boss) 체육관까지 역 \(count)개" : count == 1 ? "1 station to \(boss)'s gym" : "\(count) stations to \(boss)'s gym"
     }
-    /// The party works up to the next station's level first.
-    static func nextStationAt(_ level: Int) -> String { korean ? "다음 역은 Lv \(level)부터" : "Next station at Lv \(level)" }
     static func stationsLeft(_ count: Int) -> String {
         korean ? "남은 역 \(count)개" : count == 1 ? "1 station to go" : "\(count) stations to go"
     }
@@ -213,11 +228,10 @@ nonisolated enum GuideText {
     static func chance(_ boss: String, _ chance: Double) -> String {
         korean ? "\(boss) · 이길 확률 \(percent(chance))" : "\(boss) · \(percent(chance)) to win"
     }
-    static var bestTeam: String { korean ? "추천 팀" : "Best team" }
-    /// The party bar's short label for the same button.
-    static var recommend: String { korean ? "추천" : "Best" }
+    /// The party bar's button that sets up the best team for what's next.
+    static var auto: String { korean ? "자동" : "Auto" }
     static var gacha: String { korean ? "뽑기" : "Gacha" }
-    static func dungeon(_ tier: String) -> String { korean ? "\(tier) 던전" : "\(tier) dungeon" }
+    static var dungeon: String { korean ? "던전" : "Dungeon" }
     static func percent(_ chance: Double) -> String { "\(Int((chance * 100).rounded()))%" }
 
     // The history page.

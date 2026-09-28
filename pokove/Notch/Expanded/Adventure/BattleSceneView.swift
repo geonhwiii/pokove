@@ -11,9 +11,16 @@ struct BattleSceneView: View {
     @State private var popups: [ScenePopup] = []
     @State private var caption: String?
     @State private var captionSerial = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var lunging: UUID?
+    /// How far the user runs at the target: further for a tackle than a punch.
+    @State private var lungeDistance: CGFloat = 9
+    /// Flashes white as a hit lands.
     @State private var struck: UUID?
-    @State private var shake = false
+    /// Knocked back by a hit.
+    @State private var knocked: UUID?
+    @State private var shake = SceneShake(amount: 0, seconds: 0)
+    @State private var shakeSerial = 0
     /// A challenge's VS splash, then its result card, over the scene.
     @State private var intro: StagePlan?
     @State private var pendingIntro: StagePlan?
@@ -58,10 +65,6 @@ struct BattleSceneView: View {
                     .transition(.opacity)
             }
 
-            ForEach(popups) { popup in
-                ScenePopupView(popup: popup).position(popup.point)
-            }
-
             if let battle {
                 if let foe = battle.foeActive, !isTrainerIntro(battle) {
                     FoePlate(foe: foe, battle: battle)
@@ -71,6 +74,11 @@ struct BattleSceneView: View {
                     AllyPlate(ally: ally, battle: battle)
                         .position(x: layout.size.width - 6 - AllyPlate.width / 2, y: layout.size.height - SceneTextBox.height - 16)
                 }
+            }
+
+            // Numbers over the plates, so a big hit is never hidden.
+            ForEach(popups) { popup in
+                ScenePopupView(popup: popup).position(popup.point)
             }
 
             SceneChrome()
@@ -91,8 +99,25 @@ struct BattleSceneView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .offset(x: shake ? 1.5 : 0)
-        .animation(.linear(duration: 0.05).repeatCount(3, autoreverses: true), value: shake)
+        .keyframeAnimator(initialValue: CGSize.zero, trigger: shakeSerial) { content, offset in
+            content.offset(offset)
+        } keyframes: { _ in
+            let steps = max(3, Int(shake.seconds / 0.045))
+            KeyframeTrack(\.width) {
+                for step in 0..<steps {
+                    let fade = 1 - CGFloat(step) / CGFloat(steps)
+                    LinearKeyframe((step % 2 == 0 ? 1 : -1) * shake.amount * fade, duration: shake.seconds / Double(steps))
+                }
+                LinearKeyframe(0, duration: 0.04)
+            }
+            KeyframeTrack(\.height) {
+                for step in 0..<steps {
+                    let fade = 1 - CGFloat(step) / CGFloat(steps)
+                    LinearKeyframe((step % 3 == 0 ? 0.6 : -0.4) * shake.amount * shake.vertical * fade, duration: shake.seconds / Double(steps))
+                }
+                LinearKeyframe(0, duration: 0.04)
+            }
+        }
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
         .onChange(of: adventure.eventSerial) { handle(adventure.lastEvent, layout: layout) }
         // What a knockout at a station was worth, over the party's plate once the foe is gone.
@@ -109,6 +134,11 @@ struct BattleSceneView: View {
             if adventure.target?.showsIntro == true, let plan = adventure.battle?.plan { showIntro(plan) }
         }
         .onChange(of: adventure.resultSerial) { showResult(adventure.lastResult) }
+        #if DEBUG
+        .onReceive(NotificationCenter.default.publisher(for: .pokoveDebugMoveEffect)) { note in
+            debugEffect(slug: note.object as? String, byFoe: note.userInfo?["foe"] as? Bool == true, layout: layout)
+        }
+        #endif
         .onAppear { introduce(adventure.battle) }
     }
 
@@ -154,15 +184,18 @@ struct BattleSceneView: View {
         let feet = back ? layout.allyFeet : layout.foeFeet
         let fit = back ? SceneLayout.allyFit : SceneLayout.foeFit
         let toward: CGFloat = back ? 1 : -1
-        let lunge: CGFloat = lunging == combatant.id ? 9 * toward : 0
+        let lunge: CGFloat = lunging == combatant.id ? lungeDistance * toward : 0
+        let knock: CGFloat = knocked == combatant.id ? -5 * toward : 0
         return PokeSpriteView(id: combatant.speciesID, pixelSize: 1, back: back, shiny: back && app.adventure.isShiny(combatant), fitHeight: fit)
-            .opacity(struck == combatant.id ? 0.25 : 1)
+            .brightness(struck == combatant.id ? 0.6 : 0)
             .saturation(combatant.isFainted ? 0 : 1)
             .frame(width: 120, height: fit, alignment: .bottom)
-            .offset(x: lunge, y: combatant.isFainted ? 16 : 0)
+            .offset(x: lunge + knock, y: combatant.isFainted ? 16 : 0)
             .opacity(combatant.isFainted ? 0 : 1)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: lunging)
-            .animation(.easeIn(duration: 0.35), value: combatant.isFainted)
+            .animation(.spring(response: 0.16, dampingFraction: 0.4), value: knocked)
+            // The battle moves on before the move's effect lands, so fainting waits for it.
+            .animation(.easeIn(duration: 0.35).delay(0.35), value: combatant.isFainted)
             .position(x: feet.x, y: feet.y - fit / 2)
             .id(combatant.id)
             .transition(.scale(scale: 0.2, anchor: .bottom).combined(with: .opacity))
@@ -223,7 +256,8 @@ struct BattleSceneView: View {
             case .hurt(let amount):
                 say(BattleText.hurt(name, status.ailment))
                 struck = status.targetID
-                addPopup(ScenePopup(text: "\(amount)", style: status.onParty ? .taken : .dealt, point: CGPoint(x: at.x + 10, y: at.y - 10)))
+                addPopup(ScenePopup(text: "\(amount)", style: status.onParty ? .taken : .dealt, point: CGPoint(x: at.x + 10, y: at.y - 10),
+                                    weight: .weak))
                 Task {
                     try? await Task.sleep(for: .seconds(0.14))
                     struck = nil
@@ -253,41 +287,90 @@ struct BattleSceneView: View {
         let target = battle.combatant(action.targetID)
         let from = action.byParty ? layout.allyCenter : layout.foeCenter
         let to = action.byParty ? layout.foeCenter : layout.allyCenter
+        let feet = action.byParty ? layout.foeFeet : layout.allyFeet
         say(action.missed ? BattleText.missed(name(of: attacker)) : BattleText.used(name(of: attacker), action.move.name))
 
-        if action.move.isPhysical || action.move.id == PokeMove.struggle.id { lunging = action.attackerID }
         let strong = action.critical || action.effectiveness >= 2
-        let effect = MoveEffect(type: action.move.type, physical: action.move.isPhysical, from: from, to: to, start: Date(),
-                                strong: strong)
+        let effect = MoveEffect(move: action.move, hits: max(1, action.hits), from: from, to: to, feet: feet, strong: strong)
+        if effect.shape.isContact {
+            lungeDistance = effect.shape == .strike ? 16 : 10
+            lunging = action.attackerID
+        }
         if !action.missed { effects.append(effect) }
+        // Each hit on its own: the number, a white flash and a knock back.
+        let strikes = action.strikes.isEmpty ? [action.damage] : action.strikes
+        let weight = Self.weight(of: action)
 
         Task {
-            try? await Task.sleep(for: .seconds(effect.travel))
-            lunging = nil
             guard !action.missed else {
+                try? await Task.sleep(for: .seconds(effect.impact))
+                lunging = nil
                 addPopup(ScenePopup(text: BattleText.miss, style: .note, point: CGPoint(x: to.x, y: to.y - 18)))
                 return
             }
-            if action.damage > 0 { struck = action.targetID }
-            if strong { shake.toggle() }
-            addPopup(ScenePopup(text: "\(action.damage)", style: action.byParty ? .dealt : .taken, point: CGPoint(x: to.x + 10, y: to.y - 10),
-                                big: action.critical))
-            if let note = Self.note(for: action) {
-                addPopup(ScenePopup(text: note, style: .note, point: CGPoint(x: to.x, y: to.y - 26)))
+            var elapsed = 0.0
+            for (index, amount) in strikes.enumerated() {
+                let landing = effect.landing(index)
+                try? await Task.sleep(for: .seconds(max(0, landing - elapsed)))
+                elapsed = landing
+                if index == strikes.count - 1 { lunging = nil }
+                if amount > 0 {
+                    struck = action.targetID
+                    knocked = action.targetID
+                }
+                if index == 0 { rumble(effect.shake) }
+                // Later hits stack up and to the sides, so each number stays readable.
+                let sway: CGFloat = [0, 24, -24, 12, -12][index % 5]
+                addPopup(ScenePopup(text: "\(amount)", style: action.byParty ? .dealt : .taken,
+                                    point: CGPoint(x: to.x + 8 + sway, y: to.y - 12 - CGFloat(index) * 6), weight: weight))
+                if index == 0, let note = Self.note(for: action) {
+                    addPopup(ScenePopup(text: note, style: .note, point: CGPoint(x: to.x, y: to.y - 32)))
+                }
+                try? await Task.sleep(for: .seconds(0.07))
+                elapsed += 0.07
+                struck = nil
+                knocked = nil
             }
             if action.healed > 0 {
                 addPopup(ScenePopup(text: "+\(action.healed)", style: .healed, point: CGPoint(x: from.x, y: from.y - 18)))
             }
             if action.recoil > 0 {
-                addPopup(ScenePopup(text: "-\(action.recoil)", style: .taken, point: CGPoint(x: from.x, y: from.y - 18)))
+                addPopup(ScenePopup(text: "-\(action.recoil)", style: .taken, point: CGPoint(x: from.x, y: from.y - 18), weight: .weak))
             }
-            try? await Task.sleep(for: .seconds(0.14))
-            struck = nil
-            try? await Task.sleep(for: .seconds(0.5))
+            try? await Task.sleep(for: .seconds(max(0.3, effect.duration - elapsed)))
             effects.removeAll { $0.id == effect.id }
             if action.targetFainted { say(BattleText.fainted(name(of: target))) }
             if action.attackerFainted { say(BattleText.fainted(name(of: attacker))) }
         }
+    }
+
+    #if DEBUG
+    /// A move's effect on the battle on screen, without touching the battle itself.
+    private func debugEffect(slug: String?, byFoe: Bool, layout: SceneLayout) {
+        guard let battle = app.adventure.battle, let ally = battle.partyActive, let foe = battle.foeActive,
+              let move = app.adventure.data?.moves.moves.first(where: { $0.slug == slug }) else { return }
+        let hits = move.maxHits > 1 ? 3 : 1
+        let action = BattleAction(
+            attackerID: byFoe ? foe.id : ally.id, targetID: byFoe ? ally.id : foe.id, move: move, byParty: !byFoe, missed: false,
+            hits: hits, damage: 123 * hits, effectiveness: 1, critical: false, healed: 0, recoil: 0, targetFainted: false,
+            attackerFainted: false, strikes: Array(repeating: 123, count: hits)
+        )
+        play(action, battle: battle, layout: layout)
+    }
+    #endif
+
+    /// Shakes the scene, unless motion is reduced.
+    private func rumble(_ shake: (amount: CGFloat, seconds: Double)) {
+        guard !reduceMotion, shake.amount > 0 else { return }
+        self.shake = SceneShake(amount: shake.amount, seconds: shake.seconds)
+        shakeSerial &+= 1
+    }
+
+    private static func weight(of action: BattleAction) -> ScenePopup.Weight {
+        if action.critical { return .critical }
+        if action.effectiveness >= 2 { return .strong }
+        if action.effectiveness < 1 { return .weak }
+        return .normal
     }
 
     private static func note(for action: BattleAction) -> String? {
@@ -301,7 +384,7 @@ struct BattleSceneView: View {
 
     private func addPopup(_ popup: ScenePopup) {
         popups.append(popup)
-        if popups.count > 6 { popups.removeFirst(popups.count - 6) }
+        if popups.count > 9 { popups.removeFirst(popups.count - 9) }
         Task {
             try? await Task.sleep(for: .seconds(1))
             popups.removeAll { $0.id == popup.id }
@@ -389,7 +472,8 @@ private struct SceneTextBox: View {
     }
 }
 
-/// What the party is fighting at the top left; Challenge at the top right while a gym is open.
+/// What the party is fighting at the top left; Next station at the top right while the party is
+/// repeating a station or training behind the next one.
 private struct SceneChrome: View {
     @Environment(AppModel.self) private var app
 
@@ -404,16 +488,13 @@ private struct SceneChrome: View {
                 .frame(height: 15)
                 .background(.black.opacity(0.42), in: Capsule())
             Spacer(minLength: 4)
-            if !adventure.isChallenging, adventure.progress.isBossOpen(adventure.chapters) {
+            if !adventure.isChallenging, adventure.isBehindFrontier {
                 Button {
-                    withAnimation(.smooth(duration: 0.25)) { adventure.challengeBoss() }
+                    withAnimation(.smooth(duration: 0.25)) { adventure.resumeJourney() }
                 } label: {
                     HStack(spacing: 2) {
-                        Image(systemName: "bolt.fill")
-                        Text("Challenge")
-                        if let readiness = adventure.readiness {
-                            Text("\(Int((readiness * 100).rounded()))%").monospacedDigit().opacity(0.8)
-                        }
+                        Text("Next station")
+                        Image(systemName: "arrow.forward")
                     }
                     .font(.system(size: 8.5, weight: .heavy))
                     .foregroundStyle(.black)
@@ -423,7 +504,7 @@ private struct SceneChrome: View {
                     .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .help(adventure.nextBoss?.trainer.name ?? "")
+                .help("Take on the next station now")
             }
         }
         .padding(.horizontal, 6)
@@ -443,9 +524,9 @@ private struct SceneChrome: View {
             return info.isLeague && !trainer.isChampion ? "\(trainer.title) \(index + 1)/4 · \(trainer.name)" : "\(trainer.title) · \(trainer.name)"
         case .legend(let id):
             return "★ " + (adventure.data?.legend(id).flatMap { adventure.dex.species($0.species)?.name } ?? "")
-        case .dungeon(let tier):
-            let floor = min((adventure.battle?.foeIndex ?? 0) + 1, DailyDungeon.floors)
-            return String(localized: "Dungeon \(tier.title) · \(floor)/\(DailyDungeon.floors)F")
+        case .dungeon(let kind, let stage):
+            let foe = min((adventure.battle?.foeIndex ?? 0) + 1, DailyDungeon.foesPerStage)
+            return "\(ChallengeText.dungeon(kind)) \(ChallengeText.stage(stage)) · \(foe)/\(DailyDungeon.foesPerStage)"
         case .tower(let floor):
             return "\(ChallengeText.tower) · \(ChallengeText.floor(floor))"
         }
@@ -471,7 +552,7 @@ private struct FoePlate: View {
             }
             .font(.system(size: 8.5, weight: .heavy))
             .foregroundStyle(.white)
-            HealthBar(fraction: foe.hpFraction, width: FoePlate.width - 12)
+            HealthBar(fraction: foe.hpFraction, width: FoePlate.width - 12, delay: 0.25)
             TeamBalls(members: battle.foes, activeID: foe.id)
         }
         .padding(.horizontal, 6)
@@ -501,7 +582,7 @@ private struct AllyPlate: View {
             }
             .font(.system(size: 8.5, weight: .heavy))
             .foregroundStyle(.white)
-            HealthBar(fraction: ally.hpFraction, width: AllyPlate.width - 12)
+            HealthBar(fraction: ally.hpFraction, width: AllyPlate.width - 12, delay: 0.25)
             HStack(spacing: 3) {
                 TeamBalls(members: battle.party, activeID: ally.id)
                 if let owned {
@@ -515,6 +596,8 @@ private struct AllyPlate: View {
                 Text("\(max(0, ally.hp))/\(ally.maxHP)")
                     .font(.system(size: 7.5, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.75))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
         .padding(.horizontal, 6)
@@ -550,6 +633,8 @@ private struct StatusTag: View {
 struct HealthBar: View {
     let fraction: Double
     let width: CGFloat
+    /// Seconds to wait before moving, so a battle's bar drops as the hit lands.
+    var delay: Double = 0
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -558,7 +643,7 @@ struct HealthBar: View {
         }
         .frame(width: width, height: 3.5)
         .overlay(Capsule().strokeBorder(.white.opacity(0.3), lineWidth: 0.5))
-        .animation(.smooth(duration: 0.4), value: fraction)
+        .animation(.smooth(duration: 0.4).delay(delay), value: fraction)
     }
 
     private var color: Color {
@@ -600,35 +685,119 @@ struct PokeBallDot: View {
     }
 }
 
+/// How the scene shakes when a move lands.
+private struct SceneShake {
+    var amount: CGFloat
+    var seconds: Double
+    /// Earthquakes rock the scene up and down too.
+    var vertical: CGFloat { amount >= 3 ? 1 : 0.3 }
+}
+
 struct ScenePopup: Identifiable, Equatable {
     enum Style { case dealt, taken, healed, note, xp }
+    /// How hard a hit was, for the number's size and color.
+    enum Weight { case weak, normal, strong, critical }
     let id = UUID()
     let text: String
     let style: Style
     let point: CGPoint
-    var big = false
+    var weight: Weight = .normal
 }
 
 private struct ScenePopupView: View {
     let popup: ScenePopup
-    @State private var risen = false
+    @State private var shown = false
+
+    private struct Motion {
+        var scale: CGFloat = 1
+        var rise: CGFloat = 0
+        var opacity: Double = 0
+    }
 
     var body: some View {
+        switch popup.style {
+        case .dealt, .taken, .healed: number
+        case .note, .xp: label
+        }
+    }
+
+    /// Damage lands big and settles, then drifts up.
+    private var number: some View {
+        let pop: CGFloat = switch popup.weight {
+        case .critical: 2.1
+        case .strong: 1.8
+        case .normal: 1.6
+        case .weak: 1.3
+        }
+        return Text(popup.text)
+            .font(.system(size: size, weight: .black, design: .rounded).monospacedDigit())
+            .foregroundStyle(color)
+            .shadow(color: .black, radius: 0, x: 1, y: 1)
+            .shadow(color: .black, radius: 0, x: -0.8, y: -0.4)
+            .shadow(color: .black.opacity(0.5), radius: 2)
+            .fixedSize()
+            .keyframeAnimator(initialValue: Motion(), trigger: shown) { content, motion in
+                content
+                    .scaleEffect(motion.scale)
+                    .offset(y: motion.rise)
+                    .opacity(motion.opacity)
+            } keyframes: { _ in
+                KeyframeTrack(\.scale) {
+                    MoveKeyframe(pop)
+                    SpringKeyframe(1, duration: 0.3, spring: .init(response: 0.22, dampingRatio: 0.5))
+                    LinearKeyframe(1, duration: 0.3)
+                    LinearKeyframe(0.9, duration: 0.4)
+                }
+                KeyframeTrack(\.rise) {
+                    LinearKeyframe(0, duration: 0.55)
+                    CubicKeyframe(-16, duration: 0.45)
+                }
+                KeyframeTrack(\.opacity) {
+                    MoveKeyframe(1)
+                    LinearKeyframe(1, duration: 0.65)
+                    LinearKeyframe(0, duration: 0.35)
+                }
+            }
+            .onAppear { shown = true }
+    }
+
+    private var label: some View {
         Text(popup.text)
-            .font(popup.style == .note || popup.style == .xp ? .system(size: 8.5, weight: .heavy).monospacedDigit()
-                  : .system(size: popup.big ? 13 : 11, weight: .black, design: .rounded).monospacedDigit())
+            .font(.system(size: 8.5, weight: .heavy).monospacedDigit())
             .foregroundStyle(color)
             .shadow(color: .black.opacity(0.85), radius: 1, y: 1)
             .fixedSize()
-            .offset(y: risen ? -12 : 0)
-            .opacity(risen ? 0 : 1)
-            .onAppear { withAnimation(.easeOut(duration: 0.9)) { risen = true } }
+            .offset(y: shown ? -12 : 0)
+            .opacity(shown ? 0 : 1)
+            .onAppear { withAnimation(.easeOut(duration: 0.9)) { shown = true } }
+    }
+
+    private var size: CGFloat {
+        guard popup.style != .healed else { return 12 }
+        return switch popup.weight {
+        case .critical: 21
+        case .strong: 18
+        case .normal: 15.5
+        case .weak: 12.5
+        }
     }
 
     private var color: Color {
         switch popup.style {
-        case .dealt: .white
-        case .taken: Color(hex: 0xFF8A80)
+        case .dealt:
+            switch popup.weight {
+            case .critical: Color(hex: 0xFFE14D)
+            case .strong: Color(hex: 0xFFB347)
+            case .normal: .white
+            case .weak: Color(hex: 0xD4D4DC)
+            }
+        case .taken:
+            switch popup.weight {
+            case .critical: Color(hex: 0xFFD04A)
+            case .strong: Color(hex: 0xFF6A58)
+            case .normal: Color(hex: 0xFF8A80)
+            case .weak: Color(hex: 0xFFB8B0)
+            }
         case .healed: Color(hex: 0x7CF0A0)
         case .note: Color(hex: 0xFFE14D)
         case .xp: Color(hex: 0x7FC8FF)

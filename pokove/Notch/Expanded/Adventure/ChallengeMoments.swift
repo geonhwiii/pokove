@@ -99,7 +99,7 @@ struct ChallengeIntroView: View {
         switch plan.kind {
         case .trainer(let trainer): trainer.name
         case .legend: foeSpecies.flatMap { app.adventure.dex.species($0)?.name } ?? ""
-        case .dungeon(let tier): ChallengeText.dungeon(tier.title)
+        case .dungeon(let kind, _): ChallengeText.dungeon(kind)
         case .tower: ChallengeText.tower
         case .wild: ""
         }
@@ -109,8 +109,8 @@ struct ChallengeIntroView: View {
         switch plan.kind {
         case .trainer(let trainer): trainer.title
         case .legend: ChallengeText.legendary
-        case .dungeon:
-            ChallengeText.floors(DailyDungeon.floors, types: app.adventure.dungeonTypes.map(\.title).joined(separator: "·"))
+        case .dungeon(let kind, let stage):
+            ChallengeText.stage(stage, types: app.adventure.dungeonTypes(kind).map(\.title).joined(separator: "·"))
         case .tower(let floor): ChallengeText.floor(floor)
         case .wild: ""
         }
@@ -123,7 +123,7 @@ extension ChallengeResultView {
         switch result.kind {
         case .boss(let trainer): trainer.name
         case .legend(let species): app.adventure.dex.species(species)?.name
-        case .dungeon(let tier): ChallengeText.dungeon(tier.title)
+        case .dungeon(let kind, _): ChallengeText.dungeon(kind)
         case .tower: nil
         }
     }
@@ -188,8 +188,11 @@ struct ChallengeResultView: View {
             }
         case .tower(let floor):
             Text(ChallengeText.reached(floor)).modifier(ResultLine())
-        case .dungeon(let tier):
-            Text(ChallengeText.cleared(ChallengeText.dungeon(tier.title))).modifier(ResultLine())
+        case .dungeon(_, let stage):
+            Text(ChallengeText.cleared(ChallengeText.stage(stage))).modifier(ResultLine())
+            if result.xp > 0 {
+                Text(ChallengeText.xpEach(result.xp)).modifier(ResultDetail(color: Color(hex: 0x7FC8FF)))
+            }
             if result.ultraBall {
                 HStack(spacing: 3) {
                     ItemSpriteView(slug: "ultra-ball", pixelSize: 0.5)

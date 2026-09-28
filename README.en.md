@@ -21,15 +21,17 @@ Your party holds up to three Pokémon. It only moves along the line while an age
 
 - **Starting out:** choose Bulbasaur, Charmander or Squirtle (Lv 5). Your first gacha pull is free.
 - **The Challenge tab**
-  - **Stages:** each chapter is a line of ten stations. The last one has three wild Pokémon, ending with the strongest one around, and then the line goes on to the next chapter. Each station has a level, and the party fights at the one before until it gets there. Chapter 10 opens after the Champion. Stations hold the real wild Pokémon of their area. Tap a cleared station to go back to it.
+  - **Stages:** each chapter is a line of ten stations. The last one has three wild Pokémon, ending with the strongest one around, and then the line goes on to the next chapter. Wild Pokémon come at about the party's level, so a win moves the line on. After a loss the party fights a few times at the station before, then tries again; **Next station** tries again right away. Chapter 10 opens after the Champion. Stations hold the real wild Pokémon of their area. Tap a cleared station to go back to it.
   - **Gym:** a chapter's gym leader can be challenged once its line is cleared, and the Elite Four and the Champion after chapter 9. The VS screen shows their team, the badge at stake, the chance to win and the level that would win. You start each challenge yourself.
-  - **Dungeon:** a daily dungeon of the day's type, in Easy, Normal and Hard. Each tier pays stardust or an Ultra Ball once a day and resets at 4:00.
+  - **Dungeons:** a stardust dungeon and an EXP dungeon. Stage 1 is Lv 5, each stage two levels more, with three Pokémon to beat, the last a boss.
+    - Each dungeon has three tries a day. Clearing a new stage gives the try back; a loss uses one. When a stage is too much, spend what's left on your best stage for its reward again. Tries refill at 4:00.
+    - The stardust dungeon changes type by weekday and pays an Ultra Ball the first time you clear every tenth stage. The EXP dungeon holds Normal and Fairy types and gives the whole party experience.
   - **Tower:** the Battle Tower opens after the Champion. Climb floor after floor until you lose; your best floor is kept.
-  - Gyms, legendaries, the dungeon and the tower play out once started, agent or not. Losing costs nothing.
-- **The line under the tab** says what to do next: the next station's level, stations to the gym, the level that would beat it, and a shortcut (best team, today's dungeon, a pull).
+  - Gyms, legendaries, dungeons and the tower play out once started, agent or not. Losing costs nothing.
+- **The line under the tab** says what to do next: stations to the gym, the level that would beat it, and a shortcut (a dungeon, a pull).
 - **Badges raise the level cap.** Experience past the cap is banked and comes back with the next badge.
 - **Legendaries:** Snorlax, Zapdos, Articuno and Moltres wait on ★ branches of the line, and Mewtwo after the Champion. Beat one and it joins.
-- **Battles** are a 1:1 relay, like the games: Gen 3 power and accuracy, crits, multi-hits, drain and recoil, plus poison, burns and paralysis. The whole party shares the experience.
+- **Battles** are a 1:1 relay, like the games, and every move has its own effect: fists, lightning, beams, quakes. Gen 3 power and accuracy, crits, multi-hits, drain and recoil, plus poison, burns and paralysis. The whole party shares the experience.
 
 ![The gym's VS screen](docs/images/gym.png)
 
@@ -44,7 +46,7 @@ Getting a Pokémon never fails.
 
 ![The Pokédex and a Pokémon's card](docs/images/pokedex.png)
 
-A Pokémon's card shows its next evolution, its next move, the experience left to the next level, the level cap and how it fares against the next boss. Pokémon you don't have yet show where to meet them. Drag party slots to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in.
+A Pokémon's card shows its next evolution, its next move, the experience left to the next level, the level cap and how it fares against the next boss. Pokémon you don't have yet show where to meet them. Drag party slots to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in. **Auto**, next to the party, sets up the best three for what's next.
 
 ![The gacha](docs/images/gacha.png)
 
@@ -185,7 +187,7 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
   - Setup: `poke starter <id>`, `poke reset`, `poke champion`.
   - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke shiny` (the leader shines), `poke jump <chapter> <station> <badges>` (1-based; station 11 means the line is cleared), `poke tick <n>` (battle actions without an agent or the clock).
   - Gacha: `poke pull`, `poke ultra` (adds an Ultra Ball), `poke ultraopen`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
-  - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon easy|normal|hard`, `poke dungeonreset`, `poke tower`.
+  - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon stardust|experience [stage]` (the next stage, or the best one), `poke dungeonreset [stages]` (refills today's tries; `stages` also starts both climbs over), `poke tower`, `poke fx <move slug> [foe]` (plays a move's effect over the battle on screen).
   - Page: `poke pane challenge|dex|gacha|history|toast` (toast replays the newest history entry), `poke mode stage|gym|dungeon|tower|legend:<id>`, `poke badgebanner <n>`, `poke state` (writes to `$TMPDIR/pokove-state.txt`), `select <dex number>`.
 - **Settings:** `settings claude|adventure|about|…`.
 

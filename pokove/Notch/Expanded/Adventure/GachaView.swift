@@ -201,7 +201,7 @@ private struct GachaResultView: View {
 }
 
 /// Stardust, the price and the button, before the balls are handed out; and any Ultra Balls
-/// won in the dungeon.
+/// won along the way.
 private struct PullPanel: View {
     @Environment(AppModel.self) private var app
 
@@ -268,7 +268,7 @@ private struct PullPanel: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!adventure.canOpenUltraBall)
-                    .help("An Ultra Ball from the dungeon: three balls, all rare or better")
+                    .help("An Ultra Ball: three balls, all rare or better")
                 }
             }
         }

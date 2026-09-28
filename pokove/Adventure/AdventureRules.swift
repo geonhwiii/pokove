@@ -16,7 +16,8 @@ nonisolated enum BattleTarget: Equatable, Sendable {
     /// A gym leader, or one of the League's five, by the chapter they belong to.
     case boss(chapter: Int, index: Int)
     case legend(String)
-    case dungeon(DungeonTier)
+    /// A daily dungeon's stage.
+    case dungeon(DungeonKind, stage: Int)
     /// A Battle Tower floor, from 1, after the Champion.
     case tower(Int)
 
@@ -95,20 +96,19 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
         return point.chapter > 0 ? StationPoint(chapter: point.chapter - 1, station: Chapter.stationCount - 2) : nil
     }
 
-    /// The party is up to the next station's level, so the line can move on.
-    func isReady(for chapters: [Chapter], partyLevel: Int) -> Bool {
-        guard chapters.indices.contains(chapter), chapters[chapter].stations.indices.contains(station) else { return true }
-        return partyLevel >= chapters[chapter].stations[station].level
-    }
-
-    /// Where the party fights while an agent works: the next station once it's up to that
-    /// station's level, otherwise the one before.
-    func stationTarget(_ chapters: [Chapter], partyLevel: Int) -> StationPoint {
+    /// Where the party fights while an agent works: the next station, or the one before for a few
+    /// clears after losing there.
+    func stationTarget(_ chapters: [Chapter]) -> StationPoint {
         if let repeating { return repeating }
         if isLooping { return StationPoint(chapter: chapter, station: cursor % Chapter.stationCount) }
-        // After a loss on the line, a few clears of the station before.
-        if training > 0 || !isReady(for: chapters, partyLevel: partyLevel), let before = previous(frontier) { return before }
+        if training > 0, let before = previous(frontier) { return before }
         return frontier
+    }
+
+    /// Stops repeating or training and takes the next station on right away.
+    mutating func pushOn() {
+        repeating = nil
+        training = 0
     }
 
     enum Outcome: Equatable, Sendable {
@@ -223,8 +223,6 @@ extension JourneyProgress {
 nonisolated enum Losses {
     /// After a rare loss on the line, clears of the station before.
     static let wildTraining = 3
-    /// Losses in a row to a boss before the recap points at the best-team button.
-    static let hintAfter = 3
 }
 
 /// Plays a stage out many times ahead of time to estimate the chance of winning it.
@@ -388,7 +386,7 @@ nonisolated enum Gacha {
 // MARK: Rewards
 
 nonisolated enum Rewards {
-    /// Stardust for winning. The dungeon pays per tier instead (`DailyDungeon.stardust`).
+    /// Stardust for winning. The dungeons pay by stage instead (`DailyDungeon.stardust(stage:)`).
     static func stardust(for kind: StagePlan.Kind) -> Int {
         switch kind {
         case .wild: 1
@@ -400,45 +398,83 @@ nonisolated enum Rewards {
     }
 }
 
-// MARK: Daily dungeon
+// MARK: Daily dungeons
 
-nonisolated enum DungeonTier: String, Codable, CaseIterable, Comparable, Sendable {
-    case easy, normal, hard
-
-    static func < (lhs: DungeonTier, rhs: DungeonTier) -> Bool {
-        allCases.firstIndex(of: lhs)! < allCases.firstIndex(of: rhs)!
-    }
-
-    /// Levels from the party's.
-    var levelOffset: Int {
-        switch self {
-        case .easy: -6
-        case .normal: -2
-        case .hard: 3
-        }
-    }
-
-    /// The last floor's boss has this much more HP than its level gives.
-    var bossHP: Double {
-        switch self {
-        case .easy: 1.5
-        case .normal, .hard: 2
-        }
-    }
+/// The two dungeons: one pays stardust, the other experience.
+nonisolated enum DungeonKind: String, Codable, CaseIterable, Sendable {
+    case stardust, experience
 }
 
-/// Which tiers have paid out on a dungeon day.
-nonisolated struct DungeonDay: Codable, Equatable, Sendable {
+/// One dungeon's climb: the highest stage cleared, and the tries left today.
+nonisolated struct DungeonClimb: Codable, Equatable, Sendable {
+    /// 0 before the first clear.
+    var best = 0
+    var tries = DailyDungeon.triesPerDay
+
+    /// The stage a try at a new one takes on, while there is one.
+    var next: Int? { best < DailyDungeon.stages ? best + 1 : nil }
+}
+
+/// Both climbs, and the dungeon day their tries belong to.
+nonisolated struct DungeonState: Codable, Equatable, Sendable {
     var day: String
-    var claimed: [DungeonTier] = []
+    var stardust = DungeonClimb()
+    var experience = DungeonClimb()
+
+    subscript(kind: DungeonKind) -> DungeonClimb {
+        get { kind == .stardust ? stardust : experience }
+        set { if kind == .stardust { stardust = newValue } else { experience = newValue } }
+    }
+
+    /// A new day fills the tries again; the stages stay where they were.
+    mutating func refill(for today: String) {
+        guard day != today else { return }
+        day = today
+        stardust.tries = DailyDungeon.triesPerDay
+        experience.tries = DailyDungeon.triesPerDay
+    }
+
+    /// A try is over. Clearing a new stage moves the climb up and gives the try back; a loss, or
+    /// going back to the best stage, uses it. True when the stage was cleared for the first time.
+    @discardableResult
+    mutating func record(_ kind: DungeonKind, stage: Int, cleared: Bool) -> Bool {
+        let isNew = cleared && stage == self[kind].next
+        if isNew {
+            self[kind].best = stage
+        } else {
+            self[kind].tries = max(0, self[kind].tries - 1)
+        }
+        return isNew
+    }
 }
 
-/// Five floors of the day's type, the last a boss; each tier pays once a day.
+/// Stages that climb two levels at a time, three Pokémon each, the last a boss. Each dungeon has
+/// three tries a day; clearing a new stage gives the try back, so a strong party climbs until it
+/// loses, then can spend what's left on its best stage for the reward again.
 nonisolated enum DailyDungeon {
     static let resetHour = 4
-    static let floors = 5
-    static let bossLevels = 1
-    static let stardust: [DungeonTier: Int] = [.easy: 60, .normal: 120]
+    static let triesPerDay = 3
+    static let stages = 50
+    static let foesPerStage = 3
+    /// The boss has this much more HP than its level gives.
+    static let bossHP = 1.5
+    /// Every this many stages first cleared in the stardust dungeon pays an Ultra Ball.
+    static let ultraBallEvery = 10
+
+    /// Stage 1 is Lv 5, and each stage two more, up to 100.
+    static func level(stage: Int) -> Int { min(PokeMath.maxLevel, 3 + 2 * stage) }
+
+    static func stardust(stage: Int) -> Int { 80 + 8 * stage }
+
+    /// A sixth of a level at the stage's level, for each of the party. Half a level made the
+    /// Champion come 40% sooner in the sim; a sixth, about 15%.
+    static func experience(stage: Int) -> Int {
+        let level = min(level(stage: stage), PokeMath.maxLevel - 1)
+        return (PokeMath.xp(forLevel: level + 1) - PokeMath.xp(forLevel: level)) / 6
+    }
+
+    /// A first clear of this stage in the stardust dungeon brings an Ultra Ball.
+    static func paysUltraBall(stage: Int) -> Bool { stage % ultraBallEvery == 0 }
 
     /// The dungeon day a moment belongs to: days turn over at 04:00 local time.
     static func day(of date: Date, calendar: Calendar = .current) -> String {
@@ -454,9 +490,10 @@ nonisolated enum DailyDungeon {
 
     private static func shifted(_ date: Date) -> Date { date.addingTimeInterval(-Double(resetHour) * 3600) }
 
-    /// The type of the day, by weekday.
-    static func types(on date: Date, calendar: Calendar = .current) -> [PokeType] {
-        switch calendar.component(.weekday, from: shifted(date)) {
+    /// The stardust dungeon's types, by weekday. The experience dungeon is always Normal and Fairy.
+    static func types(_ kind: DungeonKind, on date: Date, calendar: Calendar = .current) -> [PokeType] {
+        guard kind == .stardust else { return [.normal, .fairy] }
+        return switch calendar.component(.weekday, from: shifted(date)) {
         case 1: [.dragon, .ghost]
         case 2: [.grass]
         case 3: [.fire]
@@ -474,16 +511,13 @@ nonisolated enum DailyDungeon {
         case .water: .sea
         case .electric: .plant
         case .rock: .cave
+        case .normal: .gym
         default: .tower
         }
     }
 
-    static func level(_ tier: DungeonTier, partyLevel: Int, cap: Int) -> Int {
-        max(2, min(partyLevel + tier.levelOffset, cap))
-    }
-
-    /// Species of the day's types that could be met at a level, legendaries aside. `evolved`
-    /// keeps each line only in the most evolved form it would have by then, for the boss.
+    /// Species of the types that could be met at a level, legendaries aside. `evolved` keeps each
+    /// line only in the most evolved form it would have by then, for the boss.
     static func species(types: [PokeType], level: Int, evolved: Bool, dex: DexView) -> [PokeSpecies] {
         let matching = dex.species.filter { species in
             !species.isSpecial && !Set(species.types).isDisjoint(with: types) && (species.evolveLevel ?? 0) <= level
@@ -492,23 +526,22 @@ nonisolated enum DailyDungeon {
         return matching.isEmpty ? dex.species.filter { !$0.isSpecial && ($0.evolveLevel ?? 0) <= level } : matching
     }
 
-    /// The same floors all day for a tier, so a retry faces what beat you.
-    static func plan(_ tier: DungeonTier, on date: Date, partyLevel: Int, cap: Int, data: GameData) -> StagePlan {
-        let day = day(of: date)
-        var rng = SeededRNG(seed: (day + tier.rawValue).unicodeScalars.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1.value)) &* 1099511628211 })
-        let types = types(on: date)
-        let level = level(tier, partyLevel: partyLevel, cap: cap)
-        let foes = (0..<floors).map { floor -> StagePlan.Foe in
-            let isBoss = floor == floors - 1
-            // Floors climb to the tier's level; the boss stands a little above it.
-            let floorLevel = isBoss ? level + bossLevels : max(2, level - (floors - 2) + floor)
-            var candidates = species(types: types, level: floorLevel, evolved: isBoss, dex: data.dex)
-            // The boss is one of the strongest of the day.
+    /// The same three all day for a stage, so a retry faces what beat you: two a little below the
+    /// stage's level, then one of the strongest around at it.
+    static func plan(_ kind: DungeonKind, stage: Int, on date: Date, data: GameData) -> StagePlan {
+        let key = "\(day(of: date))-\(kind.rawValue)-\(stage)"
+        var rng = SeededRNG(seed: key.unicodeScalars.reduce(UInt64(1469598103934665603)) { ($0 ^ UInt64($1.value)) &* 1099511628211 })
+        let types = types(kind, on: date)
+        let level = level(stage: stage)
+        let foes = (0..<foesPerStage).map { index -> StagePlan.Foe in
+            let isBoss = index == foesPerStage - 1
+            let foeLevel = max(2, level - (foesPerStage - 1) + index)
+            var candidates = species(types: types, level: foeLevel, evolved: isBoss, dex: data.dex)
             if isBoss { candidates = Array(candidates.sorted { $0.stats.total > $1.stats.total }.prefix(3)) }
             let pick = candidates.isEmpty ? 19 : candidates[Int(rng.next() % UInt64(candidates.count))].id
-            return StagePlan.Foe(species: pick, level: floorLevel, hpScale: isBoss ? tier.bossHP : 1)
+            return StagePlan.Foe(species: pick, level: foeLevel, hpScale: isBoss ? bossHP : 1)
         }
-        return StagePlan(kind: .dungeon(tier), foes: foes, scenery: scenery(for: types))
+        return StagePlan(kind: .dungeon(kind, stage: stage), foes: foes, scenery: scenery(for: types))
     }
 }
 

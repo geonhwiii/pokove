@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The ways to take the journey on: the stage line agents push along, the gyms, the daily dungeon,
+/// The ways to take the journey on: the stage line agents push along, the gyms, the daily dungeons,
 /// and the tower after the Champion.
 enum ChallengeMode: String, CaseIterable {
     case stage, gym, dungeon, tower
@@ -267,7 +267,7 @@ private struct StageLineView: View {
                     .foregroundStyle(.white.opacity(0.5))
                 Spacer(minLength: 2)
                 if progress.repeating == selected {
-                    pill(String(localized: "Move On"), symbol: "arrow.forward") { adventure.resumeJourney(); self.selected = nil }
+                    pill(String(localized: "Next station"), symbol: "arrow.forward") { adventure.resumeJourney(); self.selected = nil }
                 } else if progress.isCleared(selected) {
                     pill(String(localized: "Repeat"), symbol: "repeat") { adventure.repeatStation(selected); self.selected = nil }
                 }
@@ -275,15 +275,19 @@ private struct StageLineView: View {
                 Image(systemName: "repeat").foregroundStyle(Color(hex: 0x7FC8FF))
                 Text("Repeating \(repeating.chapter + 1)-\(repeating.station + 1)").foregroundStyle(Color(hex: 0x7FC8FF))
                 Spacer(minLength: 2)
-                pill(String(localized: "Move On"), symbol: "arrow.forward") { adventure.resumeJourney() }
+                pill(String(localized: "Next station"), symbol: "arrow.forward") { adventure.resumeJourney() }
+            } else if progress.isTraining, isCurrent {
+                // Back a station after a loss, for a few clears.
+                let point = adventure.stationPoint
+                Image(systemName: "arrow.counterclockwise").foregroundStyle(Color(hex: 0xFF9E6B))
+                Text("Training at \(point.chapter + 1)-\(point.station + 1)").foregroundStyle(.white.opacity(0.8)).lineLimit(1)
+                Spacer(minLength: 2)
+                pill(String(localized: "Next station"), symbol: "arrow.forward") { adventure.resumeJourney() }
             } else if adventure.isChallenging {
                 Image(systemName: "bolt.fill").foregroundStyle(Color(hex: 0xFFD35A))
                 Text("A challenge is underway").foregroundStyle(.white.opacity(0.7))
                 Spacer(minLength: 0)
-            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), isCurrent,
-                      adventure.nextStationLevel == nil {
-                // An open gym, unless the party is working up to the next station: the gym tab's
-                // dot and the battle's chip still say it's waiting.
+            } else if let boss = adventure.nextBoss, progress.isBossOpen(adventure.chapters), isCurrent {
                 let chance = adventure.readiness ?? 0
                 if chance >= Guidance.goodChance {
                     Image(systemName: "flag.checkered").foregroundStyle(Color(hex: 0xFFD35A))
@@ -309,13 +313,12 @@ private struct StageLineView: View {
                 Text("Looping the last line").foregroundStyle(.white.opacity(0.6))
                 Spacer(minLength: 0)
             } else if isCurrent {
-                // On the line: the level the next station takes, how far to the line's end (and
-                // whose gym opens there), or that it waits for an agent; a pull when there's one.
+                // On the line: how far to the line's end (and whose gym opens there), or that it
+                // waits for an agent; a pull when there's one.
                 let point = adventure.stationPoint
                 let station = adventure.chapters[point.chapter].stations[point.station]
                 let gym = adventure.nextBoss.flatMap { $0.chapter == progress.chapter ? $0.trainer.name : nil }
-                let onTheWay = adventure.nextStationLevel.map(GuideText.nextStationAt)
-                    ?? gym.map { GuideText.stationsTo($0, adventure.stationsLeft) } ?? GuideText.stationsLeft(adventure.stationsLeft)
+                let onTheWay = gym.map { GuideText.stationsTo($0, adventure.stationsLeft) } ?? GuideText.stationsLeft(adventure.stationsLeft)
                 Image(systemName: adventure.isBattling ? "play.fill" : "moon.zzz.fill")
                     .foregroundStyle(adventure.isBattling ? Color(hex: 0xFFD35A) : .white.opacity(0.5))
                 Text(adventure.isBattling ? onTheWay : GuideText.resting)
@@ -345,12 +348,11 @@ private struct StageLineView: View {
 
     // MARK: Next step
 
-    /// A quicker way to get stronger than waiting: a better team from the box, today's dungeon, a pull.
-    private enum Fix { case bestTeam, dungeon(DungeonTier), gacha }
+    /// A quicker way to get stronger than waiting: a dungeon with tries left, a pull.
+    private enum Fix { case dungeon, gacha }
 
     private func fix(_ adventure: AdventureService) -> Fix? {
-        if adventure.hasBetterTeam { return .bestTeam }
-        if let tier = adventure.openDungeonTier { return .dungeon(tier) }
+        if adventure.openDungeon != nil { return .dungeon }
         if adventure.hasGachaWaiting { return .gacha }
         return nil
     }
@@ -358,10 +360,8 @@ private struct StageLineView: View {
     @ViewBuilder
     private func fixPill(_ fix: Fix) -> some View {
         switch fix {
-        case .bestTeam:
-            pill(GuideText.bestTeam, symbol: "hand.thumbsup.fill", primary: true) { app.adventure.recommendParty() }
-        case .dungeon(let tier):
-            pill(GuideText.dungeon(tier.title), symbol: "door.left.hand.open", primary: true) { openDungeon() }
+        case .dungeon:
+            pill(GuideText.dungeon, symbol: "door.left.hand.open", primary: true) { openDungeon() }
         case .gacha:
             pill(GuideText.gacha, symbol: "sparkles", primary: true) { pane = .gacha }
         }
@@ -699,36 +699,6 @@ private struct VSNote: View {
     }
 }
 
-private struct BestTeamButton: View {
-    let goal: BattleTarget
-
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let adventure = app.adventure
-        // Lit when it would change the party for the next boss.
-        let better = adventure.hasBetterTeam && adventure.nextBoss.map { BattleTarget.boss(chapter: $0.chapter, index: $0.index) } == goal
-        Button {
-            withAnimation(.smooth(duration: 0.25)) { adventure.recommendParty(for: goal) }
-        } label: {
-            HStack(spacing: 2) {
-                Image(systemName: "hand.thumbsup.fill").font(.system(size: 7.5, weight: .bold))
-                // The short label, so the Challenge button keeps its room.
-                Text(GuideText.recommend).font(.system(size: 8.5, weight: .heavy))
-            }
-            .foregroundStyle(better ? .black : .white.opacity(0.9))
-            .padding(.horizontal, 6)
-            .frame(height: 19)
-            .background(better ? Color(hex: 0xFFD35A) : .white.opacity(0.16), in: Capsule())
-            .contentShape(Capsule())
-            .fixedSize()
-        }
-        .buttonStyle(.plain)
-        .disabled(app.adventure.owned.count < 2 || app.adventure.isChallenging)
-        .help("Best team for this fight")
-    }
-}
-
 /// The next boss (or any other, browsing), as a VS screen.
 private struct BossVSView: View {
     @Environment(AppModel.self) private var app
@@ -785,12 +755,9 @@ private struct BossVSView: View {
             } else if running {
                 VSNote(symbol: "bolt.fill", text: String(localized: "Battling…"), tint: Color(hex: 0xFFD35A))
             } else if isNext, progress.isBossOpen(adventure.chapters) {
-                BestTeamButton(goal: goal)
                 GoButton(title: String(localized: "Challenge!")) { adventure.challengeBoss() }
                     .disabled(adventure.isChallenging)
             } else if isNext {
-                // No best-team button until the boss opens: the note needs the room, and the party
-                // bar's button does the same.
                 VSNote(symbol: "lock.fill", text: String(localized: "\(adventure.stationsLeft) stations left"))
             } else {
                 VSNote(symbol: "lock.fill", text: String(localized: "Chapter \(entry.chapter + 1)"))
@@ -859,7 +826,6 @@ private struct LegendVSView: View {
             } else if !adventure.isLegendOpen(spot) {
                 VSNote(symbol: "lock.fill", text: String(localized: "Not yet reached"))
             } else {
-                BestTeamButton(goal: goal)
                 GoButton(title: String(localized: "Challenge!")) { adventure.challengeLegend(spot.id) }
                     .disabled(adventure.isChallenging)
             }
@@ -879,32 +845,144 @@ private struct LegendVSView: View {
     }
 }
 
-// MARK: Dungeon
+// MARK: Dungeons
 
-/// Today's dungeon: three tiers, each paying once until 04:00.
+/// The stardust and experience dungeons, each a climb of stages with three tries a day.
 private struct DungeonView: View {
+    var body: some View {
+        VStack(spacing: 4) {
+            ForEach(DungeonKind.allCases, id: \.self) { DungeonCard(kind: $0) }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+}
+
+/// One dungeon: its next stage and what it pays, the tries left, a try at the next stage, and
+/// another go at the best one.
+private struct DungeonCard: View {
+    let kind: DungeonKind
+
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let adventure = app.adventure
-        let types = adventure.dungeonTypes
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 3) {
-                Text("Today's dungeon")
-                    .font(.system(size: 10.5, weight: .bold))
+        let climb = adventure.climb(kind)
+        let running = runningStage(adventure)
+        let stage = running ?? climb.next ?? climb.best
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                if kind == .stardust {
+                    StardustIcon(size: 11)
+                } else {
+                    Image(systemName: "arrow.up.circle.fill").font(.system(size: 9.5, weight: .bold)).foregroundStyle(Color(hex: 0x7FC8FF))
+                }
+                Text(ChallengeText.dungeon(kind))
+                    .font(.system(size: 10, weight: .heavy))
                     .foregroundStyle(.white)
-                ForEach(types, id: \.self) { PokeTypeBadge(type: $0, compact: true) }
+                    .lineLimit(1)
+                ForEach(adventure.dungeonTypes(kind), id: \.self) { PokeTypeBadge(type: $0, compact: true) }
                 Spacer(minLength: 2)
-                Text("Resets at 4:00")
-                    .font(.system(size: 8.5, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.42))
+                TriesDots(tries: climb.tries)
+                    .help(climb.tries > 0 ? ChallengeText.tries(climb.tries) : ChallengeText.triesTomorrow)
             }
-            .padding(.horizontal, 2)
-            ForEach(DungeonTier.allCases, id: \.self) { tier in
-                TierRow(tier: tier)
+            HStack(spacing: 5) {
+                VStack(alignment: .leading, spacing: -2) {
+                    Text(ChallengeText.stage(stage))
+                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .contentTransition(.numericText())
+                    Text("Lv \(DailyDungeon.level(stage: stage))")
+                        .font(.system(size: 8.5, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+                .fixedSize()
+                reward(stage: stage, isNew: stage == climb.next)
+                Spacer(minLength: 2)
+                actions(adventure, climb: climb, running: running)
             }
         }
-        .frame(maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(.white.opacity(running != nil ? 0.12 : 0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color(hex: 0xFFD35A).opacity(running != nil ? 0.6 : 0)))
+        .animation(.smooth(duration: 0.25), value: climb)
+    }
+
+    private func runningStage(_ adventure: AdventureService) -> Int? {
+        guard adventure.isChallenging, case .dungeon(let current, let stage) = adventure.target, current == kind else { return nil }
+        return stage
+    }
+
+    /// What the stage pays: stardust, with an Ultra Ball on a first clear of every tenth, or experience.
+    @ViewBuilder
+    private func reward(stage: Int, isNew: Bool) -> some View {
+        HStack(spacing: 2) {
+            switch kind {
+            case .stardust:
+                StardustIcon(size: 10)
+                Text("\(DailyDungeon.stardust(stage: stage))")
+                if isNew, DailyDungeon.paysUltraBall(stage: stage) {
+                    ItemSpriteView(slug: "ultra-ball", pixelSize: 0.5).frame(width: 12, height: 12)
+                }
+            case .experience:
+                Text("EXP \(DailyDungeon.experience(stage: stage))")
+            }
+        }
+        .font(.system(size: 9, weight: .bold).monospacedDigit())
+        .foregroundStyle(.white.opacity(0.75))
+        .lineLimit(1)
+        .fixedSize()
+    }
+
+    @ViewBuilder
+    private func actions(_ adventure: AdventureService, climb: DungeonClimb, running: Int?) -> some View {
+        if running != nil, let battle = adventure.battle {
+            Text("\(min(battle.foeIndex + 1, DailyDungeon.foesPerStage))/\(DailyDungeon.foesPerStage)")
+                .font(.system(size: 9.5, weight: .heavy).monospacedDigit())
+                .foregroundStyle(Color(hex: 0xFFD35A))
+                .frame(height: 19)
+        } else if climb.tries == 0 {
+            VSNote(symbol: "moon.zzz.fill", text: ChallengeText.triesTomorrow)
+        } else {
+            HStack(spacing: 4) {
+                if climb.best > 0 {
+                    Button {
+                        withAnimation(.smooth(duration: 0.25)) { adventure.enterDungeon(kind, stage: climb.best) }
+                    } label: {
+                        Text(ChallengeText.redo(climb.best))
+                            .font(.system(size: 8.5, weight: .heavy))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .padding(.horizontal, 7)
+                            .frame(height: 19)
+                            .background(.white.opacity(0.15), in: Capsule())
+                            .contentShape(Capsule())
+                            .fixedSize()
+                    }
+                    .buttonStyle(.plain)
+                }
+                if let next = climb.next {
+                    GoButton(title: String(localized: "Go!")) { adventure.enterDungeon(kind, stage: next) }
+                }
+            }
+            .disabled(adventure.isChallenging)
+            .opacity(adventure.isChallenging ? 0.4 : 1)
+        }
+    }
+}
+
+/// Today's tries as three dots, lit while they last.
+private struct TriesDots: View {
+    let tries: Int
+
+    var body: some View {
+        HStack(spacing: 2.5) {
+            ForEach(0..<DailyDungeon.triesPerDay, id: \.self) { index in
+                Circle()
+                    .fill(index < tries ? Color(hex: 0xFFD35A) : .white.opacity(0.15))
+                    .frame(width: 5, height: 5)
+            }
+        }
+        .animation(.smooth(duration: 0.25), value: tries)
     }
 }
 
@@ -982,86 +1060,6 @@ private struct TowerView: View {
     private func nextUltraFloor(after floor: Int) -> Int {
         let every = BattleTower.ultraBallEvery
         return (floor + every - 1) / every * every
-    }
-}
-
-private struct TierRow: View {
-    let tier: DungeonTier
-
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let adventure = app.adventure
-        let claimed = adventure.isClaimed(tier)
-        let running = adventure.target == .dungeon(tier) && adventure.isChallenging
-        HStack(spacing: 6) {
-            Text(tier.title)
-                .font(.system(size: 10, weight: .heavy))
-                .foregroundStyle(claimed ? .white.opacity(0.5) : .white)
-                .frame(width: 36, alignment: .leading)
-            Text("Lv \(adventure.dungeonLevel(tier))")
-                .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
-                .foregroundStyle(.white.opacity(claimed ? 0.35 : 0.6))
-            Spacer(minLength: 2)
-            if claimed {
-                Label("Claimed", systemImage: "checkmark")
-                    .font(.system(size: 9, weight: .heavy))
-                    .foregroundStyle(Color(hex: 0x7EE08F))
-            } else {
-                reward
-                if running, let battle = adventure.battle {
-                    Text("Floor \(min(battle.foeIndex + 1, DailyDungeon.floors))/\(DailyDungeon.floors)")
-                        .font(.system(size: 9, weight: .heavy).monospacedDigit())
-                        .foregroundStyle(Color(hex: 0xFFD35A))
-                        .frame(height: 17)
-                } else {
-                    Button {
-                        withAnimation(.smooth(duration: 0.25)) { adventure.enterDungeon(tier) }
-                    } label: {
-                        Text("Enter")
-                            .font(.system(size: 9.5, weight: .heavy))
-                            .foregroundStyle(tier == .normal ? .black : .white)
-                            .padding(.horizontal, 9)
-                            .frame(height: 17)
-                            .background(tier == .normal ? Color(hex: 0xFFD35A) : .white.opacity(0.15), in: Capsule())
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(adventure.isChallenging)
-                    .opacity(adventure.isChallenging ? 0.4 : 1)
-                }
-            }
-        }
-        .padding(.leading, 8)
-        .padding(.trailing, 5)
-        .frame(height: 24)
-        .background(.white.opacity(running ? 0.12 : 0.07), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Color(hex: 0xFFD35A).opacity(running ? 0.6 : 0)))
-    }
-
-    @ViewBuilder
-    private var reward: some View {
-        if let stardust = DailyDungeon.stardust[tier] {
-            HStack(spacing: 3) {
-                StardustIcon(size: 10)
-                Text("\(stardust)").font(.system(size: 9, weight: .bold).monospacedDigit())
-            }
-            .foregroundStyle(.white.opacity(0.75))
-        } else {
-            ItemSpriteView(slug: "ultra-ball", pixelSize: 0.6)
-                .frame(width: 14, height: 14)
-                .help("An Ultra Ball: three balls, all rare or better")
-        }
-    }
-}
-
-extension DungeonTier {
-    var title: String {
-        switch self {
-        case .easy: String(localized: "Easy")
-        case .normal: String(localized: "Normal")
-        case .hard: String(localized: "Hard")
-        }
     }
 }
 
