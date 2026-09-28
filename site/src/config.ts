@@ -1,6 +1,6 @@
 export const repo = 'https://github.com/geonhwiii/pokove';
-/** Always the newest release's zip, built by `scripts/package.sh`. */
-export const downloadURL = `${repo}/releases/latest/download/pokove.zip`;
+/** Always the newest release's disk image, built by `scripts/package.sh`. */
+export const downloadURL = `${repo}/releases/latest/download/pokove.dmg`;
 /** The site's download page, which starts `downloadURL`. Its page views count downloads in
  *  Vercel Web Analytics, which has no custom events on the Hobby plan. */
 export const downloadPage = (lang: 'en' | 'ko') => url(lang === 'ko' ? 'download' : 'en/download');

@@ -30,9 +30,9 @@ const home = url(lang === 'ko' ? '' : 'en/');
   <Footer lang={lang} />
 </Base>
 
-<!-- Starts the zip once the page view is on its way. The page stays put while it downloads. -->
-<script is:inline define:vars={{ zip: downloadURL }}>
-  addEventListener('load', () => setTimeout(() => location.assign(zip), 300));
+<!-- Starts the download once the page view is on its way. The page stays put while it downloads. -->
+<script is:inline define:vars={{ file: downloadURL }}>
+  addEventListener('load', () => setTimeout(() => location.assign(file), 300));
 </script>
 
 <style>

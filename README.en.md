@@ -10,8 +10,8 @@ While Claude Code or Codex works, a Pokémon party in the notch rides through Ka
 
 ## Install
 
-1. Download `pokove.zip` from the [latest release](https://github.com/geonhwiii/pokove/releases/latest) and unzip it.
-2. Move `pokove.app` to Applications and open it.
+1. Download `pokove.dmg` from the [latest release](https://github.com/geonhwiii/pokove/releases/latest) and open it.
+2. Drag pokove onto Applications and open it.
 
 It runs on macOS 15 or later. Displays without a notch get a simulated one. When a new version is out, the notch's gear gets a dot, and Settings › About downloads it, installs it and relaunches, all in the app. From 1.2.4 or earlier, download the new version once by hand. To remove it, use Settings › General › **Uninstall pokove**: it takes out the Claude hooks and the login item, and moves your adventure, to-dos, clipboard history and settings to the Trash with the app.
 
@@ -152,7 +152,7 @@ cd site && pnpm install && pnpm dev   # http://localhost:4321
 - The hero is the app icon's pixel scene redrawn to fill the page, under a live notch that opens into the Adventure page. Its battle is scripted; the sprites load from PokéAPI's repository at runtime, like the app's, and none are in the repo.
 - Copy for both languages lives in `site/src/i18n.ts`.
 - Vercel deploys it on every push to `main`. The project `pokove` builds from the repo root, and `vercel.json` there installs and builds `site/` and serves `site/dist`.
-- The download buttons point at `releases/latest/download/pokove.zip`.
+- The download buttons point at `releases/latest/download/pokove.dmg`.
 - Headings use [Galmuri](https://github.com/quiple/galmuri) (SIL OFL, license next to the font) and body text uses Pretendard.
 
 ## Building
@@ -164,7 +164,7 @@ xcodebuild -project pokove.xcodeproj -scheme pokove -configuration Release -deri
 ```
 
 - `scripts/install.sh` builds Release, installs it to `~/Applications` and relaunches it.
-- `scripts/package.sh [notes.md]` builds `build/pokove.zip` for a release and prints the `gh release create` command. Given the release notes, `scripts/appcast.py` signs the zip and adds the version to `site/public/appcast.xml`; push that after the release is up and installed copies update themselves.
+- `scripts/package.sh [notes.md]` builds `build/pokove.dmg` (to download by hand) and `build/pokove.zip` (for in-app updates) for a release and prints the `gh release create` command. Given the release notes, `scripts/appcast.py` signs the zip and adds the version to `site/public/appcast.xml`; push that after the release is up and installed copies update themselves.
   - The signing key lives in this Mac's login keychain (Sparkle's `generate_keys`); only its public half is in the app, in `Config/Info.plist`. Losing it means installed copies can't take new updates, so back it up with `generate_keys -x <file>` somewhere safe.
 - `swift scripts/make-icon.swift` regenerates the app icon: a dark bezel around a pixel-art screen (a 44-cell grid, like a GBA scene) of dusk over a cove, with the notch, a stardust sparkle and a sail on the horizon. Pass a path to render a single 1024 px preview instead.
 

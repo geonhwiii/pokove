@@ -115,7 +115,7 @@ const en = {
 
   downloading: {
     title: 'Downloading pokove',
-    heading: 'pokove.zip is on its way',
+    heading: 'pokove is on its way',
     retry: 'Nothing yet?',
     retryLink: 'Download it again',
     back: 'Back to pokove',
@@ -123,11 +123,11 @@ const en = {
 
   download: {
     title: 'Get pokove',
-    button: 'Download pokove.zip',
+    button: 'Download for Mac',
     meta: 'For Apple silicon and macOS 15 or later.',
     releases: 'All releases',
     steps: [
-      'Unzip it and drag pokove into Applications.',
+      'Open pokove.dmg and drag pokove onto Applications.',
       'If macOS blocks it, go to System Settings → Privacy & Security and click Open Anyway.',
       'Pick a starter and you’re set.',
     ],
@@ -249,7 +249,7 @@ const ko: Strings = {
 
   downloading: {
     title: 'pokove 다운로드',
-    heading: 'pokove.zip을 받고 있어요',
+    heading: 'pokove를 받고 있어요',
     retry: '받아지지 않았나요?',
     retryLink: '다시 받기',
     back: 'pokove로 돌아가기',
@@ -257,11 +257,11 @@ const ko: Strings = {
 
   download: {
     title: 'pokove 받기',
-    button: 'pokove.zip 다운로드',
+    button: 'Mac용 다운로드',
     meta: 'Apple 실리콘과 macOS 15 이상에서 돌아가요.',
     releases: '모든 릴리스',
     steps: [
-      '압축을 풀고 pokove를 응용 프로그램 폴더로 옮겨요.',
+      'pokove.dmg를 열고 pokove를 응용 프로그램 폴더로 끌어다 놓아요.',
       'macOS가 막으면 시스템 설정 → 개인정보 보호 및 보안에서 그래도 열기를 눌러요.',
       '스타팅 포켓몬을 고르면 끝이에요.',
     ],
