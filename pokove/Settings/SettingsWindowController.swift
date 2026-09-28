@@ -22,6 +22,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             window.title = String(localized: "pokove Settings")
             window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
             window.titlebarAppearsTransparent = true
+            // The panes scroll under the see-through title bar, so the title would sit on top of them.
+            window.titleVisibility = .hidden
             window.toolbarStyle = .unified
             window.setContentSize(NSSize(width: 720, height: 520))
             window.isReleasedWhenClosed = false
