@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>pokove</title>
+    <link>https://pokove.vercel.app/appcast.xml</link>
+    <language>ko</language>
+    <item>
+      <title>pokove 1.2.5</title>
+      <pubDate>Mon, 28 Sep 2026 20:51:33 +0900</pubDate>
+      <sparkle:version>8</sparkle:version>
+      <sparkle:shortVersionString>1.2.5</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>이제 앱 안에서 업데이트해요. 새 버전이 나오면 노치의 톱니 아이콘에 점이 찍히고, 설정 › 정보에서 누르면 받아서 설치하고 다시 켜져요</li><li>설정 › 정보에서 업데이트를 바로 확인하거나 자동 확인을 끌 수 있어요</li><li>1.2.4 이하에서는 이번 버전만 한 번 직접 받아 주세요. 다음부터는 앱 안에서 돼요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>pokove now updates itself. When a new version is out, the notch&#x27;s gear gets a dot, and Settings › About downloads it, installs it and relaunches</li><li>Settings › About can check for updates now, or stop checking automatically</li><li>From 1.2.4 or earlier, download this version by hand once. After that it happens in the app</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.2.5/pokove.zip" type="application/octet-stream" sparkle:edSignature="RhW0v5qdTcKSk+y6CPImhKidQ3pfBCBg8e5R2wVJUN6kAPBuR8ghp4doSCvH0yl9Dr/T58CbvIPveNtgoWdlCw==" length="4057381"/>
+    </item>
+  </channel>
+</rss>
