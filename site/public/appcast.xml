@@ -5,6 +5,16 @@
     <link>https://pokove.vercel.app/appcast.xml</link>
     <language>ko</language>
     <item>
+      <title>pokove 1.2.6</title>
+      <pubDate>Mon, 28 Sep 2026 21:06:18 +0900</pubDate>
+      <sparkle:version>9</sparkle:version>
+      <sparkle:shortVersionString>1.2.6</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>설정 › 일반에서 pokove를 제거할 수 있어요. Claude 훅과 로그인 항목을 없애고, 모험 저장·할 일·클립보드 기록·설정을 앱과 함께 휴지통으로 옮겨요</li><li>휴지통을 비우기 전까지는 되살릴 수 있어요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>Settings › General can uninstall pokove: it takes out the Claude hooks and the login item, and moves your adventure, to-dos, clipboard history and settings to the Trash with the app</li><li>Until you empty the Trash, you can put them back</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.2.6/pokove.zip" type="application/octet-stream" sparkle:edSignature="Pz4D85DG2H4ipi8w7UoMiSD2r7OS8GB4fexnmlYxPq/IifaZzdVnqpmodtK/o1HfQi/ODFLkldzpMDrbShTzAA==" length="4060786"/>
+    </item>
+    <item>
       <title>pokove 1.2.5</title>
       <pubDate>Mon, 28 Sep 2026 20:51:33 +0900</pubDate>
       <sparkle:version>8</sparkle:version>
