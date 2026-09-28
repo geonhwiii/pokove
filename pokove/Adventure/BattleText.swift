@@ -184,7 +184,7 @@ nonisolated enum ChallengeText {
         korean ? "싸우지 않고 \(stage)단계 보상을 받아요" : "Get stage \(stage)'s reward without a battle"
     }
     static func tries(_ count: Int) -> String { korean ? "오늘 남은 도전 \(count)회" : count == 1 ? "1 try left today" : "\(count) tries left today" }
-    static var triesTomorrow: String { korean ? "4시에 다시 3회" : "3 more at 4:00" }
+    static var triesTomorrow: String { korean ? "04:00 초기화" : "Resets at 04:00" }
     static func xpEach(_ xp: Int) -> String { korean ? "모두 EXP +\(xp)" : "EXP +\(xp) each" }
     static var victory: String { korean ? "승리!" : "Victory!" }
     static var defeat: String { korean ? "패배" : "Defeated" }
