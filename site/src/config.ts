@@ -1,8 +1,10 @@
 export const repo = 'https://github.com/geonhwiii/pokove';
 /** Always the newest release's zip, built by `scripts/package.sh`. */
 export const downloadURL = `${repo}/releases/latest/download/pokove.zip`;
+/** The site's download page, which starts `downloadURL`. Its page views count downloads in
+ *  Vercel Web Analytics, which has no custom events on the Hobby plan. */
+export const downloadPage = (lang: 'en' | 'ko') => url(lang === 'ko' ? 'download' : 'en/download');
 export const releasesURL = `${repo}/releases`;
-export const version = '1.0';
 
 /** A path under the site's base. */
 export function url(path = ''): string {

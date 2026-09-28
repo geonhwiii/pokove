@@ -113,10 +113,18 @@ const en = {
     clips: [['text', 'brew install --cask pokove', 'Terminal'], ['link', 'github.com/geonhwiii/pokove', 'Safari'], ['color', '#5A48EC', 'Figma']],
   },
 
+  downloading: {
+    title: 'Downloading pokove',
+    heading: 'pokove.zip is on its way',
+    retry: 'Nothing yet?',
+    retryLink: 'Download it again',
+    back: 'Back to pokove',
+  },
+
   download: {
     title: 'Get pokove',
     button: 'Download pokove.zip',
-    meta: 'Version 1.0, for Apple silicon and macOS 15 or later.',
+    meta: 'For Apple silicon and macOS 15 or later.',
     releases: 'All releases',
     steps: [
       'Unzip it and drag pokove into Applications.',
@@ -239,10 +247,18 @@ const ko: Strings = {
     clips: [['text', 'brew install --cask pokove', '터미널'], ['link', 'github.com/geonhwiii/pokove', 'Safari'], ['color', '#5A48EC', 'Figma']],
   },
 
+  downloading: {
+    title: 'pokove 다운로드',
+    heading: 'pokove.zip을 받고 있어요',
+    retry: '받아지지 않았나요?',
+    retryLink: '다시 받기',
+    back: 'pokove로 돌아가기',
+  },
+
   download: {
     title: 'pokove 받기',
     button: 'pokove.zip 다운로드',
-    meta: '버전 1.0, Apple 실리콘과 macOS 15 이상에서 돌아가요.',
+    meta: 'Apple 실리콘과 macOS 15 이상에서 돌아가요.',
     releases: '모든 릴리스',
     steps: [
       '압축을 풀고 pokove를 응용 프로그램 폴더로 옮겨요.',

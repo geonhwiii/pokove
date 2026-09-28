@@ -1,0 +1,112 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from './Footer.astro';
+import { strings, type Lang } from '../i18n';
+import { downloadURL, url } from '../config';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = strings[lang].downloading;
+const steps = strings[lang].download.steps;
+const home = url(lang === 'ko' ? '' : 'en/');
+---
+
+<Base lang={lang} title={t.title}>
+  <main id="main" class="page">
+    <div class="panel">
+      <img src={url('apple-touch-icon.png')} alt="" width="112" height="112" />
+      <h1>{t.heading}</h1>
+      <ol class="steps">
+        {steps.map((step) => <li>{step}</li>)}
+      </ol>
+      <p class="retry">
+        {t.retry} <a href={downloadURL}>{t.retryLink}</a>
+      </p>
+    </div>
+    <a class="back" href={home}>{t.back}</a>
+  </main>
+  <Footer lang={lang} />
+</Base>
+
+<!-- Starts the zip once the page view is on its way. The page stays put while it downloads. -->
+<script is:inline define:vars={{ zip: downloadURL }}>
+  addEventListener('load', () => setTimeout(() => location.assign(zip), 300));
+</script>
+
+<style>
+  .page {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: clamp(72px, 12vw, 128px) var(--gutter) 0;
+    display: grid;
+    justify-items: center;
+    gap: 28px;
+  }
+
+  .panel {
+    width: 100%;
+    display: grid;
+    justify-items: start;
+    gap: 22px;
+    padding: clamp(28px, 5vw, 48px);
+    border-radius: 32px;
+    background: var(--sea-3);
+  }
+
+  img {
+    width: 112px;
+    height: 112px;
+    margin: -8px 0 0 -10px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 38px);
+  }
+
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+    display: grid;
+    gap: 18px;
+  }
+
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+    align-items: baseline;
+  }
+
+  .steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px 6px 14px 14px;
+    background: var(--notch);
+    font-family: var(--font-pixel);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--crest);
+    -webkit-font-smoothing: none;
+    align-self: start;
+    margin-top: -4px;
+  }
+
+  .retry {
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .retry a,
+  .back {
+    color: var(--crest);
+    text-underline-offset: 3px;
+  }
+</style>

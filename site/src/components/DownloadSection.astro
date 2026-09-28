@@ -1,7 +1,7 @@
 ---
 import Glyph from './Glyph.astro';
 import { strings, type Lang } from '../i18n';
-import { downloadURL, releasesURL, repo, url } from '../config';
+import { downloadPage, releasesURL, repo, url } from '../config';
 
 interface Props {
   lang: Lang;
@@ -16,7 +16,7 @@ const clone = `git clone ${repo}.git\ncd pokove\nscripts/install.sh`;
     <div class="get">
       <img src={url('apple-touch-icon.png')} alt="" width="128" height="128" />
       <h2>{t.title}</h2>
-      <a class="download" href={downloadURL}>
+      <a class="download" href={downloadPage(lang)}>
         <Glyph name="download" size={20} />
         {t.button}
       </a>

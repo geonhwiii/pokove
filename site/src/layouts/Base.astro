@@ -1,13 +1,16 @@
 ---
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import '../styles/global.css';
+import Analytics from '@vercel/analytics/astro';
 import { strings, type Lang } from '../i18n';
 import { url } from '../config';
 
 interface Props {
   lang: Lang;
+  /** For a page other than the landing page; it also keeps the page out of search results. */
+  title?: string;
 }
-const { lang } = Astro.props;
+const { lang, title } = Astro.props;
 const t = strings[lang];
 const canonical = new URL(url(lang === 'ko' ? '' : 'en/'), Astro.site);
 const alternates = [
@@ -22,7 +25,8 @@ const image = new URL(url('icon-512.png'), Astro.site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{t.title}</title>
+    <title>{title ?? t.title}</title>
+    {title && <meta name="robots" content="noindex" />}
     <meta name="description" content={t.description} />
     <meta name="theme-color" content="#2446e0" />
     <link rel="canonical" href={canonical} />
@@ -37,6 +41,7 @@ const image = new URL(url('icon-512.png'), Astro.site);
     <meta property="og:image" content={image} />
     <meta name="twitter:card" content="summary" />
     <meta name="generator" content={Astro.generator} />
+    <Analytics />
   </head>
   <body>
     <a class="skip" href="#main">{t.skip}</a>

@@ -2,7 +2,7 @@
 import PixelSky from './PixelSky.astro';
 import Glyph from './Glyph.astro';
 import { strings, type Lang } from '../i18n';
-import { downloadURL, repo } from '../config';
+import { downloadPage, repo } from '../config';
 
 interface Props {
   lang: Lang;
@@ -17,7 +17,7 @@ const t = strings[lang].hero;
     <h1>{t.title}</h1>
     <p class="lede">{t.lede}</p>
     <div class="actions">
-      <a class="download" href={downloadURL}>
+      <a class="download" href={downloadPage(lang)}>
         <Glyph name="download" size={18} />
         {t.download}
       </a>
