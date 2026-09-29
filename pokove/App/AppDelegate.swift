@@ -185,6 +185,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch parts.last {
             case "pause": app.nowPlaying.debugInject(playing: false)
             case "next": app.nowPlaying.debugInject(title: "How Sweet", artist: "NewJeans")
+            case "video":
+                app.nowPlaying.debugInject(title: "복직 앞두고 Kotlin한테 육아 도우미 시킨 개발자 엄마의 사연을 끝까지 들어보세요",
+                                           artist: "판교 뚜벅초", video: true)
             default: app.nowPlaying.debugInject()
             }
         case "allow", "deny":

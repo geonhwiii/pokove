@@ -241,8 +241,9 @@ final class NowPlayingService {
 
     #if DEBUG
     /// Feeds a synthetic track through the normal parsing path, for UI work without playback.
-    func debugInject(playing: Bool = true, title: String = "Supernatural", artist: String = "NewJeans") {
-        let size = NSSize(width: 300, height: 300)
+    /// `video` fakes a browser video: a 16:9 thumbnail and a long title.
+    func debugInject(playing: Bool = true, title: String = "Supernatural", artist: String = "NewJeans", video: Bool = false) {
+        let size = video ? NSSize(width: 480, height: 270) : NSSize(width: 300, height: 300)
         let image = NSImage(size: size, flipped: false) { rect in
             NSGradient(colors: [NSColor.systemPink, NSColor.systemPurple, NSColor.systemIndigo])?.draw(in: rect, angle: 45)
             return true
@@ -251,7 +252,7 @@ final class NowPlayingService {
         var state: [String: Any] = [
             "type": "state", "title": title, "artist": artist, "album": "Single",
             "playing": playing, "duration": 191.0, "elapsed": 42.0, "rate": 1.0,
-            "timestamp": Date().timeIntervalSince1970, "bundleId": "com.apple.Music",
+            "timestamp": Date().timeIntervalSince1970, "bundleId": video ? "com.google.Chrome" : "com.apple.Music",
         ]
         if let tiff { state["artwork"] = tiff.base64EncodedString() }
         apply(state)

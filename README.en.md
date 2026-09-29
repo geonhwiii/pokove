@@ -180,7 +180,7 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
 
 - **Notch:** `open media|calendar|todos|clipboard|claude|adventure`, `close`, `hover on|off`.
 - **HUDs and activities:** `volume 0.5`, `brightness 0.5`, `charging`, `airpods` (connection card), `peek`, `banner`.
-- **Media:** `media`, `toggle`, `next`.
+- **Media:** `media` (`media video` fakes a browser video with a wide thumbnail and a long title), `toggle`, `next`.
 - **Claude:** `allow`, `deny`.
 - **To-dos:** `todo add <text>`, `todo type <text>`, `todo toggle`, `todo clear`, `keytest` (checks that key focus is lent and returned).
 - **Clipboard:** `clip seed` (sample history), `clip clear`.

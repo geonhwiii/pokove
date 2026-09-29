@@ -9,10 +9,15 @@ struct ArtworkView: View {
     var body: some View {
         ZStack {
             if let image {
-                Image(nsImage: image)
-                    .resizable()
-                    .interpolation(.high)
-                    .aspectRatio(contentMode: .fill)
+                // Filled into the frame it's given, so a wide video thumbnail is cropped to it
+                // instead of widening the layout around it.
+                Color.clear
+                    .overlay {
+                        Image(nsImage: image)
+                            .resizable()
+                            .interpolation(.high)
+                            .aspectRatio(contentMode: .fill)
+                    }
                     .transition(.opacity)
             } else {
                 LinearGradient(
