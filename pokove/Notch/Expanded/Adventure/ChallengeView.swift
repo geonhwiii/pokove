@@ -22,10 +22,12 @@ struct ChallengeView: View {
     @State private var legend: String?
 
     var body: some View {
+        // The tower is per region, so a region without its Champion yet shows the line instead.
+        let shown = mode == .tower && !app.adventure.progress.isChampion ? .stage : mode
         VStack(spacing: 5) {
-            ModePicker(mode: $mode)
+            ModePicker(mode: $mode, shown: shown)
             ZStack {
-                switch mode {
+                switch shown {
                 case .stage:
                     StageLineView(openLegend: { id in withAnimation(.smooth(duration: 0.25)) { legend = id } },
                                   openGym: { withAnimation(.smooth(duration: 0.2)) { mode = .gym } },
@@ -37,7 +39,7 @@ struct ChallengeView: View {
                 case .tower:
                     TowerView()
                 }
-                if mode == .stage, let legend, let spot = app.adventure.data?.legend(legend) {
+                if shown == .stage, let legend, let spot = app.adventure.data?.legend(legend) {
                     LegendVSView(spot: spot) { withAnimation(.smooth(duration: 0.25)) { self.legend = nil } }
                         .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 }
@@ -56,6 +58,8 @@ struct ChallengeView: View {
 
 private struct ModePicker: View {
     @Binding var mode: ChallengeMode
+    /// The mode on screen, which falls back from the tower where it isn't open.
+    let shown: ChallengeMode
     @Environment(AppModel.self) private var app
 
     var body: some View {
@@ -68,7 +72,7 @@ private struct ModePicker: View {
                 } label: {
                     Text(item.title)
                         .font(.system(size: 9.5, weight: .bold))
-                        .foregroundStyle(mode == item ? .white : .white.opacity(0.5))
+                        .foregroundStyle(shown == item ? .white : .white.opacity(0.5))
                         .overlay(alignment: .topTrailing) {
                             // A gym is open and waiting.
                             if item == .gym, waitingGym != nil {
@@ -77,7 +81,7 @@ private struct ModePicker: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 15)
-                        .background(mode == item ? .white.opacity(0.17) : .clear, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        .background(shown == item ? .white.opacity(0.17) : .clear, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -93,6 +97,54 @@ private struct ModePicker: View {
         let adventure = app.adventure
         guard adventure.progress.isBossOpen(adventure.chapters), !adventure.isChallenging, let boss = adventure.nextBoss else { return nil }
         return String(localized: "\(boss.trainer.name) is waiting")
+    }
+}
+
+// MARK: Regions
+
+/// Where the journey is, once there's more than Kanto: each region keeps its own party and progress.
+private struct RegionMenu: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let adventure = app.adventure
+        Menu {
+            ForEach(Region.allCases.filter(adventure.isOpen), id: \.self) { region in
+                Button {
+                    withAnimation(.smooth(duration: 0.3)) { adventure.travel(to: region) }
+                } label: {
+                    if region == adventure.region {
+                        Label(region.name, systemImage: "checkmark")
+                    } else {
+                        Text(region.name)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 2) {
+                Text(adventure.region.name)
+                    .font(.system(size: 9.5, weight: .heavy))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 6.5, weight: .heavy))
+            }
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, 6)
+            .frame(height: 17)
+            .background(.white.opacity(0.13), in: Capsule())
+            .overlay(alignment: .topTrailing) {
+                // A region opened and not yet visited.
+                if adventure.hasUnvisitedRegion {
+                    Circle().fill(Color(hex: 0xFFD35A)).frame(width: 5, height: 5).offset(x: 1, y: -1)
+                }
+            }
+            .contentShape(Capsule())
+        }
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .fixedSize()
+        .disabled(adventure.isChallenging)
+        .help(adventure.isChallenging ? String(localized: "Battling…") : "")
     }
 }
 
@@ -154,6 +206,7 @@ private struct StageLineView: View {
         let adventure = app.adventure
         let progress = adventure.progress
         return HStack(spacing: 3) {
+            if adventure.hasRegionChoice { RegionMenu() }
             chevron("chevron.left", enabled: index > 0) { browse(index - 1) }
             Text("Chapter \(chapter.number)")
                 .font(.system(size: 15, weight: .black, design: .rounded))
@@ -748,6 +801,7 @@ private struct BossVSView: View {
         let entry = entries[shown]
         let goal = BattleTarget.boss(chapter: entry.chapter, index: entry.index)
         let beaten = shown < nextIndex || progress.isChampion && entry.trainer.isChampion
+            || (progress.beatenBosses ?? []).contains(entry.trainer.id)
         let isNext = shown == nextIndex && !beaten
         let running = adventure.target == goal && adventure.isChallenging
         VSCard(color: entry.trainer.specialty?.color ?? Color(hex: 0xC8A040),
@@ -764,9 +818,11 @@ private struct BossVSView: View {
                 Circle().fill(.black.opacity(0.6))
                 Circle().strokeBorder(.white.opacity(0.4), lineWidth: 1.5)
                 if let badge = entry.trainer.badge {
-                    BadgeImageView(number: badge, size: 17, earned: beaten, unearnedColor: .white.opacity(0.45))
+                    BadgeImageView(number: app.adventure.region.badgeImage(badge), size: 17, earned: beaten, unearnedColor: .white.opacity(0.45))
                 } else {
-                    Image(systemName: entry.trainer.isChampion ? "crown.fill" : "\(entry.index + 1).circle.fill")
+                    // The Champion's crown, a star for the one after (Red), else the League's order.
+                    let postgame = adventure.chapters[safeChapter: entry.chapter]?.isLeague == false
+                    Image(systemName: entry.trainer.isChampion ? "crown.fill" : postgame ? "star.fill" : "\(entry.index + 1).circle.fill")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(beaten ? Color(hex: 0xFFD35A) : .white.opacity(0.55))
                 }

@@ -339,9 +339,9 @@ struct ItemSpriteView: View {
     }
 }
 
-/// A Kanto gym badge, smoothly scaled (the art isn't pixel art). Unearned badges show as a
-/// dim silhouette.
+/// A gym badge, smoothly scaled (the art isn't pixel art). Unearned badges show as a dim silhouette.
 struct BadgeImageView: View {
+    /// PokéAPI's badge number: Kanto's 1–8, Johto's 9–16 (`Region.badgeImage`).
     let number: Int
     var size: CGFloat = 16
     var earned = true

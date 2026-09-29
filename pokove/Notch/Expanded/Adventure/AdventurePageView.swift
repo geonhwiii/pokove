@@ -48,7 +48,11 @@ struct AdventurePageView: View {
                 ZStack {
                     switch adventure.dex.state {
                     case .ready:
-                        if let id = selection, let species = adventure.dex.species(id) {
+                        if adventure.data == nil {
+                            // Johto before its Pokémon have downloaded.
+                            RegionDownload()
+                                .transition(.blurReplace)
+                        } else if let id = selection, let species = adventure.dex.species(id) {
                             PokeDetailCard(species: species) { selection = nil }
                                 .id(id)
                                 .transition(.blurReplace)
@@ -435,7 +439,10 @@ struct RecapLine: Identifiable {
 
     static func lines(for recap: AdventureRecap, adventure: AdventureService) -> [RecapLine] {
         let name = { (id: Int) in adventure.dex.species(id)?.name ?? "#\(id)" }
-        let trainers = adventure.chapters.flatMap(\.bosses)
+        // A recap belongs to the region it happened in, which may not be the one played now.
+        let region = recap.region ?? .kanto
+        let chapters = region == adventure.region ? adventure.chapters : region.chapters(starter: 4)
+        let trainers = chapters.flatMap(\.bosses)
         var lines: [RecapLine] = []
 
         for milestone in recap.dexMilestones {
@@ -450,13 +457,14 @@ struct RecapLine: Identifiable {
         }
         for badge in recap.badges {
             let trainer = trainers.first { $0.badge == badge }?.name ?? ""
-            lines.append(.init(id: "badge\(badge)", icon: .badge(badge),
-                               text: RecapText.beat(trainer, badge: Kanto.badgeName(badge)), isNotable: true))
+            lines.append(.init(id: "badge\(badge)", icon: .badge(region.badgeImage(badge)),
+                               text: RecapText.beat(trainer, badge: region.badgeName(badge)), isNotable: true))
         }
         for chapter in recap.gymsOpened {
-            guard let info = adventure.chapters[safeChapter: chapter], let first = info.bosses.first else { continue }
+            guard let info = chapters[safeChapter: chapter], let first = info.bosses.first else { continue }
             if let badge = info.badge {
-                lines.append(.init(id: "gym\(chapter)", icon: .openBadge(badge), text: RecapText.gymOpened(first.name), isNotable: true))
+                lines.append(.init(id: "gym\(chapter)", icon: .openBadge(region.badgeImage(badge)), text: RecapText.gymOpened(first.name),
+                                   isNotable: true))
             } else {
                 lines.append(.init(id: "gym\(chapter)", icon: .symbol("crown.fill", Color(hex: 0xFFD35A)), text: RecapText.leagueOpened,
                                    isNotable: true))
@@ -502,11 +510,15 @@ struct RecapLine: Identifiable {
         if recap.clears > 0 || recap.stardust > 0 {
             // How far the line moved, else where the party stayed; the stardust rides along.
             let label = { (point: StationPoint) in "\(point.chapter + 1)-\(point.station + 1)" }
+            // Once there are two regions, the first station says which: "성도 4-3에서 4-10까지".
+            let named = { (text: String) in adventure.hasRegionChoice ? "\(region.name) \(text)" : text }
             let text: String
             if let reached = recap.reached {
-                text = RecapText.moved(from: recap.start.map(label), to: label(reached))
+                let start = recap.start.map(label), end = label(reached)
+                text = start == nil || start == end ? RecapText.moved(from: start.map(named), to: named(end))
+                    : RecapText.moved(from: start.map(named), to: end)
             } else if let stayed = recap.stayed {
-                text = RecapText.stayed(at: label(stayed))
+                text = RecapText.stayed(at: named(label(stayed)))
             } else {
                 text = RecapText.stardust
             }
@@ -520,24 +532,89 @@ struct RecapLine: Identifiable {
 
 // MARK: Starter, loading
 
+/// The three to start a region's journey with. A new region can wait: it offers the way back.
 private struct StarterPicker: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        let adventure = app.adventure
+        let region = adventure.region
         ZStack {
             StageBackdrop(scenery: .meadow)
             VStack(spacing: 4) {
-                Text("Choose your partner")
+                Text(region == .kanto ? String(localized: "Choose your partner") : RegionText.start(region))
                     .font(.system(size: 11, weight: .heavy))
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.6), radius: 1, y: 1)
                 HStack(spacing: 6) {
-                    ForEach(AdventureService.starters, id: \.self) { id in
+                    ForEach(region.starters, id: \.self) { id in
                         StarterButton(id: id)
                     }
                 }
+                if region != .kanto { BackToKanto().padding(.top, 2) }
             }
             .padding(.top, 6)
+        }
+    }
+}
+
+private struct BackToKanto: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        Button {
+            withAnimation(.smooth(duration: 0.3)) { app.adventure.travel(to: .kanto) }
+        } label: {
+            Label(RegionText.back(to: .kanto), systemImage: "chevron.left")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.white.opacity(0.85))
+                .padding(.horizontal, 8)
+                .frame(height: 18)
+                .background(.black.opacity(0.35), in: Capsule())
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(app.adventure.isChallenging)
+    }
+}
+
+/// A region whose Pokémon are still downloading: it tries again every little while, and says so
+/// when it couldn't, with the way back to Kanto.
+private struct RegionDownload: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        let dex = app.adventure.dex
+        ZStack {
+            StageBackdrop(scenery: .meadow)
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    if dex.fullLoadFailed {
+                        Image(systemName: "wifi.exclamationmark").font(.system(size: 10, weight: .bold))
+                    } else {
+                        ProgressView().controlSize(.small)
+                    }
+                    Text(dex.fullLoadFailed ? RegionText.downloadFailed : RegionText.downloading)
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.black.opacity(0.4), in: Capsule())
+                if dex.fullLoadFailed {
+                    Button(String(localized: "Try Again")) { dex.load() }
+                        .controlSize(.small)
+                }
+                BackToKanto()
+            }
+        }
+        .task {
+            dex.load()
+            // Keeps trying while the page is open, in case the connection comes back.
+            while !Task.isCancelled, !dex.hasJohto {
+                guard (try? await Task.sleep(for: .seconds(20))) != nil else { return }
+                dex.load()
+            }
         }
     }
 }
@@ -734,6 +811,8 @@ private struct DexGrid: View {
     @Binding var selection: Int?
     @Environment(AppModel.self) private var app
     @AppStorage("dexOwnedOnly") private var ownedOnly = false
+    /// The region picked in the filter; nil follows the one being played. `.all` is both.
+    @State private var filter: DexFilter?
 
     private let columns = Array(repeating: GridItem(.fixed(40), spacing: 4), count: 5)
     /// A hovered cell scales up; this leaves it room so the scroll view doesn't clip it.
@@ -741,17 +820,25 @@ private struct DexGrid: View {
 
     var body: some View {
         let adventure = app.adventure
+        let shown = shownFilter(adventure)
+        let range = shown.range
+        let caughtHere = adventure.caught.filter(range.contains).count
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
+                if adventure.hasRegionChoice {
+                    DexFilterMenu(shown: shown) { picked in
+                        withAnimation(.smooth(duration: 0.2)) { filter = picked }
+                    }
+                }
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
                         Capsule().fill(.white.opacity(0.1))
                         Capsule().fill(Color.adventure)
-                            .frame(width: proxy.size.width * CGFloat(adventure.caught.count) / CGFloat(PokeDexStore.maxID))
+                            .frame(width: proxy.size.width * CGFloat(caughtHere) / CGFloat(range.count))
                     }
                 }
                 .frame(height: 4)
-                Text("\(adventure.caught.count)/\(PokeDexStore.maxID)")
+                Text("\(caughtHere)/\(range.count)")
                     .font(.system(size: 9.5, weight: .semibold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.55))
                     .contentTransition(.numericText())
@@ -793,7 +880,7 @@ private struct DexGrid: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(ownedOnly ? ownedSpecies(adventure) : Array(1...PokeDexStore.maxID), id: \.self) { id in
+                    ForEach(ownedOnly ? ownedSpecies(adventure).filter(range.contains) : Array(range), id: \.self) { id in
                         DexCell(id: id, isSelected: selection == id) {
                             selection = selection == id ? nil : id
                         }
@@ -825,6 +912,68 @@ private struct DexGrid: View {
     /// Species in the box right now, by number.
     private func ownedSpecies(_ adventure: AdventureService) -> [Int] {
         Array(Set(adventure.owned.map(\.speciesID))).sorted()
+    }
+
+    /// Kanto's 151 until Johto opens; then the region picked, starting with the one being played.
+    private func shownFilter(_ adventure: AdventureService) -> DexFilter {
+        guard adventure.hasRegionChoice else { return .region(.kanto) }
+        return filter ?? .region(adventure.region)
+    }
+}
+
+/// Which part of the Pokédex the grid shows.
+enum DexFilter: Hashable {
+    case region(Region)
+    case all
+
+    var title: String {
+        switch self {
+        case .region(let region): region.name
+        case .all: RegionText.all
+        }
+    }
+
+    /// Each region's own Pokémon: Kanto's 151, then Johto's 100.
+    var range: ClosedRange<Int> {
+        switch self {
+        case .region(.kanto): 1...151
+        case .region(.johto): 152...PokeDexStore.maxID
+        case .all: 1...PokeDexStore.maxID
+        }
+    }
+
+    static let choices: [DexFilter] = Region.allCases.map(DexFilter.region) + [.all]
+}
+
+/// The Pokédex's region pill: a menu of the regions and "all".
+private struct DexFilterMenu: View {
+    let shown: DexFilter
+    let pick: (DexFilter) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(DexFilter.choices, id: \.self) { choice in
+                Button {
+                    pick(choice)
+                } label: {
+                    if choice == shown { Label(choice.title, systemImage: "checkmark") } else { Text(choice.title) }
+                }
+            }
+        } label: {
+            HStack(spacing: 2) {
+                Text(shown.title).font(.system(size: 8.5, weight: .bold))
+                Image(systemName: "chevron.down").font(.system(size: 6, weight: .heavy))
+            }
+            .foregroundStyle(.white.opacity(0.75))
+            .padding(.horizontal, 6)
+            .frame(height: 15)
+            .background(.white.opacity(0.1), in: Capsule())
+            .contentShape(Capsule())
+        }
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .fixedSize()
     }
 }
 
@@ -1113,7 +1262,7 @@ private struct OwnedSummary: View {
     private func nextLine(adventure: AdventureService, atCap: Bool) -> String? {
         if atCap {
             let badges = adventure.progress.badges
-            let nextCap = badges >= 8 ? PokeMath.maxLevel : Kanto.levelCap(badges: badges + 1, champion: false)
+            let nextCap = badges >= 8 ? PokeMath.maxLevel : adventure.region.levelCap(badges: badges + 1, champion: false)
             let reach = PokeMath.level(forXP: min(member.xp + member.banked, PokeMath.xpLimit(cap: nextCap)))
             return reach > member.level ? GuideText.afterBadge(reach - member.level) : GuideText.atCap
         }

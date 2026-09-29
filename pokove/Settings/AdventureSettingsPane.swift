@@ -23,7 +23,7 @@ struct AdventureSettingsPane: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Pokémon adventure")
                             .font(.headline)
-                        Text("While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and two daily dungeons are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.")
+                        Text("While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon, and Johto's after Kanto's Champion. Gym leaders, legendaries and two daily dungeons are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
@@ -48,7 +48,9 @@ struct AdventureSettingsPane: View {
                 }
                 LabeledContent("Badges") {
                     HStack(spacing: 3) {
-                        ForEach(1...8, id: \.self) { BadgeImageView(number: $0, size: 16, earned: adventure.progress.badges >= $0) }
+                        ForEach(1...8, id: \.self) {
+                            BadgeImageView(number: adventure.region.badgeImage($0), size: 16, earned: adventure.progress.badges >= $0)
+                        }
                     }
                 }
                 LabeledContent("Stages cleared") {
@@ -87,7 +89,8 @@ struct AdventureSettingsPane: View {
 
     private func journey(_ adventure: AdventureService) -> String {
         let progress = adventure.progress
-        let line = String(localized: "Chapter \(progress.chapter + 1) · station \(min(progress.station + 1, Chapter.stationCount))/\(Chapter.stationCount)")
+        let place = String(localized: "Chapter \(progress.chapter + 1) · station \(min(progress.station + 1, Chapter.stationCount))/\(Chapter.stationCount)")
+        let line = adventure.hasRegionChoice ? "\(adventure.region.name) · \(place)" : place
         if progress.isChampion { return String(localized: "Champion") + " · " + line }
         guard let boss = adventure.nextBoss else { return line }
         return line + " · " + String(localized: "\(boss.trainer.name) next")

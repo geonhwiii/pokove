@@ -3199,16 +3199,6 @@
         }
       }
     },
-    "Something stirs in Cerulean Cave…": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "미지의동굴에서 무언가 깨어났어요…"
-          }
-        }
-      }
-    },
     "Something went wrong": {
       "localizations": {
         "ko": {
@@ -3761,12 +3751,12 @@
         }
       }
     },
-    "While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon. Gym leaders, legendaries and two daily dungeons are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.": {
+    "While Claude or Codex works, your party of up to three rides Kanto's stage lines, battling wild Pokémon, and Johto's after Kanto's Champion. Gym leaders, legendaries and two daily dungeons are challenges you start. New Pokémon turn up along the way, and stardust buys gacha pulls. Badges raise the level cap.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동의 스테이지 노선을 따라 야생 포켓몬과 싸워요. 체육관 관장, 전설 포켓몬, 두 가지 데일리 던전은 직접 시작하는 도전이에요. 가는 길에 새 포켓몬이 합류하고, 별의모래로 뽑기를 할 수 있어요. 배지를 따면 레벨 상한이 올라가요."
+            "value": "Claude나 Codex가 일하는 동안 최대 3마리 파티가 관동의 스테이지 노선을 따라 야생 포켓몬과 싸우고, 관동 챔피언이 되면 성도로 떠나요. 체육관 관장, 전설 포켓몬, 두 가지 데일리 던전은 직접 시작하는 도전이에요. 가는 길에 새 포켓몬이 합류하고, 별의모래로 뽑기를 할 수 있어요. 배지를 따면 레벨 상한이 올라가요."
           }
         }
       }

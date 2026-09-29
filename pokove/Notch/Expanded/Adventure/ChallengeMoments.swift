@@ -174,8 +174,8 @@ struct ChallengeResultView: View {
         case .boss:
             if let badge = result.badge {
                 HStack(spacing: 6) {
-                    BadgeImageView(number: badge, size: 22)
-                    Text(ChallengeText.gotBadge(Kanto.badgeName(badge))).modifier(ResultLine())
+                    BadgeImageView(number: app.adventure.region.badgeImage(badge), size: 22)
+                    Text(ChallengeText.gotBadge(app.adventure.region.badgeName(badge))).modifier(ResultLine())
                 }
             }
             if let cap = result.cap {

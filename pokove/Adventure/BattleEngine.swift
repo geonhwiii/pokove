@@ -112,17 +112,20 @@ nonisolated struct GameData: Sendable {
     let dex: DexView
     let moves: MoveDex
     let encounters: EncounterDex
-    /// The journey for this player's starter.
+    /// Where the journey is.
+    let region: Region
+    /// The region's journey for this player's starter.
     let chapters: [Chapter]
 
-    init(species: [PokeSpecies], moves: MoveDex, encounters: EncounterDex, starter: Int) {
+    init(species: [PokeSpecies], moves: MoveDex, encounters: EncounterDex, region: Region = .kanto, starter: Int) {
         dex = DexView(species)
         self.moves = moves
         self.encounters = encounters
-        chapters = Kanto.chapters(starter: starter)
+        self.region = region
+        chapters = region.chapters(starter: starter)
     }
 
-    func legend(_ id: String) -> LegendSpot? { Kanto.legends.first { $0.id == id } }
+    func legend(_ id: String) -> LegendSpot? { region.legends.first { $0.id == id } }
     /// The chapter whose line a legendary branches off.
     func chapterIndex(ofLegend id: String) -> Int? { chapters.firstIndex { $0.legend?.id == id } }
 }

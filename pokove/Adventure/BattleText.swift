@@ -296,7 +296,22 @@ nonisolated enum GuideText {
             let before = name(from)
             guard let level else { return korean ? "\(before.subjectParticle) 진화하면 돼요" : "Evolves from \(before)" }
             return korean ? "\(before.subjectParticle) Lv \(level)에 진화하면 돼요" : "\(before) evolves into it at Lv \(level)"
+        case .region(let region): return RegionText.metIn(region)
         case .unknown: return korean ? "에이전트가 일하는 동안 만날 수 있어요" : "Keep your agents busy to meet this one."
         }
     }
+}
+
+/// Lines about the regions: Johto opening, choosing where to travel, the boxes joining.
+nonisolated enum RegionText {
+    private static var korean: Bool { PokeLanguage.isKorean }
+
+    static var johtoOpened: String { korean ? "성도 지방이 열렸어요. 스테이지에서 떠날 수 있어요" : "Johto is open. Head there from Stages." }
+    static var boxesMerged: String { korean ? "관동 동료들도 이제 함께 싸울 수 있어요" : "Your Kanto Pokémon can join you now" }
+    static func start(_ region: Region) -> String { korean ? "\(region.name) 여행을 시작해요" : "Start your \(region.name) journey" }
+    static func back(to region: Region) -> String { korean ? "\(region.name)으로 돌아가기" : "Back to \(region.name)" }
+    static var downloading: String { korean ? "성도 포켓몬을 받는 중이에요" : "Getting Johto's Pokémon…" }
+    static var downloadFailed: String { korean ? "연결되면 성도 포켓몬을 받아요" : "Johto's Pokémon download once you're online" }
+    static func metIn(_ region: Region) -> String { korean ? "\(region.name)에서 만날 수 있어요" : "Met in \(region.name)" }
+    static var all: String { korean ? "전체" : "All" }
 }

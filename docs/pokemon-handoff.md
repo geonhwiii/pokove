@@ -3,6 +3,58 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## v4: Johto, a second journey (agreed with the user, 2026-09-30)
+
+Where this conflicts with v3.x, v4 wins. The user wanted more than the 151 and asked for Johto to open
+after Kanto as a new start, without throwing Kanto away.
+
+- **Opens with the Kanto Champion.** Johto is a fresh journey: pick Chikorita, Cyndaquil or Totodile
+  at Lv 5 and start at 1-1. Kanto stays as it was (its chapters 28–30, Mewtwo, the tower) and the
+  user switches between the two regions from the stage line's header.
+- **Per region:** the box and party, stardust, Ultra Balls, the journey, dungeons, the tower, the
+  gacha's pending balls, pulls, clears. **Shared:** the Pokédex (seen/caught, now 251), shinies on
+  the Pokémon themselves, dex milestones (paid into the region you're in), the history (each recap
+  records its region; switching closes the current recap).
+- **After the Johto Champion** both boxes become one, usable in either region (the user's pick).
+  No level sync: before that, each region only has its own Pokémon.
+- **Johto's journey:** HeartGold/SoulSilver areas, gyms and League at HGSS levels (Falkner 13 …
+  Clair 41, Lance 50), thirty chapters in ten legs like Kanto; chapters 28–30 are Mt. Silver after
+  the Champion, ending with Red (Lv 82–88) as a post-game boss. Legendary branches: Sudowoodo,
+  Raikou, Entei, the red Gyarados (joins shiny), Suicune, Lugia, Ho-Oh (post-game). Celebi is the
+  Johto gacha's mythical after its Champion. Badges 1–8 in each region; Johto's images are
+  PokéAPI badges 9–16.
+- **Gacha pools:** Kanto keeps the 151 (a Kanto species whose pre-evolution is a Johto baby still
+  counts as a base form there, e.g. Pikachu). Johto's is every base form up to 251, babies
+  included, legendaries and ★ spots out; rarity from Johto's encounter shares.
+- **New evolutions everywhere** (the user's pick): Crobat 32, Espeon/Umbreon 30 (with the stones),
+  Politoed 30, Slowking 37, Blissey 50, Steelix/Scizor/Kingdra/Porygon2 36 (trade), babies at 8.
+  They apply when a Pokémon next levels up, so an update never changes a box by itself.
+- **Each region keeps to its own Pokémon** where it picks them itself: Kanto's dungeons and tower
+  draw from 1–151 (Johto's from all 251), and a find whose pre-evolution is from another region
+  isn't floored at that evolve level (Kanto's Pikachu still joins at the party's level). Other
+  regions' legendaries and mythicals say "관동에서 만날 수 있어요" in the dex.
+- **Pokédex:** a region filter (관동 · 성도 · 전체) beside "보유만" instead of tabs, since the pane
+  already has tabs; it opens on the region you're in and only shows once Johto is open.
+- **Where things live:** `Region` (Region.swift) routes per-region rules (chapters, caps, badge
+  names and images, legends, starters, mythical, encounter versions); `Johto.swift` mirrors
+  `Kanto.swift`, both building chapters with `Chapter.leg`/`Chapter.journey`. `AdventureService`
+  keeps the played region in its usual properties and the other in `away` (`RegionState`);
+  `travel(to:)` swaps them, closing the recap. Post-League bosses: `JourneyProgress.beatenBosses`
+  and `Outcome.postgame`. UI: `RegionMenu` in the stage header, `DexFilter`/`DexFilterMenu`, the
+  region-aware `StarterPicker` with the way back to Kanto, "성도 4-3" on the scene's chip and in recaps.
+- **Sim (`SIM_REGION=johto`, starters 152/155/158), six runs:** badge 1 at 1.0–1.5 h, badge 4 at
+  7.4–9 h, badge 8 at 23–28 h, Champion at 31–36 h (Kanto's is 47–51 h: HGSS levels are lower, and
+  it's the second journey), Mt. Silver's line done by ~45 h; Red (Lv 82–88) still unbeaten at 70 h
+  as the long goal. Kanto's pacing is unchanged by the 251 dex (Champion 47–51 h in three runs).
+- **Updating from 1.2.x must just work** (the user's ask): the save keeps its v4 top-level fields
+  as Kanto's, and Johto is added beside them (`region`, `johto`, `boxMerged`), so 1.2.x saves read
+  unchanged and 1.2.x can still read a v5 save's Kanto. The dex refetches 251 species once; if that
+  fails, the old 151 cache keeps Kanto running and Johto waits for the download. New caches are new
+  files (dex-v2, moves-v3, encounters-v2), so 1.2.x keeps its own. Tested on a copy of the user's
+  real save (only the tick's own experience changed) and by opening a v5 save in a 1.2.9 build
+  (Kanto read fine). A 1.2.x build that then *saves* drops Johto, since it doesn't know the field;
+  in-app updates only go forward, so that's accepted.
+
 ## v3.6: dungeons sweep the best stage (agreed with the user, 2026-09-29)
 
 - The "N단계 다시" button (a battle at the best stage) is now **소탕** / Sweep: the user didn't want

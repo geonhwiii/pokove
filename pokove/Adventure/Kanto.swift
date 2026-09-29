@@ -25,7 +25,7 @@ nonisolated struct Trainer: Equatable, Sendable {
 
     var name: String { PokeLanguage.isKorean ? nameKo : nameEn }
     var title: String { PokeLanguage.isKorean ? titleKo : titleEn }
-    var isChampion: Bool { id == "blue" }
+    var isChampion: Bool { id == "blue" || id == Johto.lance.id }
 
     /// Trainers bring three, like the party: the last three of their team, ace included.
     var battleTeam: [Member] { Array(team.suffix(Self.maxTeam)) }
@@ -63,9 +63,12 @@ nonisolated struct LegendSpot: Identifiable, Equatable, Sendable {
     let species: Int
     let level: Int
     let scenery: Scenery
+    /// Joins shiny when beaten, like the Lake of Rage's red Gyarados.
+    var shiny = false
 }
 
 /// Ten stations in a row; every third chapter ends with a boss: a gym leader, or the League's five.
+/// After the League, a chapter's boss (Johto's Red) waits for the Champion.
 nonisolated struct Chapter: Identifiable, Equatable, Sendable {
     static let stationCount = 10
 
@@ -93,6 +96,36 @@ nonisolated struct Chapter: Identifiable, Equatable, Sendable {
     var isLeague: Bool { bosses.count > 1 }
     var badge: Int? { bosses.count == 1 ? bosses[0].badge : nil }
     var bossScenery: Scenery { isLeague ? .league : .gym }
+}
+
+extension Chapter {
+    /// Chapters in each of a region's ten legs, from one gym to the next.
+    static let perLeg = 3
+
+    typealias Leg = [(stations: [Station], bosses: [Trainer], legend: LegendSpot?)]
+
+    /// A leg's stations from its stretches in order (parts in tenths of the leg), levels rising
+    /// evenly across `levels`, split into chapters of ten. The leg's first chapter has its legendary
+    /// and its last one the boss.
+    static func leg(_ levels: ClosedRange<Int>, _ parts: [(Stretch, Int)], _ bosses: [Trainer], _ legend: LegendSpot? = nil) -> Leg {
+        let count = stationCount * perLeg
+        let stretches = parts.flatMap { Array(repeating: $0.0, count: $0.1 * perLeg) }
+        precondition(stretches.count == count)
+        let stations = stretches.enumerated().map { index, stretch in
+            let t = Double(index) / Double(count - 1)
+            return Station(stretch: stretch, level: levels.lowerBound + Int((Double(levels.upperBound - levels.lowerBound) * t).rounded()))
+        }
+        return (0..<perLeg).map { part in
+            (Array(stations[part * stationCount..<(part + 1) * stationCount]), part == perLeg - 1 ? bosses : [], part == 0 ? legend : nil)
+        }
+    }
+
+    /// Legs one after another, numbered from chapter 1.
+    static func journey(_ legs: [Leg]) -> [Chapter] {
+        legs.joined().enumerated().map { index, part in
+            Chapter(number: index + 1, stations: part.stations, bosses: part.bosses, legend: part.legend)
+        }
+    }
 }
 
 nonisolated enum Kanto {
@@ -201,67 +234,38 @@ nonisolated enum Kanto {
     static let legends = [snorlax, zapdos, articuno, moltres, mewtwo]
 
     /// Chapters in each of Kanto's ten legs, from one gym to the next.
-    static let chaptersPerLeg = 3
-
-    /// A leg's stations from its stretches in order (parts in tenths of the leg), levels rising
-    /// evenly across `levels`, split into chapters of ten. The leg's first chapter has its legendary
-    /// and its last one the boss.
-    private static func leg(_ levels: ClosedRange<Int>, _ parts: [(Stretch, Int)], bosses: [Trainer],
-                            legend: LegendSpot? = nil) -> [(stations: [Station], bosses: [Trainer], legend: LegendSpot?)] {
-        let count = Chapter.stationCount * chaptersPerLeg
-        let stretches = parts.flatMap { Array(repeating: $0.0, count: $0.1 * chaptersPerLeg) }
-        precondition(stretches.count == count)
-        let stations = stretches.enumerated().map { index, stretch in
-            let t = Double(index) / Double(count - 1)
-            return Station(stretch: stretch, level: levels.lowerBound + Int((Double(levels.upperBound - levels.lowerBound) * t).rounded()))
-        }
-        return (0..<chaptersPerLeg).map { part in
-            (Array(stations[part * Chapter.stationCount..<(part + 1) * Chapter.stationCount]),
-             part == chaptersPerLeg - 1 ? bosses : [], part == 0 ? legend : nil)
-        }
-    }
+    static let chaptersPerLeg = Chapter.perLeg
 
     /// The journey, in FRLG order: thirty chapters, a gym at the end of every third. The champion
     /// depends on the starter.
     static func chapters(starter: Int) -> [Chapter] {
-        let legs = [
-            leg(3...9, [(route1, 4), (viridianForest, 6)], bosses: [brock]),
-            leg(10...18, [(route3, 3), (mtMoon, 4), (route24, 3)], bosses: [misty]),
-            leg(17...23, [(route5, 5), (diglettsCave, 5)], bosses: [surge]),
-            leg(21...28, [(route9, 2), (rockTunnel, 3), (pokemonTower, 3), (route8, 2)], bosses: [erika]),
-            leg(28...36, [(route12, 5), (cyclingRoad, 5)], bosses: [koga], legend: snorlax),
-            leg(33...40, [(safariZone, 10)], bosses: [sabrina], legend: zapdos),
-            leg(38...46, [(seafoam, 5), (mansion, 5)], bosses: [blaine], legend: articuno),
-            leg(44...50, [(route21, 5), (route23, 5)], bosses: [giovanni]),
-            leg(48...54, [(victoryRoad, 10)], bosses: [lorelei, bruno, agatha, lance, champion(starter: starter)], legend: moltres),
-            leg(55...65, [(ceruleanCave, 10)], bosses: [], legend: mewtwo),
-        ]
-        return legs.joined().enumerated().map { index, part in
-            Chapter(number: index + 1, stations: part.stations, bosses: part.bosses, legend: part.legend)
-        }
+        Chapter.journey([
+            Chapter.leg(3...9, [(route1, 4), (viridianForest, 6)], [brock]),
+            Chapter.leg(10...18, [(route3, 3), (mtMoon, 4), (route24, 3)], [misty]),
+            Chapter.leg(17...23, [(route5, 5), (diglettsCave, 5)], [surge]),
+            Chapter.leg(21...28, [(route9, 2), (rockTunnel, 3), (pokemonTower, 3), (route8, 2)], [erika]),
+            Chapter.leg(28...36, [(route12, 5), (cyclingRoad, 5)], [koga], snorlax),
+            Chapter.leg(33...40, [(safariZone, 10)], [sabrina], zapdos),
+            Chapter.leg(38...46, [(seafoam, 5), (mansion, 5)], [blaine], articuno),
+            Chapter.leg(44...50, [(route21, 5), (route23, 5)], [giovanni]),
+            Chapter.leg(48...54, [(victoryRoad, 10)], [lorelei, bruno, agatha, lance, champion(starter: starter)], moltres),
+            Chapter.leg(55...65, [(ceruleanCave, 10)], [], mewtwo),
+        ])
     }
 
     // MARK: Rules tied to the journey
 
-    /// The highest level a Pokémon reaches with this many badges; experience past it is banked.
-    static func levelCap(badges: Int, champion: Bool) -> Int {
-        if champion { return PokeMath.maxLevel }
-        let caps = [16, 23, 27, 32, 45, 47, 50, 54, 65]
-        return caps[min(max(0, badges), caps.count - 1)]
-    }
+    /// The level cap by badges (see `Region.levelCap`): a few over the next boss's ace.
+    static let levelCaps = [16, 23, 27, 32, 45, 47, 50, 54, 65]
 
     /// Mew only shows up in the gacha once you're the champion.
     static let mew = 151
 
-    static func badgeName(_ badge: Int) -> String {
-        let names: [(ko: String, en: String)] = [
-            ("회색배지", "Boulder Badge"), ("블루배지", "Cascade Badge"), ("오렌지배지", "Thunder Badge"),
-            ("무지개배지", "Rainbow Badge"), ("핑크배지", "Soul Badge"), ("골드배지", "Marsh Badge"),
-            ("진홍배지", "Volcano Badge"), ("그린배지", "Earth Badge"),
-        ]
-        guard (1...names.count).contains(badge) else { return "" }
-        return PokeLanguage.isKorean ? names[badge - 1].ko : names[badge - 1].en
-    }
+    static let badgeNames: [(ko: String, en: String)] = [
+        ("회색배지", "Boulder Badge"), ("블루배지", "Cascade Badge"), ("오렌지배지", "Thunder Badge"),
+        ("무지개배지", "Rainbow Badge"), ("핑크배지", "Soul Badge"), ("골드배지", "Marsh Badge"),
+        ("진홍배지", "Volcano Badge"), ("그린배지", "Earth Badge"),
+    ]
 }
 
 // MARK: Wild encounters
@@ -299,9 +303,19 @@ nonisolated struct EncounterDex: Codable, Sendable {
 }
 
 nonisolated extension PokeAPI {
-    static func fetchEncounters(areas: [String]) async throws -> EncounterDex {
+    /// Each region's areas in its own games' encounters, together.
+    static func fetchEncounters(regions: [Region]) async throws -> EncounterDex {
+        var areas: [String: [EncounterDex.Slot]] = [:]
+        for region in regions {
+            let found = try await fetchEncounters(areas: Array(Set(region.stretches.flatMap(\.areas))).sorted(), versions: region.encounterVersions)
+            areas.merge(found.areas) { _, new in new }
+        }
+        return EncounterDex(areas: areas)
+    }
+
+    static func fetchEncounters(areas: [String], versions games: [Int]) async throws -> EncounterDex {
         let names = areas.map { "\"\($0)\"" }.joined(separator: ", ")
-        let versions = "version_id: {_in: [10, 11]}, pokemon_id: {_lte: \(PokeDexStore.maxID)}"
+        let versions = "version_id: {_in: [\(games.map(String.init).joined(separator: ", "))]}, pokemon_id: {_lte: \(PokeDexStore.maxID)}"
         let query = """
         query { areas: pokemon_v2_locationarea(where: {name: {_in: [\(names)]}}) { name \
         enc: pokemon_v2_encounters(where: {\(versions)}) { p: pokemon_id \

@@ -31,6 +31,12 @@ Your party holds up to three Pokémon. It only moves along the line while an age
 - **The line under the tab** says what to do next: stations to the gym, the level that would beat it, and a shortcut (a dungeon, a pull).
 - **Badges raise the level cap.** Experience past the cap is banked and comes back with the next badge.
 - **Legendaries:** Snorlax, Zapdos, Articuno and Moltres wait on ★ branches of the line, and Mewtwo after the Champion. Beat one and it joins.
+- **Johto:** becoming Kanto's Champion opens HeartGold/SoulSilver's Johto. Head there from the **Kanto ⌄** menu above the stage line.
+  - Pick Chikorita, Cyndaquil or Totodile and start again at 1-1: thirty chapters like Kanto's, eight gyms, the Elite Four and Lance, and Red at the top of Mt. Silver after the Champion.
+  - Each region has its own box and party, stardust, Ultra Balls, dungeons and tower. Kanto stays as you left it, to go back to any time. The Pokédex (251) and the history are shared.
+  - Becoming Johto's Champion puts both regions' Pokémon in one box, so anyone can join the party in either region.
+  - Sudowoodo, Raikou, Entei, the red Gyarados (it joins shiny), Suicune and Lugia wait on ★ branches, and Ho-Oh after the Champion. Celebi very rarely comes from the gacha once you're Johto's Champion.
+  - Gen 2 evolutions are in: Golbat becomes Crobat at Lv 32, and Eevee can also become Espeon or Umbreon, in Kanto too.
 - **Battles** are a 1:1 relay, like the games, and every move has its own effect: fists, lightning, beams, quakes. Gen 3 power and accuracy, crits, multi-hits, drain and recoil, plus poison, burns and paralysis. The whole party shares the experience.
 
 ![The gym's VS screen](docs/images/gym.png)
@@ -186,7 +192,7 @@ python3 scripts/localize-ko.py   # fills Korean; lists any key without a transla
 - **Clipboard:** `clip seed` (sample history), `clip clear`.
 - **Windows:** `rebuild` (recreates the notch windows).
 - **Adventure:**
-  - Setup: `poke starter <id>`, `poke reset`, `poke champion`.
+  - Setup: `poke starter <id>`, `poke reset`, `poke champion` (in Johto it also merges the boxes), `poke region kanto|johto`.
   - Progress: `poke catch [id]` (a discovery with a finished banner), `poke xp <n>`, `poke stardust <n>`, `poke shiny` (the leader shines), `poke jump <chapter> <station> <badges>` (1-based; station 11 means the line is cleared), `poke tick <n>` (battle actions without an agent or the clock).
   - Gacha: `poke pull`, `poke ultra` (adds an Ultra Ball), `poke ultraopen`, `poke open <ball>` (opens with the animation), `poke pick <index>`.
   - Battles: `poke challenge` (the boss), `poke legend <id>`, `poke dungeon stardust|experience` (the next stage), `poke sweep stardust|experience` (the best stage, no battle), `poke dungeonreset [stages]` (refills today's tries; `stages` also starts both climbs over), `poke tower`, `poke fx <move slug> [foe]` (plays a move's effect over the battle on screen).

@@ -54,6 +54,8 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
     var losses = 0
     /// Wild Pokémon beaten at the next station so far (optional so older saves still read).
     var frontierWins: Int?
+    /// Bosses past the League beaten, by trainer ID (Johto's Red).
+    var beatenBosses: [String]?
 
     /// Wild Pokémon beaten at the next station so far; it opens at `Chapter.winsNeeded`.
     var wins: Int { frontierWins ?? 0 }
@@ -76,9 +78,17 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
     /// The last open line is cleared, so the party goes round it.
     var isLooping: Bool { station >= Chapter.stationCount }
 
-    /// The next gym leader in badge order, then the League's five one after another.
+    /// The next gym leader in badge order, then the League's five one after another, and after the
+    /// Champion a chapter's own boss until it's beaten.
     func nextBoss(_ chapters: [Chapter]) -> (chapter: Int, index: Int)? {
-        guard !isChampion, let index = chapters.firstIndex(where: { $0.isLeague || ($0.badge ?? 0) > badges }) else { return nil }
+        if isChampion {
+            let beaten = beatenBosses ?? []
+            guard let index = chapters.firstIndex(where: { chapter in
+                !chapter.isLeague && chapter.badge == nil && chapter.bosses.first.map { !beaten.contains($0.id) } == true
+            }) else { return nil }
+            return (index, 0)
+        }
+        guard let index = chapters.firstIndex(where: { $0.isLeague || ($0.badge ?? 0) > badges }) else { return nil }
         let member = chapters[index].isLeague ? boss : 0
         guard chapters[index].bosses.indices.contains(member) else { return nil }
         return (index, member)
@@ -124,6 +134,8 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
         case chapter
         case badge(Int)
         case champion
+        /// A boss past the League is beaten.
+        case postgame
         case legend(String)
     }
 
@@ -174,6 +186,10 @@ nonisolated struct JourneyProgress: Codable, Equatable, Sendable {
         }
         losses = 0
         let current = chapters[next.chapter]
+        if isChampion {
+            beatenBosses = (beatenBosses ?? []) + [current.bosses[next.index].id]
+            return .postgame
+        }
         if current.isLeague, next.index + 1 < current.bosses.count {
             boss += 1
             return .advanced
@@ -298,10 +314,12 @@ nonisolated enum Discovery {
     }
 
     /// A newcomer arrives a little behind the party, so it's worth raising without jumping ahead.
-    static func level(of species: PokeSpecies, partyLevel: Int, cap: Int, rng: inout SeededRNG) -> Int {
+    static func level(of species: PokeSpecies, partyLevel: Int, cap: Int, range: ClosedRange<Int> = 1...PokeDexStore.maxID,
+                      rng: inout SeededRNG) -> Int {
         var level = max(3, Int(Double(partyLevel) * 0.85) - 1 + rng.pick(-2...2))
-        // Evolved forms are never below the level they evolve at: a lucky find.
-        if let evolveLevel = species.evolveLevel { level = max(level, evolveLevel) }
+        // Evolved forms are never below the level they evolve at: a lucky find. A pre-evolution from
+        // another region doesn't count, so Kanto's Pikachu still turns up at the party's level.
+        if let evolveLevel = species.evolveLevel, species.evolvesFrom.map(range.contains) == true { level = max(level, evolveLevel) }
         return min(level, cap, PokeMath.maxLevel)
     }
 
@@ -369,10 +387,12 @@ nonisolated enum Gacha {
     /// A new journey starts with one pull's worth.
     static let startingStardust = price
 
-    /// Every Pokémon that starts a line, from the first pull: pulls come a little under the party's
-    /// level, so a strong one early grows with the rest instead of carrying them. Rarity follows how
-    /// often it's met anywhere in Kanto, and one never met in the wild is rare. Evolved forms come
-    /// from evolving, the legendaries by beating them, and Mew once you're the Champion.
+    /// Every Pokémon that starts a line in the region, from the first pull: pulls come a little under
+    /// the party's level, so a strong one early grows with the rest instead of carrying them. Rarity
+    /// follows how often it's met anywhere in the region, and one never met in the wild is rare.
+    /// Evolved forms come from evolving, the legendaries by beating them, and the region's mythical
+    /// once you're its Champion. A line's first form outside the region doesn't count, so Kanto
+    /// keeps Pikachu while Johto has Pichu.
     static func pool(progress: JourneyProgress, data: GameData) -> [(species: Int, rarity: GachaCard.Rarity)] {
         var best: [Int: Double] = [:]
         var stretches: Set<String> = []
@@ -381,14 +401,15 @@ nonisolated enum Gacha {
                 best[entry.species] = max(best[entry.species] ?? 0, entry.share)
             }
         }
-        let legends = Set(Kanto.legends.map(\.species))
+        let legends = Region.allLegendSpecies
+        let range = data.region.dexRange
         var pool: [(species: Int, rarity: GachaCard.Rarity)] = data.dex.species
-            .filter { $0.evolvesFrom == nil && !$0.isSpecial && !legends.contains($0.id) }
+            .filter { range.contains($0.id) && ($0.evolvesFrom.map { !range.contains($0) } ?? true) && !$0.isSpecial && !legends.contains($0.id) }
             .map { species in
                 let share = best[species.id] ?? 0
                 return (species.id, share >= 15 ? .common : (share >= 5 ? .uncommon : .rare))
             }
-        if progress.isChampion { pool.append((Kanto.mew, .mythical)) }
+        if progress.isChampion { pool.append((data.region.mythical, .mythical)) }
         return pool.sorted { $0.species < $1.species }
     }
 
@@ -570,14 +591,17 @@ nonisolated enum DailyDungeon {
         }
     }
 
-    /// Species of the types that could be met at a level, legendaries aside. `evolved` keeps each
-    /// line only in the most evolved form it would have by then, for the boss.
-    static func species(types: [PokeType], level: Int, evolved: Bool, dex: DexView) -> [PokeSpecies] {
-        let matching = dex.species.filter { species in
-            !species.isSpecial && !Set(species.types).isDisjoint(with: types) && (species.evolveLevel ?? 0) <= level
-                && (!evolved || !dex.evolutions(species.id).contains { (dex[$0]?.evolveLevel ?? .max) <= level })
+    /// Species of the types that could be met at a level, legendaries aside, from the region's own
+    /// Pokémon (Kanto's dungeons keep to the 151). `evolved` keeps each line only in the most evolved
+    /// form it would have by then, for the boss.
+    static func species(types: [PokeType], level: Int, evolved: Bool, dex: DexView, range: ClosedRange<Int> = 1...PokeDexStore.maxID)
+        -> [PokeSpecies] {
+        let local = dex.species.filter { range.contains($0.id) && !$0.isSpecial && ($0.evolveLevel ?? 0) <= level }
+        let matching = local.filter { species in
+            !Set(species.types).isDisjoint(with: types)
+                && (!evolved || !dex.evolutions(species.id).contains { range.contains($0) && (dex[$0]?.evolveLevel ?? .max) <= level })
         }
-        return matching.isEmpty ? dex.species.filter { !$0.isSpecial && ($0.evolveLevel ?? 0) <= level } : matching
+        return matching.isEmpty ? local : matching
     }
 
     /// One Pokémon on stage 1 and two on stage 2, so a lone starter can clear the first; three from
@@ -596,7 +620,7 @@ nonisolated enum DailyDungeon {
             let isBoss = count == foesPerStage && index == count - 1
             // A short stage starts lower still: Lv 2, then Lv 4–5, then Lv 7–9 with the boss.
             let foeLevel = max(2, level - (foesPerStage - 1) + index - (foesPerStage - count))
-            var candidates = species(types: types, level: foeLevel, evolved: isBoss, dex: data.dex)
+            var candidates = species(types: types, level: foeLevel, evolved: isBoss, dex: data.dex, range: data.region.dexRange)
             if isBoss { candidates = Array(candidates.sorted { $0.stats.total > $1.stats.total }.prefix(3)) }
             let pick = candidates.isEmpty ? 19 : candidates[Int(rng.next() % UInt64(candidates.count))].id
             return StagePlan.Foe(species: pick, level: foeLevel, hpScale: isBoss ? bossHP : 1)
@@ -621,7 +645,11 @@ nonisolated enum BattleTower {
     static func plan(floor: Int, on date: Date, data: GameData, calendar: Calendar = .current) -> StagePlan {
         let week = calendar.component(.yearForWeekOfYear, from: date) * 100 + calendar.component(.weekOfYear, from: date)
         var rng = SeededRNG(seed: UInt64(week) &* 1_000_003 &+ UInt64(floor))
-        let pool = data.dex.species.filter { !$0.isSpecial && data.dex.evolutions($0.id).isEmpty && $0.stats.total >= 400 }
+        // Fully evolved within the region's own Pokémon, so Kanto's tower keeps to the 151.
+        let range = data.region.dexRange
+        let pool = data.dex.species.filter {
+            range.contains($0.id) && !$0.isSpecial && !data.dex.evolutions($0.id).contains(where: range.contains) && $0.stats.total >= 400
+        }
         let level = level(floor: floor)
         let foes = (0..<foesPerFloor).map { _ in
             StagePlan.Foe(species: pool.isEmpty ? 143 : pool[Int(rng.next() % UInt64(pool.count))].id, level: level)
@@ -709,6 +737,8 @@ nonisolated enum Habitat: Equatable, Sendable {
     case legend(chapter: Int)
     case mythical
     case evolves(from: Int, level: Int?)
+    /// Met in the other region's journey.
+    case region(Region)
     case unknown
 }
 
@@ -768,9 +798,18 @@ nonisolated enum Guidance {
         for entry in Gacha.pool(progress: JourneyProgress(), data: data) where found[entry.species] == nil {
             found[entry.species] = .gacha
         }
-        if found[Kanto.mew] == nil { found[Kanto.mew] = .mythical }
+        if found[data.region.mythical] == nil { found[data.region.mythical] = .mythical }
+        // The other regions' legendaries and mythicals are met there.
+        for other in Region.allCases where other != data.region {
+            for species in other.legends.map(\.species) + [other.mythical] where found[species] == nil { found[species] = .region(other) }
+        }
+        let range = data.region.dexRange
         for species in data.dex.species where found[species.id] == nil {
-            found[species.id] = species.evolvesFrom.map { .evolves(from: $0, level: species.evolveLevel) } ?? .unknown
+            if !range.contains(species.id) {
+                found[species.id] = Region.allCases.first { $0 != data.region && $0.dexRange.contains(species.id) }.map(Habitat.region) ?? .unknown
+            } else {
+                found[species.id] = species.evolvesFrom.map { .evolves(from: $0, level: species.evolveLevel) } ?? .unknown
+            }
         }
         return found
     }

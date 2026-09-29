@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // poke starter <id> | poke catch [id] | poke xp <n> | poke stardust <n> | poke ultra
             // | poke jump <chapter> <station, 11 = line cleared> <badges> | poke tick <n> | poke pull | poke pick <i> | poke open <i>
             // | poke challenge | poke legend <id> | poke dungeon stardust|experience | poke sweep stardust|experience
-            // | poke dungeonreset [stages]
+            // | poke dungeonreset [stages] | poke region kanto|johto
             // | poke pane challenge|dex|gacha|history|toast | poke mode stage|gym|dungeon|tower|legend:<id> | poke reset
             // | poke fx <move slug> [foe]: plays a move's effect in the battle on screen
             let arguments = parts.dropFirst(2).compactMap { Int($0) }
@@ -125,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "dungeon": if let kind = DungeonKind(rawValue: parts.dropFirst(2).first ?? "") { adventure.enterDungeon(kind) }
             case "sweep": if let kind = DungeonKind(rawValue: parts.dropFirst(2).first ?? "") { adventure.sweepDungeon(kind) }
             case "dungeonreset": adventure.debugResetDungeon(stages: parts.last == "stages")
+            case "region": if let region = Region(rawValue: parts.dropFirst(2).first ?? "") { adventure.travel(to: region) }
             case "mode": NotificationCenter.default.post(name: .pokoveDebugChallengeMode, object: parts.dropFirst(2).first)
             case "badgebanner": adventure.debugBadgeBanner(arguments.first ?? 1)
             case "state":

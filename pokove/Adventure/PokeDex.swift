@@ -142,15 +142,23 @@ final class PokeDexStore {
         case failed(String)
     }
 
-    nonisolated static let maxID = 151
-    static let cacheVersion = 1
+    /// Kanto and Johto.
+    nonisolated static let maxID = 251
+    /// What a save from before Johto was cached with.
+    nonisolated static let legacyMaxID = 151
+    /// 2 holds Johto too, beside 1's Kanto, which a 1.2 build still reads.
+    static let cacheVersion = 2
 
     private(set) var state: State = .idle
     private(set) var species: [PokeSpecies] = []
     /// FireRed/LeafGreen moves and learnsets.
     private(set) var moves: MoveDex?
-    /// FireRed/LeafGreen wild encounters for the journey's areas.
+    /// Wild encounters for both journeys' areas: FireRed/LeafGreen's and HeartGold/SoulSilver's.
     private(set) var encounters: EncounterDex?
+    /// Bumps whenever the data is replaced, as when the full dex arrives after the old cache.
+    private(set) var revision = 0
+    /// The full dex couldn't be downloaded while Kanto runs on the old cache; the next load retries.
+    private(set) var fullLoadFailed = false
 
     @ObservationIgnored private var byID: [Int: PokeSpecies] = [:]
     @ObservationIgnored private var evolutionsByID: [Int: [Int]] = [:]
@@ -168,11 +176,19 @@ final class PokeDexStore {
     }
 
     private var cacheURL: URL { directory.appendingPathComponent("dex-v\(Self.cacheVersion).json") }
-    /// v2 added each move's status effect.
-    private var movesURL: URL { directory.appendingPathComponent("moves-v2.json") }
-    private var encountersURL: URL { directory.appendingPathComponent("encounters-v1.json") }
+    /// v2 added each move's status effect; v3 has Johto's learnsets.
+    private var movesURL: URL { directory.appendingPathComponent("moves-v3.json") }
+    /// v2 has Johto's areas.
+    private var encountersURL: URL { directory.appendingPathComponent("encounters-v2.json") }
+    /// Kanto's data from before Johto, used while the rest downloads or can't.
+    private var legacyCacheURL: URL { directory.appendingPathComponent("dex-v1.json") }
+    private var legacyMovesURL: URL { directory.appendingPathComponent("moves-v2.json") }
+    private var legacyEncountersURL: URL { directory.appendingPathComponent("encounters-v1.json") }
 
     var isReady: Bool { state == .ready }
+
+    /// Johto's species, moves and areas are in; until then only Kanto can be played.
+    var hasJohto: Bool { species.count >= Self.maxID }
 
     func species(_ id: Int) -> PokeSpecies? { byID[id] }
 
@@ -216,39 +232,52 @@ final class PokeDexStore {
 
     // MARK: Loading
 
-    /// Loads the cached dex, moves and encounters, or downloads what's missing (three requests
-    /// in parallel, a few seconds the first time).
+    /// Loads the cached dex, moves and encounters, or downloads what's missing (a few requests in
+    /// parallel, a few seconds the first time). Kanto's cache from before Johto runs the game while
+    /// the full data downloads, and keeps running it if that fails.
     func load() {
-        guard state != .ready, state != .loading else { return }
-        let cachedSpecies = (try? Data(contentsOf: cacheURL)).flatMap { try? JSONDecoder().decode([PokeSpecies].self, from: $0) }
+        guard state != .loading, loadTask == nil else { return }
+        if state == .ready, hasJohto { return }
+        let decoder = JSONDecoder()
+        let cachedSpecies = (try? Data(contentsOf: cacheURL)).flatMap { try? decoder.decode([PokeSpecies].self, from: $0) }
             .flatMap { $0.count == Self.maxID ? $0 : nil }
-        let cachedMoves = (try? Data(contentsOf: movesURL)).flatMap { try? JSONDecoder().decode(MoveDex.self, from: $0) }
-        let cachedEncounters = (try? Data(contentsOf: encountersURL)).flatMap { try? JSONDecoder().decode(EncounterDex.self, from: $0) }
+        let cachedMoves = (try? Data(contentsOf: movesURL)).flatMap { try? decoder.decode(MoveDex.self, from: $0) }
+        let cachedEncounters = (try? Data(contentsOf: encountersURL)).flatMap { try? decoder.decode(EncounterDex.self, from: $0) }
         if let cachedSpecies, let cachedMoves, let cachedEncounters {
             apply(cachedSpecies, moves: cachedMoves, encounters: cachedEncounters)
             return
         }
-        state = .loading
+        if state != .ready,
+           let legacy = (try? Data(contentsOf: legacyCacheURL)).flatMap({ try? decoder.decode([PokeSpecies].self, from: $0) }),
+           legacy.count == Self.legacyMaxID,
+           let moves = (try? Data(contentsOf: legacyMovesURL)).flatMap({ try? decoder.decode(MoveDex.self, from: $0) }),
+           let encounters = (try? Data(contentsOf: legacyEncountersURL)).flatMap({ try? decoder.decode(EncounterDex.self, from: $0) }) {
+            apply(legacy, moves: moves, encounters: encounters)
+        }
+        let hasFallback = state == .ready
+        if !hasFallback { state = .loading }
+        fullLoadFailed = false
         let directory = directory, cacheURL = cacheURL, movesURL = movesURL, encountersURL = encountersURL
         loadTask = Task { [weak self] in
-            let maxID = Self.maxID, areas = Self.journeyAreas
+            let maxID = Self.maxID
             do {
                 async let species = Self.fetch(cachedSpecies) { try await PokeAPI.fetchSpecies(maxID: maxID) }
                 async let moves = Self.fetch(cachedMoves) { try await PokeAPI.fetchMoves(maxID: maxID) }
-                async let encounters = Self.fetch(cachedEncounters) { try await PokeAPI.fetchEncounters(areas: areas) }
+                async let encounters = Self.fetch(cachedEncounters) { try await PokeAPI.fetchEncounters(regions: Region.allCases) }
                 let (speciesList, moveDex, encounterDex) = try await (species, moves, encounters)
                 try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                 if cachedSpecies == nil { try? JSONEncoder().encode(speciesList).write(to: cacheURL, options: .atomic) }
                 if cachedMoves == nil { try? JSONEncoder().encode(moveDex).write(to: movesURL, options: .atomic) }
                 if cachedEncounters == nil { try? JSONEncoder().encode(encounterDex).write(to: encountersURL, options: .atomic) }
+                self?.loadTask = nil
                 self?.apply(speciesList, moves: moveDex, encounters: encounterDex)
             } catch {
-                self?.state = .failed(error.localizedDescription)
+                self?.loadTask = nil
+                // Kanto keeps going on the old data; the next load tries again.
+                if hasFallback { self?.fullLoadFailed = true } else { self?.state = .failed(error.localizedDescription) }
             }
         }
     }
-
-    static let journeyAreas = Array(Set(Kanto.stretches.flatMap(\.areas))).sorted()
 
     private nonisolated static func fetch<T: Sendable>(_ cached: T?, _ download: @Sendable () async throws -> T) async throws -> T {
         if let cached { return cached }
@@ -261,6 +290,7 @@ final class PokeDexStore {
     }
 
     private func apply(_ list: [PokeSpecies], moves: MoveDex, encounters: EncounterDex) {
+        revision += 1
         self.moves = moves
         self.encounters = encounters
         species = list.sorted { $0.id < $1.id }
@@ -367,9 +397,18 @@ nonisolated enum PokeAPI {
                 isLegendary: is_legendary,
                 isMythical: is_mythical,
                 evolvesFrom: from,
-                evolveLevel: from == nil ? nil : Self.level(for: evolutions)
+                evolveLevel: from == nil ? nil : Self.levelOverrides[id] ?? Self.level(for: evolutions)
             )
         }
+
+        /// Johto's evolutions that the rule below would get wrong: Crobat after Golbat, Espeon and
+        /// Umbreon alongside Eevee's stones, Politoed and Slowking level with the other branch (so
+        /// either can come), Blissey late since Chansey is met late, and the babies early so their
+        /// Kanto forms still turn up on Kanto's first routes.
+        static let levelOverrides: [Int: Int] = [
+            169: 32, 196: 30, 197: 30, 186: 30, 199: 37, 242: 50,
+            25: 8, 35: 8, 39: 8,
+        ]
 
         /// Item, trade and friendship evolutions get a level, so everything evolves by leveling.
         static func level(for evolutions: [Evolution]) -> Int {

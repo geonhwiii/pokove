@@ -1,8 +1,10 @@
-// Simulates the Kanto journey over many hours of agent work, to tune its pacing.
+// Simulates a region's journey (Kanto, or Johto with SIM_REGION=johto) over many hours of agent
+// work, to tune its pacing. Johto starts from scratch, as it does in the app.
 // Run from the repo root:
 //   swiftc -O -parse-as-library -o /tmp/adventure-sim scripts/adventure-sim.swift \
 //     pokove/Adventure/BattleEngine.swift pokove/Adventure/AdventureRules.swift \
-//     pokove/Adventure/Kanto.swift pokove/Adventure/PokeMoves.swift pokove/Adventure/PokeDex.swift
+//     pokove/Adventure/Kanto.swift pokove/Adventure/Johto.swift pokove/Adventure/Region.swift \
+//     pokove/Adventure/PokeMoves.swift pokove/Adventure/PokeDex.swift
 //   /tmp/adventure-sim [hours] [xpScale] [starter] [seed] [agentHoursPerDay]
 //   /tmp/adventure-sim duel <chapter> <station 1-10 | b1-b5> <level> <species>...
 // Stations run on agent time (1.5 s per action). Gyms, legendaries and the daily dungeons don't need
@@ -40,18 +42,19 @@ struct AdventureSim {
             Rewards.arrivalStation = pay[0]
             Rewards.arrivalTerminus = pay[1]
         }
-        let starter = !isDuel && args.count > 2 ? Int(args[2]) ?? 4 : 4
+        let region = Region(rawValue: ProcessInfo.processInfo.environment["SIM_REGION"] ?? "") ?? .kanto
+        let starter = !isDuel && args.count > 2 ? Int(args[2]) ?? region.starters[1] : region.starters[1]
         let seed = !isDuel && args.count > 3 ? UInt64(args[3]) ?? 42 : 42
         let hoursPerDay = !isDuel && args.count > 4 ? Double(args[4]) ?? 2.9 : 2.9
 
-        var species = load("dex-v1.json", as: [PokeSpecies].self)
+        var species = load("dex-v2.json", as: [PokeSpecies].self).flatMap { $0.count == PokeDexStore.maxID ? $0 : nil }
         if species == nil { species = try await PokeAPI.fetchSpecies(maxID: PokeDexStore.maxID) }
-        var moveDex = load("moves-v2.json", as: MoveDex.self)
+        var moveDex = load("moves-v3.json", as: MoveDex.self)
         if moveDex == nil { moveDex = try await PokeAPI.fetchMoves(maxID: PokeDexStore.maxID) }
-        var encounters = load("encounters-v1.json", as: EncounterDex.self)
-        if encounters == nil { encounters = try await PokeAPI.fetchEncounters(areas: PokeDexStore.journeyAreas) }
+        var encounters = load("encounters-v2.json", as: EncounterDex.self)
+        if encounters == nil { encounters = try await PokeAPI.fetchEncounters(regions: Region.allCases) }
         let moves = moveDex!
-        let data = GameData(species: species!, moves: moves, encounters: encounters!, starter: starter)
+        let data = GameData(species: species!, moves: moves, encounters: encounters!, region: region, starter: starter)
         let chapters = data.chapters
         let dex = data.dex
         var rng = SeededRNG(seed: seed)
@@ -105,7 +108,7 @@ struct AdventureSim {
         // A calendar day starting on a Monday, advanced once per `hoursPerDay` of agent work.
         var day = Date(timeIntervalSince1970: 1_790_000_000)
 
-        func cap() -> Int { Kanto.levelCap(badges: progress.badges, champion: progress.isChampion) }
+        func cap() -> Int { region.levelCap(badges: progress.badges, champion: progress.isChampion) }
         func grant(_ xp: Int, to id: UUID) {
             guard var member = box[id] else { return }
             let limit = PokeMath.xpLimit(cap: cap())
@@ -330,7 +333,7 @@ struct AdventureSim {
             if rng.unit() < secondsPerTick / Discovery.meanInterval(boxCount: box.count) {
                 let pool = Discovery.pool(at: progress.stationTarget(chapters), data: data)
                 if let speciesID = Discovery.roll(pool: pool, rng: &rng), let species = dex[speciesID] {
-                    let level = Discovery.level(of: species, partyLevel: partyLevel(), cap: cap(), rng: &rng)
+                    let level = Discovery.level(of: species, partyLevel: partyLevel(), cap: cap(), range: region.dexRange, rng: &rng)
                     if receive(speciesID, level: level, duplicateXP: Discovery.duplicateXP(level: level)) { discoveries += 1 }
                 }
             }

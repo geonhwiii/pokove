@@ -71,6 +71,8 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         let to: Int
     }
 
+    /// Where it happened; nil for recaps from before Johto, which were all in Kanto.
+    var region: Region?
     /// When the first thing was recorded.
     var since: Date?
     /// When the page opened and the recap moved to the history.
@@ -131,6 +133,7 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+        region = try container.decodeIfPresent(Region.self, forKey: .region)
         since = try container.decodeIfPresent(Date.self, forKey: .since)
         until = try container.decodeIfPresent(Date.self, forKey: .until)
         clears = try container.decodeIfPresent(Int.self, forKey: .clears) ?? 0
@@ -154,6 +157,24 @@ nonisolated struct AdventureRecap: Codable, Equatable, Sendable {
         dexMilestones = try container.decodeIfPresent([Int].self, forKey: .dexMilestones) ?? []
         tower = try container.decodeIfPresent(Int.self, forKey: .tower)
     }
+}
+
+/// One region's journey: its box and party, what it has earned, and how far it has come. The
+/// region being played lives in `AdventureService`'s own properties; the other waits here.
+nonisolated struct RegionState: Codable, Equatable, Sendable {
+    var starter: Int?
+    /// Empty once the boxes are merged: the one box is kept with the region being played.
+    var owned: [OwnedPokemon] = []
+    var partyIDs: [UUID] = []
+    var stardust = 0
+    var ultraBalls = 0
+    var progress = JourneyProgress()
+    var offer: [GachaCard]?
+    var clears = 0
+    var wipes = 0
+    var pulls = 0
+    var tower = TowerState()
+    var dungeons = DungeonState(day: DailyDungeon.day(of: Date()))
 }
 
 /// A station left behind for the next one, or a terminus cleared, and the stardust it paid.
@@ -194,6 +215,12 @@ nonisolated struct ChallengeResult: Equatable, Sendable {
 /// gacha; badges raise the level cap.
 @Observable
 final class AdventureService {
+    /// The region being played. Everything below that isn't shared belongs to it.
+    private(set) var region: Region = .kanto
+    /// The regions not being played, as they were left.
+    private var away: [Region: RegionState] = [:]
+    /// After Johto's Champion, both regions share one box.
+    private(set) var boxMerged = false
     private(set) var owned: [OwnedPokemon] = []
     private(set) var partyIDs: [UUID] = []
     private(set) var seen: Set<Int> = []
@@ -261,7 +288,7 @@ final class AdventureService {
     /// Set by the adventure page while it's on screen: what happens then isn't news later.
     @ObservationIgnored var isWatching = false
     @ObservationIgnored private var cachedData: GameData?
-    @ObservationIgnored private var cachedStarter: Int?
+    @ObservationIgnored private var cachedKey: String?
     @ObservationIgnored private var forecastKey: String?
     @ObservationIgnored private var hintTask: Task<Void, Never>?
     @ObservationIgnored private var habitatCache: [Int: Habitat]?
@@ -280,7 +307,6 @@ final class AdventureService {
     static let resultHold: Double = 3.2
     static let maxParty = 3
     static let historyLimit = 40
-    static let starters = [1, 4, 7]
 
     init(preferences: Preferences, activity: ActivityCenter, dex: PokeDexStore = PokeDexStore(),
          storeURL: URL = AdventureService.defaultStoreURL, legacyURL: URL? = AdventureService.legacyStoreURL) {
@@ -320,23 +346,125 @@ final class AdventureService {
     var party: [OwnedPokemon] { partyIDs.compactMap { id in owned.first { $0.id == id } } }
     var partyLevel: Int { party.isEmpty ? 5 : party.map(\.level).reduce(0, +) / party.count }
     var leader: OwnedPokemon? { party.first }
-    var levelCap: Int { Kanto.levelCap(badges: progress.badges, champion: progress.isChampion) }
+    var levelCap: Int { region.levelCap(badges: progress.badges, champion: progress.isChampion) }
     var canPull: Bool { hasStarted && offer == nil && stardust >= Gacha.price }
     var canOpenUltraBall: Bool { hasStarted && offer == nil && ultraBalls > 0 }
     /// Balls to pick from, or enough to get some: the gacha's dot.
     var hasGachaWaiting: Bool { canPull || canOpenUltraBall || offer != nil }
 
-    /// Species, moves and encounters together, once everything is downloaded.
+    /// Species, moves and encounters together, once everything is downloaded (for Johto, the full dex).
     var data: GameData? {
-        guard dex.isReady, let moves = dex.moves, let encounters = dex.encounters else { return nil }
-        if let cachedData, cachedStarter == starter { return cachedData }
-        let built = GameData(species: dex.species, moves: moves, encounters: encounters, starter: starter ?? 4)
+        guard dex.isReady, let moves = dex.moves, let encounters = dex.encounters, region == .kanto || dex.hasJohto else { return nil }
+        let key = "\(region.rawValue)-\(starter ?? 0)-\(dex.revision)"
+        if let cachedData, cachedKey == key { return cachedData }
+        let built = GameData(species: dex.species, moves: moves, encounters: encounters, region: region, starter: starter ?? 4)
         cachedData = built
-        cachedStarter = starter
+        cachedKey = key
+        habitatCache = nil
         return built
     }
 
-    var chapters: [Chapter] { data?.chapters ?? Kanto.chapters(starter: starter ?? 4) }
+    var chapters: [Chapter] { data?.chapters ?? region.chapters(starter: starter ?? 4) }
+
+    // MARK: Regions
+
+    /// A region's journey, whether it's being played or waiting.
+    func journey(in other: Region) -> JourneyProgress? {
+        other == region ? progress : away[other]?.progress
+    }
+
+    /// Johto opens with Kanto's Champion.
+    func isOpen(_ other: Region) -> Bool {
+        switch other {
+        case .kanto: true
+        case .johto: journey(in: .kanto)?.isChampion == true
+        }
+    }
+
+    /// Some region besides Kanto is open, so there's a choice to show.
+    var hasRegionChoice: Bool { isOpen(.johto) }
+
+    /// An open region whose journey hasn't started: the region menu's dot.
+    var hasUnvisitedRegion: Bool {
+        Region.allCases.contains { other in other != region && isOpen(other) && away[other]?.starter == nil }
+    }
+
+    /// Leaves this region as it is and picks up the other where it was left. A new region starts
+    /// with its starter to pick. Not while a challenge plays out.
+    func travel(to next: Region) {
+        guard next != region, isOpen(next), !isChallenging else { return }
+        closeRecap()
+        away[region] = currentState()
+        let arriving = away.removeValue(forKey: next) ?? RegionState()
+        let box = owned
+        region = next
+        restore(arriving)
+        if boxMerged { owned = box }
+        battle = nil
+        target = nil
+        lastEvent = nil
+        holdUntil = nil
+        cachedData = nil
+        habitatCache = nil
+        forecasts = [:]
+        forecastKey = nil
+        readiness = nil
+        levelHint = nil
+        // A hint still being worked out is for the region left behind.
+        hintTask?.cancel()
+        hintTask = nil
+        dungeons.refill(for: DailyDungeon.day(of: Date()))
+        refreshReadiness()
+        saveNow()
+    }
+
+    /// The region being played, as a state to set aside or save.
+    private func currentState() -> RegionState {
+        RegionState(starter: starter, owned: boxMerged ? [] : owned, partyIDs: partyIDs, stardust: stardust, ultraBalls: ultraBalls,
+                    progress: progress, offer: offer, clears: clears, wipes: wipes, pulls: pulls, tower: tower, dungeons: dungeons)
+    }
+
+    private func restore(_ state: RegionState) {
+        starter = state.starter
+        owned = state.owned
+        partyIDs = state.partyIDs.filter { id in state.owned.contains { $0.id == id } || boxMerged }
+        stardust = state.stardust
+        ultraBalls = state.ultraBalls
+        progress = state.progress
+        offer = state.offer
+        clears = state.clears
+        wipes = state.wipes
+        pulls = state.pulls
+        tower = state.tower
+        tower.floor = nil
+        dungeons = state.dungeons
+    }
+
+    /// A region's state for the save: the one being played from its properties.
+    private func state(of other: Region) -> RegionState? {
+        other == region ? currentState() : away[other]
+    }
+
+    /// Johto's Champion: Kanto's box joins Johto's, and either region can field anyone.
+    private func mergeBoxes() {
+        guard !boxMerged else { return }
+        for other in Region.allCases where other != region {
+            owned += away[other]?.owned ?? []
+            away[other]?.owned = []
+        }
+        boxMerged = true
+    }
+
+    /// Switching regions ends the recap, so each one is about one region.
+    private func closeRecap() {
+        guard !recap.isEmpty else { recap = AdventureRecap(); return }
+        var finished = recap
+        finished.until = Date()
+        recap = AdventureRecap()
+        history.insert(finished, at: 0)
+        trimHistory()
+        historyUnread = true
+    }
 
     func pokemon(_ id: UUID) -> OwnedPokemon? { owned.first { $0.id == id } }
 
@@ -485,12 +613,13 @@ final class AdventureService {
     // MARK: Party
 
     func chooseStarter(_ speciesID: Int) {
-        guard owned.isEmpty, dex.species(speciesID) != nil else { return }
+        guard starter == nil, boxMerged || owned.isEmpty, dex.species(speciesID) != nil else { return }
         let first = OwnedPokemon(id: UUID(), speciesID: speciesID, xp: PokeMath.xp(forLevel: 5), caughtAt: Date(), origin: .starter)
-        owned = [first]
+        owned.append(first)
         partyIDs = [first.id]
-        seen = [speciesID]
-        caught = [speciesID]
+        // The Pokédex carries over from the other region.
+        seen.insert(speciesID)
+        caught.insert(speciesID)
         starter = speciesID
         stardust = Gacha.startingStardust
         progress = JourneyProgress()
@@ -498,6 +627,7 @@ final class AdventureService {
         target = nil
         cachedData = nil
         habitatCache = nil
+        claimDexRewards()
         saveNow()
     }
 
@@ -898,8 +1028,15 @@ final class AdventureService {
                 if levelCap > capBefore { result?.cap = capBefore...levelCap }
             case .champion:
                 releaseBank()
-                announce(title: String(localized: "You're the Champion!"),
-                         detail: String(localized: "Something stirs in Cerulean Cave…"), pokemonID: plan.foes.last?.species)
+                switch region {
+                case .kanto:
+                    announce(title: String(localized: "You're the Champion!"),
+                             detail: RegionText.johtoOpened, pokemonID: plan.foes.last?.species)
+                case .johto:
+                    mergeBoxes()
+                    announce(title: String(localized: "You're the Champion!"),
+                             detail: RegionText.boxesMerged, pokemonID: plan.foes.last?.species)
+                }
             default:
                 break
             }
@@ -908,10 +1045,10 @@ final class AdventureService {
             if let spot = data.legend(id) { result = ChallengeResult(kind: .legend(species: spot.species), cleared: cleared, stardust: reward) }
             if cleared, let spot = data.legend(id), let species = dex.species(spot.species) {
                 let isNew = !caught.contains(spot.species)
-                receive(species, level: min(spot.level, levelCap), origin: .legend)
+                receive(species, level: min(spot.level, levelCap), origin: .legend, shiny: spot.shiny)
                 note { $0.discovered.append(spot.species) }
                 let encounter = PokeEncounter(id: UUID(), speciesID: spot.species, level: spot.level, caught: true, isNew: isNew,
-                                              isSpecial: true, date: Date())
+                                              isSpecial: true, date: Date(), shiny: spot.shiny)
                 announceDiscovery(encounter, title: String(localized: "\(species.name) joined your team!"))
             }
         case .dungeon(let kind, let stage):
@@ -1061,7 +1198,7 @@ final class AdventureService {
         guard rng.unit() < Self.stationInterval / Discovery.meanInterval(boxCount: owned.count) else { return }
         let pool = Discovery.pool(at: stationPoint, data: data)
         guard let speciesID = Discovery.roll(pool: pool, rng: &rng), let species = dex.species(speciesID) else { return }
-        let level = Discovery.level(of: species, partyLevel: partyLevel, cap: levelCap, rng: &rng)
+        let level = Discovery.level(of: species, partyLevel: partyLevel, cap: levelCap, range: region.dexRange, rng: &rng)
         seen.insert(speciesID)
         let shiny = Shiny.roll(&rng)
         if let existing = owned(family: speciesID), let index = owned.firstIndex(where: { $0.id == existing.id }) {
@@ -1164,6 +1301,7 @@ final class AdventureService {
     private func note(_ change: (inout AdventureRecap) -> Void) {
         guard !isWatching else { return }
         if recap.since == nil { recap.since = Date() }
+        recap.region = region
         change(&recap)
     }
 
@@ -1214,9 +1352,9 @@ final class AdventureService {
 
     private func announceBadge(_ badge: Int) {
         guard preferences.adventureAnnounceCatches else { return }
-        var banner = NotchBanner(style: .adventure, title: String(localized: "\(Kanto.badgeName(badge)) earned!"),
+        var banner = NotchBanner(style: .adventure, title: String(localized: "\(region.badgeName(badge)) earned!"),
                                  detail: String(localized: "Level cap raised to \(levelCap)."), duration: 6)
-        banner.badge = badge
+        banner.badge = region.badgeImage(badge)
         activity.post(banner)
         if preferences.adventureSound { NSSound(named: "Hero")?.play() }
     }
@@ -1233,6 +1371,9 @@ final class AdventureService {
     // MARK: Reset
 
     func resetAdventure() {
+        region = .kanto
+        away = [:]
+        boxMerged = false
         owned = []
         partyIDs = []
         seen = []
@@ -1267,7 +1408,7 @@ final class AdventureService {
     func debugDiscover(_ speciesID: Int?) -> PokeEncounter? {
         guard hasStarted, let species = dex.species(speciesID ?? Int.random(in: 1...PokeDexStore.maxID)) else { return nil }
         let isNew = owned(family: species.id) == nil
-        let level = Discovery.level(of: species, partyLevel: partyLevel, cap: levelCap, rng: &rng)
+        let level = Discovery.level(of: species, partyLevel: partyLevel, cap: levelCap, range: region.dexRange, rng: &rng)
         if isNew { receive(species, level: level, origin: .wild); note { $0.discovered.append(species.id) } }
         saveNow()
         return PokeEncounter(id: UUID(), speciesID: species.id, level: level, caught: true, isNew: isNew,
@@ -1276,9 +1417,10 @@ final class AdventureService {
 
     func debugXP(_ amount: Int) { award(amount) }
 
-    /// Crowns the party, which opens the Battle Tower.
+    /// Crowns the party, which opens the Battle Tower (and Johto, or in Johto merges the boxes).
     func debugChampion() {
         progress.isChampion = true
+        if region == .johto { mergeBoxes() }
         saveNow()
     }
 
@@ -1331,9 +1473,11 @@ final class AdventureService {
 
     // MARK: Persistence
 
+    /// The fields up to `dungeons` are Kanto's, as 1.2 wrote them, so 1.2 still reads its journey
+    /// from a save with Johto in it; Johto sits beside them.
     private struct SaveFile: Codable {
-        /// 4 split each of Kanto's legs into three chapters.
-        var version = 4
+        /// 4 split each of Kanto's legs into three chapters; 5 added Johto.
+        var version = 5
         var starter: Int?
         var owned: [OwnedPokemon]
         var partyIDs: [UUID]
@@ -1354,6 +1498,11 @@ final class AdventureService {
         var wipes: Int
         var pulls: Int
         var dungeons: DungeonState?
+        /// The region being played; nil means Kanto.
+        var region: Region?
+        var johto: RegionState?
+        /// After Johto's Champion the one box is the top-level `owned`, and Johto's is empty.
+        var boxMerged: Bool?
     }
 
     /// v2's save: the same box, coins instead of stardust, and a position on the old map.
@@ -1400,6 +1549,19 @@ final class AdventureService {
                 // A run can't resume mid-floor across launches.
                 tower.floor = nil
                 trimHistory()
+                // What was just read is Kanto's; Johto waits beside it, or is played.
+                boxMerged = file.boxMerged ?? false
+                if var johto = file.johto {
+                    johto.progress.moveOn(Region.johto.chapters(starter: johto.starter ?? 0))
+                    away[.johto] = johto
+                }
+                if file.region == .johto, isOpen(.johto) {
+                    let box = owned
+                    away[.kanto] = currentState()
+                    region = .johto
+                    restore(away.removeValue(forKey: .johto) ?? RegionState())
+                    if boxMerged { owned = box }
+                }
                 if let rewards = file.dexRewards {
                     dexRewards = rewards
                 } else {
@@ -1456,11 +1618,17 @@ final class AdventureService {
     private func saveNow() {
         saveTask?.cancel()
         saveTask = nil
-        let file = SaveFile(starter: starter, owned: owned, partyIDs: partyIDs, seen: seen.sorted(), caught: caught.sorted(),
-                            stardust: stardust, ultraBalls: ultraBalls, progress: progress, offer: offer,
-                            recap: recap, history: history, historyUnread: historyUnread, tower: tower, dexRewards: dexRewards,
-                            clears: clears, wipes: wipes, pulls: pulls,
-                            dungeons: dungeons)
+        let kanto = state(of: .kanto) ?? RegionState()
+        var johto = state(of: .johto)
+        // One box after the merge, kept where 1.2 looks for Kanto's.
+        let box = boxMerged ? owned : kanto.owned
+        if boxMerged { johto?.owned = [] }
+        let file = SaveFile(starter: kanto.starter, owned: box, partyIDs: kanto.partyIDs, seen: seen.sorted(), caught: caught.sorted(),
+                            stardust: kanto.stardust, ultraBalls: kanto.ultraBalls, progress: kanto.progress, offer: kanto.offer,
+                            recap: recap, history: history, historyUnread: historyUnread, tower: kanto.tower, dexRewards: dexRewards,
+                            clears: kanto.clears, wipes: kanto.wipes, pulls: kanto.pulls,
+                            dungeons: kanto.dungeons, region: region == .kanto ? nil : region, johto: johto,
+                            boxMerged: boxMerged ? true : nil)
         do {
             try FileManager.default.createDirectory(at: storeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder.adventure.encode(file).write(to: storeURL, options: .atomic)

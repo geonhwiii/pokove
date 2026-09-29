@@ -538,7 +538,9 @@ private struct SceneChrome: View {
         let chapters = adventure.chapters
         switch target {
         case .station(let point):
-            let text = "\(point.chapter + 1)-\(point.station + 1)"
+            // Once there are two regions, the chip says which: "성도 4-3".
+            let place = "\(point.chapter + 1)-\(point.station + 1)"
+            let text = adventure.hasRegionChoice ? "\(adventure.region.name) \(place)" : place
             return adventure.progress.isTraining || adventure.progress.repeating != nil ? "↻ " + text : text
         case .boss(let chapter, let index):
             guard let info = chapters[safeChapter: chapter], info.bosses.indices.contains(index) else { return "" }
