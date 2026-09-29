@@ -5,6 +5,16 @@
     <link>https://pokove.vercel.app/appcast.xml</link>
     <language>ko</language>
     <item>
+      <title>pokove 1.2.9</title>
+      <pubDate>Tue, 29 Sep 2026 22:16:54 +0900</pubDate>
+      <sparkle:version>12</sparkle:version>
+      <sparkle:shortVersionString>1.2.9</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>유튜브 같은 영상을 재생할 때 가로로 긴 썸네일이 음악 화면을 밀어내던 문제를 고쳤어요. 썸네일은 앨범 커버처럼 정사각형으로 보여요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>Fixed a video&#x27;s wide thumbnail, from YouTube and the like, pushing the music page out of place. It now shows square, like album art</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.2.9/pokove.zip" type="application/octet-stream" sparkle:edSignature="hKR33jOAYaLqIFeMkFfgmZISB6KYbars0xwu4QkkKI2uYSsNHKqoa2sX566YanMC7vYe3fQHs8BvXRgU+xBvDA==" length="4063743"/>
+    </item>
+    <item>
       <title>pokove 1.2.8</title>
       <pubDate>Tue, 29 Sep 2026 01:20:12 +0900</pubDate>
       <sparkle:version>11</sparkle:version>
