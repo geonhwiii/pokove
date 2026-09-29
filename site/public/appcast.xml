@@ -5,6 +5,16 @@
     <link>https://pokove.vercel.app/appcast.xml</link>
     <language>ko</language>
     <item>
+      <title>pokove 1.3.0</title>
+      <pubDate>Wed, 30 Sep 2026 01:16:06 +0900</pubDate>
+      <sparkle:version>13</sparkle:version>
+      <sparkle:shortVersionString>1.3.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>관동 챔피언이 되면 성도 지방이 열려요. 스테이지 위쪽의 지방 메뉴에서 떠날 수 있어요</li><li>성도는 치코리타·브케인·리아코 중 하나로 1-1부터 새로 시작해요. 체육관 8곳, 사천왕과 챔피언 목호, 은빛산 끝의 레드가 기다려요</li><li>관동의 파티, 박스, 별의모래, 진행은 그대로 남아서 언제든 돌아갈 수 있어요. 성도 챔피언이 되면 두 지방의 동료가 하나로 합쳐져요</li><li>도감이 251마리로 늘었고, 지방별로 볼 수 있어요. 크로뱃, 에브이·블래키 같은 2세대 진화도 들어왔어요</li><li>업데이트 후 처음 켤 때 성도 포켓몬 데이터를 받아요. 그동안에도 관동은 평소처럼 진행돼요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>Becoming Kanto&#x27;s Champion opens Johto. Head there from the region menu above the stage line</li><li>Johto starts fresh with Chikorita, Cyndaquil or Totodile: eight gyms, the Elite Four and Lance, and Red at the top of Mt. Silver</li><li>Kanto&#x27;s party, box, stardust and progress stay as they are, to go back to any time. Becoming Johto&#x27;s Champion puts both regions&#x27; Pokémon together</li><li>The Pokédex grows to 251, with a filter by region. Gen 2 evolutions like Crobat, Espeon and Umbreon are in</li><li>The first launch after updating downloads Johto&#x27;s Pokémon; Kanto keeps going meanwhile</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.3.0/pokove.zip" type="application/octet-stream" sparkle:edSignature="l0o2pAclOvxpebPoX0dpHgBYDlvHSZrT5XB7EkLh9Fk15sMZ5ne8GMwUPf7oeLkOoKnxZv30XiyfrCnlBYXDAg==" length="4137868"/>
+    </item>
+    <item>
       <title>pokove 1.2.9</title>
       <pubDate>Tue, 29 Sep 2026 22:16:54 +0900</pubDate>
       <sparkle:version>12</sparkle:version>
