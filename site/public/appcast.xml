@@ -5,6 +5,16 @@
     <link>https://pokove.vercel.app/appcast.xml</link>
     <language>ko</language>
     <item>
+      <title>pokove 1.3.1</title>
+      <pubDate>Wed, 30 Sep 2026 11:00:27 +0900</pubDate>
+      <sparkle:version>14</sparkle:version>
+      <sparkle:shortVersionString>1.3.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description xml:lang="ko"><![CDATA[<ul><li>새 버전이 나오면 노치에 배너가 한 번 떠요. 누르면 바로 업데이트해요</li><li>업데이트한 뒤 처음 켜면 새로 생긴 것을 한 줄로 알려줘요</li></ul>]]></description>
+      <description xml:lang="en"><![CDATA[<ul><li>When a new version is out, a banner drops from the notch once; click it to update</li><li>The first launch after an update says in a line what&#x27;s new</li></ul>]]></description>
+      <enclosure url="https://github.com/geonhwiii/pokove/releases/download/v1.3.1/pokove.zip" type="application/octet-stream" sparkle:edSignature="c5SHreem+sDYaQt/grxzq3HpQeKUK91OdjumeDLbb62o3RAJqZ2qlJUznrm83X69KegP30QvAQlKnpXqipEzCQ==" length="4142531"/>
+    </item>
+    <item>
       <title>pokove 1.3.0</title>
       <pubDate>Wed, 30 Sep 2026 01:16:06 +0900</pubDate>
       <sparkle:version>13</sparkle:version>
