@@ -16,7 +16,7 @@ const en = {
   description:
     'pokove is a notch app for Mac. While Claude Code or Codex works, your Pokémon travel through Kanto in the notch. It also shows what your agents are doing and lets you answer them from there.',
   skip: 'Skip to content',
-  menu: { adventure: 'Adventure', agents: 'Agents', notch: 'Notch', download: 'Download', github: 'GitHub' },
+  menu: { adventure: 'Adventure', journey: 'Journey', agents: 'Agents', notch: 'Notch', download: 'Download', github: 'GitHub' },
   otherLang: { label: '한국어', path: '' },
 
   hero: {
@@ -57,8 +57,28 @@ const en = {
       { art: 'poke-ball', name: 'New teammates', text: 'Someone new joins about every 20 minutes of work.' },
     ],
     note: 'Losing costs nothing, and you can turn the adventure off in Settings.',
+    journeyLink: 'See the whole journey, Kanto to Johto',
     disclaimer:
       'pokove is an unofficial fan project, not affiliated with Nintendo, Game Freak, Creatures or The Pokémon Company, and its sprites load from PokéAPI at runtime instead of shipping with the app.',
+  },
+
+  journey: {
+    title: 'The journey',
+    heading: 'From Kanto to Johto',
+    lede: 'Your party passes one station at a time while your agent works. Here is where the line goes, and what waits along it.',
+    chapters: (range: string) => `Ch. ${range}`,
+    starters: 'Starts with',
+    league: 'Pokémon League',
+    champion: (name: string) => `Champion ${name}`,
+    postgame: 'After the Champion',
+    kantoAfter: 'The level cap is gone, and the Battle Tower opens.',
+    johtoAfter: "The Battle Tower opens, and both regions' Pokémon join one box.",
+    opens: 'Kanto’s Champion opens Johto',
+    opensText: 'A new starter and a fresh line. Kanto stays as you left it, to go back to any time.',
+    legend: 'On a branch',
+    level: (n: number) => `Lv ${n}`,
+    note: 'Levels are each leader’s strongest Pokémon. Badges raise the level cap, and losing costs nothing.',
+    back: 'Back to pokove',
   },
 
   demo: {
@@ -150,7 +170,7 @@ const ko: Strings = {
   description:
     'pokove는 Mac 노치 앱이에요. Claude Code나 Codex가 일하는 동안 노치 속 포켓몬이 관동 지방을 여행해요. 에이전트가 뭘 하는지 보여 주고, 요청에도 노치에서 바로 답할 수 있어요.',
   skip: '본문으로 건너뛰기',
-  menu: { adventure: '모험', agents: '에이전트', notch: '노치', download: '다운로드', github: 'GitHub' },
+  menu: { adventure: '모험', journey: '여정', agents: '에이전트', notch: '노치', download: '다운로드', github: 'GitHub' },
   otherLang: { label: 'English', path: 'en/' },
 
   hero: {
@@ -191,8 +211,28 @@ const ko: Strings = {
       { art: 'poke-ball', name: '새 동료', text: '에이전트가 20분쯤 일할 때마다 포켓몬이 합류해요.' },
     ],
     note: '져도 잃는 건 없고, 모험은 설정에서 끌 수 있어요.',
+    journeyLink: '관동부터 성도까지 여정 보기',
     disclaimer:
       'Nintendo, Game Freak, Creatures, The Pokémon Company와 관련 없는 비공식 팬 프로젝트이고, 포켓몬 이미지는 앱에 넣지 않고 실행할 때 PokéAPI에서 받아 와요.',
+  },
+
+  journey: {
+    title: '여정',
+    heading: '관동에서 성도까지',
+    lede: '에이전트가 일하는 동안 파티는 역을 하나씩 지나가요. 노선이 어디로 이어지고, 가는 길에 누가 기다리는지 미리 봐요.',
+    chapters: (range: string) => `${range}장`,
+    starters: '처음 고르는 포켓몬',
+    league: '포켓몬리그',
+    champion: (name: string) => `챔피언 ${name}`,
+    postgame: '챔피언이 된 뒤',
+    kantoAfter: '레벨 상한이 사라지고 배틀타워가 열려요.',
+    johtoAfter: '배틀타워가 열리고, 두 지방의 동료가 하나로 합쳐져요.',
+    opens: '관동 챔피언이 되면 성도가 열려요',
+    opensText: '새 스타터와 새 노선으로 다시 시작해요. 관동은 떠난 그대로 남아서 언제든 돌아갈 수 있어요.',
+    legend: '갈림길',
+    level: (n: number) => `Lv ${n}`,
+    note: '레벨은 관장이 내보내는 가장 강한 포켓몬 기준이에요. 배지를 받으면 레벨 상한이 오르고, 져도 잃는 건 없어요.',
+    back: 'pokove로 돌아가기',
   },
 
   demo: {

@@ -1,0 +1,469 @@
+---
+import Base from '../layouts/Base.astro';
+import MenuBar from './MenuBar.astro';
+import Footer from './Footer.astro';
+import Glyph from './Glyph.astro';
+import { strings, type Lang } from '../i18n';
+import { downloadPage, sprite, url } from '../config';
+import { journey, say } from '../journey';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const all = strings[lang];
+const t = all.journey;
+const home = url(lang === 'ko' ? '' : 'en/');
+---
+
+<Base lang={lang} title={`${t.title} · pokove`} page="journey" description={t.lede}>
+  <MenuBar lang={lang} page="journey" />
+  <main id="main" class="page">
+    <header class="intro">
+      <h1>{t.heading}</h1>
+      <p>{t.lede}</p>
+    </header>
+
+    {
+      journey.map((region, index) => (
+        <>
+          {index > 0 && (
+            <div class="opens">
+              <span class="rail" aria-hidden="true" />
+              <h2 class="opens-title">{t.opens}</h2>
+              <p>{t.opensText}</p>
+            </div>
+          )}
+          <section class="region" data-region={region.id} aria-labelledby={`region-${region.id}`}>
+            <header class="head">
+              <div>
+                <h2 id={`region-${region.id}`}>{say(region.name, lang)}</h2>
+                <p class="games">{say(region.games, lang)}</p>
+              </div>
+              <div class="starters">
+                <span>{t.starters}</span>
+                <span class="icons">
+                  {region.starters.map((id) => (
+                    <img src={sprite.icon(id)} alt="" width="40" height="30" loading="lazy" />
+                  ))}
+                </span>
+              </div>
+            </header>
+
+            <ol class="line">
+              {region.stops.map((stop) => (
+                <li class:list={['stop', { postgame: stop.postgame, league: !!stop.league }]}>
+                  {stop.postgame && <p class="after-label">{t.postgame}</p>}
+                  <span class="chapters">{t.chapters(stop.chapters)}</span>
+                  <span class="node" aria-hidden="true" />
+                  <div class="body">
+                    <p class="areas">{say(stop.areas, lang)}</p>
+                    <div class="meets">
+                      {stop.leader && (
+                        <span class="meet">
+                          <img class="badge" src={sprite.badge(stop.leader.badge)} alt="" width="22" height="22" loading="lazy" />
+                          <b>{say(stop.leader.name, lang)}</b>
+                          <span class="lv">{t.level(stop.leader.level)}</span>
+                        </span>
+                      )}
+                      {stop.league && (
+                        <span class="meet">
+                          <span class="tag">{t.league}</span>
+                          <span class="names">{stop.league.four.map((name) => say(name, lang)).join(' · ')}</span>
+                          <b>{t.champion(say(stop.league.champion, lang))}</b>
+                          <span class="lv">{t.level(stop.league.level)}</span>
+                        </span>
+                      )}
+                      {stop.boss && (
+                        <span class="meet">
+                          <span class="tag">★</span>
+                          <b>{say(stop.boss.name, lang)}</b>
+                          <span class="lv">{t.level(stop.boss.level)}</span>
+                        </span>
+                      )}
+                      {stop.legend && (
+                        <span class="meet legend">
+                          <span class="ring">
+                            <img src={sprite.icon(stop.legend.id)} alt="" width="40" height="30" loading="lazy" />
+                          </span>
+                          <span class="visually-hidden">{t.legend}</span>
+                          {say(stop.legend.name, lang)}
+                          <span class="lv">{t.level(stop.legend.level)}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p class="after">{region.id === 'kanto' ? t.kantoAfter : t.johtoAfter}</p>
+          </section>
+        </>
+      ))
+    }
+
+    <footer class="end">
+      <p class="note">{t.note}</p>
+      <div class="actions">
+        <a class="download" href={downloadPage(lang)}>
+          <Glyph name="download" size={20} />
+          {all.hero.download}
+        </a>
+        <a class="back" href={home}>{t.back}</a>
+      </div>
+    </footer>
+  </main>
+  <Footer lang={lang} page="journey" />
+</Base>
+
+<style>
+  .page {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: calc(var(--menu-height) + clamp(56px, 10vw, 112px)) var(--gutter) 0;
+  }
+
+  .intro {
+    display: grid;
+    gap: 18px;
+    max-width: var(--measure);
+    margin-bottom: clamp(40px, 6vw, 64px);
+  }
+
+  h1 {
+    font-size: clamp(36px, 6vw, 56px);
+  }
+
+  .intro p {
+    color: var(--ink-soft);
+  }
+
+  /* Each region as the app's notch: pure black, the line down its side in the region's color. */
+  .region {
+    --accent: #ff7a45;
+    --accent-deep: #6b2a12;
+    padding: clamp(22px, 4vw, 36px);
+    border-radius: 12px 12px 32px 32px;
+    background: var(--notch);
+    font-family: var(--font-mac);
+    color: #fff;
+  }
+
+  .region[data-region='johto'] {
+    --accent: #ffd35a;
+    --accent-deep: #5a4410;
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin-bottom: 28px;
+  }
+
+  .head h2 {
+    font-size: clamp(34px, 5vw, 46px);
+    color: var(--accent);
+  }
+
+  .games {
+    margin-top: 4px;
+    font-size: 0.9375rem;
+    color: var(--mac-dim);
+  }
+
+  .starters {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+    font-size: 0.8125rem;
+    color: var(--mac-dim);
+  }
+
+  .icons {
+    display: flex;
+  }
+
+  .icons img,
+  .ring img {
+    width: 40px;
+    height: 30px;
+    image-rendering: pixelated;
+  }
+
+  .line {
+    /* The chapters column: "22–24장", or the wider "Ch. 22–24". */
+    --ch: 4.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .line:lang(en) {
+    --ch: 5.5rem;
+  }
+
+  /* Chapters, the line with its stop, then where it runs and who waits at its end. */
+  .stop {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--ch) 24px minmax(0, 1fr);
+    column-gap: 14px;
+    padding-bottom: 26px;
+  }
+
+  .stop::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--ch) + 14px + 10px);
+    top: 10px;
+    bottom: -10px;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .stop:last-child::before {
+    display: none;
+  }
+
+  .stop.postgame::before,
+  .stop:has(+ .postgame)::before {
+    background: repeating-linear-gradient(var(--accent) 0 6px, transparent 6px 12px);
+  }
+
+  .after-label {
+    grid-column: 1 / -1;
+    margin: 4px 0 14px calc(var(--ch) + 14px + 24px + 14px);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .chapters {
+    padding-top: 1px;
+    font-family: var(--font-pixel);
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    -webkit-font-smoothing: none;
+  }
+
+  .node {
+    position: relative;
+    z-index: 1;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-deep);
+    border: 4px solid var(--accent);
+  }
+
+  .league .node {
+    background: var(--accent);
+  }
+
+  .body {
+    display: grid;
+    gap: 8px;
+    padding-top: 1px;
+  }
+
+  .areas {
+    font-size: 1rem;
+    color: #fff;
+  }
+
+  .meets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-size: 0.9375rem;
+    color: var(--mac-dim);
+  }
+
+  .meet {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 7px;
+  }
+
+  .meet b {
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .badge {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+  }
+
+  .tag {
+    padding: 1px 7px;
+    border-radius: 6px;
+    background: var(--mac-button);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .lv {
+    font-family: var(--font-pixel);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    -webkit-font-smoothing: none;
+  }
+
+  /* A legendary sits in the app's ★ ring, off to the side of the line. */
+  .ring {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #ffd84d;
+    background: #3a2f10;
+    overflow: hidden;
+  }
+
+  .after {
+    --ch: 4.25rem;
+    margin: 2px 0 0 calc(var(--ch) + 14px + 24px + 14px);
+    font-size: 0.9375rem;
+    color: var(--mac-dim);
+  }
+
+  .after:lang(en) {
+    --ch: 5.5rem;
+  }
+
+  /* Between the regions: the way on, drawn as the line leaving Kanto. */
+  .opens {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    padding: 0 var(--gutter) 28px;
+    text-align: center;
+  }
+
+  .rail {
+    width: 4px;
+    height: 56px;
+    background: repeating-linear-gradient(var(--ink-soft) 0 6px, transparent 6px 12px);
+    opacity: 0.6;
+  }
+
+  .opens-title {
+    font-size: clamp(20px, 3vw, 26px);
+  }
+
+  .opens p {
+    max-width: 30rem;
+    color: var(--ink-soft);
+  }
+
+  .end {
+    display: grid;
+    gap: 24px;
+    justify-items: start;
+    margin-top: 40px;
+  }
+
+  .note {
+    max-width: var(--measure);
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+  }
+
+  .download {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 26px 17px;
+    border-radius: 6px 6px 24px 24px;
+    background: var(--notch);
+    color: #fff;
+    font-family: var(--font-mac);
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: scale 0.78s var(--spring-hover);
+  }
+
+  .download:hover {
+    scale: 1.04;
+  }
+
+  .download:active {
+    scale: 0.96;
+  }
+
+  .back {
+    color: var(--crest);
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 560px) {
+    .line {
+      --ch: 3.5rem;
+    }
+
+    .line:lang(en) {
+      --ch: 4.75rem;
+    }
+
+    .stop {
+      column-gap: 10px;
+    }
+
+    .stop::before {
+      left: calc(var(--ch) + 10px + 8px);
+    }
+
+    .node {
+      width: 20px;
+      height: 20px;
+      border-width: 3px;
+    }
+
+    .chapters {
+      font-size: 13px;
+    }
+
+    .after-label {
+      margin-left: calc(var(--ch) + 10px + 20px + 10px);
+    }
+
+    .after {
+      --ch: 3.5rem;
+      margin-left: calc(var(--ch) + 10px + 20px + 10px);
+    }
+
+    .after:lang(en) {
+      --ch: 4.75rem;
+    }
+
+    .starters {
+      justify-items: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .download {
+      transition: none;
+    }
+  }
+</style>

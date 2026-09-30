@@ -7,15 +7,20 @@ import { url } from '../config';
 
 interface Props {
   lang: Lang;
-  /** For a page other than the landing page; it also keeps the page out of search results. */
+  /** For a page other than the landing page. */
   title?: string;
+  /** Its path below the landing page ("journey"), for the canonical and language links. */
+  page?: string;
+  /** Keeps the page out of search results, like the download page. */
+  noindex?: boolean;
+  description?: string;
 }
-const { lang, title } = Astro.props;
+const { lang, title, page = '', noindex = false, description } = Astro.props;
 const t = strings[lang];
-const canonical = new URL(url(lang === 'ko' ? '' : 'en/'), Astro.site);
+const canonical = new URL(url((lang === 'ko' ? '' : 'en/') + page), Astro.site);
 const alternates = [
-  { hreflang: 'ko', href: new URL(url(''), Astro.site) },
-  { hreflang: 'en', href: new URL(url('en/'), Astro.site) },
+  { hreflang: 'ko', href: new URL(url(page), Astro.site) },
+  { hreflang: 'en', href: new URL(url('en/' + page), Astro.site) },
 ];
 const image = new URL(url('icon-512.png'), Astro.site);
 ---
@@ -26,8 +31,8 @@ const image = new URL(url('icon-512.png'), Astro.site);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title ?? t.title}</title>
-    {title && <meta name="robots" content="noindex" />}
-    <meta name="description" content={t.description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="description" content={description ?? t.description} />
     <meta name="theme-color" content="#2446e0" />
     <link rel="canonical" href={canonical} />
     {alternates.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}

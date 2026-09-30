@@ -15,6 +15,10 @@ work. Keep this file current: it is what the next session (or a compacted contex
   Debug and Release share these defaults: delete `lastLaunchedVersion`, `announcedUpdateVersion` and
   `debugLatestVersion` after testing, or the real app skips its banners.
 - **Each release with something to tell:** add a line to `UpdateNotices.highlights`.
+- **The site's journey page** (`/journey`, `/en/journey`; `site/src/journey.ts`, `JourneyPage.astro`)
+  shows both regions' lines: chapters, areas, leaders with their aces' levels, ★ legendaries, the
+  post-game. The user wanted people to see how far the journey goes, without times. Keep it in step
+  with Kanto.swift and Johto.swift.
 
 ## v4: Johto, a second journey (agreed with the user, 2026-09-30)
 

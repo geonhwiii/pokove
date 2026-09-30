@@ -4,22 +4,28 @@ import { repo, url } from '../config';
 
 interface Props {
   lang: Lang;
+  /** The page below the landing page this bar sits on, as its path ("journey"). */
+  page?: string;
 }
-const { lang } = Astro.props;
+const { lang, page = '' } = Astro.props;
 const t = strings[lang];
+const home = url(lang === 'ko' ? '' : 'en/');
+// On the landing page the sections are right here; elsewhere they're back on it.
+const section = (id: string) => (page ? `${home}#${id}` : `#${id}`);
 ---
 
 <header class="menubar">
   <nav class="left" aria-label="pokove">
-    <a class="app" href={url(lang === 'ko' ? '' : 'en/')}>pokove</a>
-    <a href="#adventure">{t.menu.adventure}</a>
-    <a href="#agents">{t.menu.agents}</a>
-    <a href="#notch">{t.menu.notch}</a>
-    <a href="#download">{t.menu.download}</a>
+    <a class="app" href={home}>pokove</a>
+    <a href={section('adventure')}>{t.menu.adventure}</a>
+    <a href={url(`${lang === 'ko' ? '' : 'en/'}journey`)} aria-current={page === 'journey' ? 'page' : undefined}>{t.menu.journey}</a>
+    <a href={section('agents')}>{t.menu.agents}</a>
+    <a href={section('notch')}>{t.menu.notch}</a>
+    <a href={section('download')}>{t.menu.download}</a>
   </nav>
   <div class="right">
     <a class="github" href={repo}>{t.menu.github}</a>
-    <a href={url(t.otherLang.path)} hreflang={lang === 'en' ? 'ko' : 'en'} lang={lang === 'en' ? 'ko' : 'en'}>{t.otherLang.label}</a>
+    <a href={url(t.otherLang.path + page)} hreflang={lang === 'en' ? 'ko' : 'en'} lang={lang === 'en' ? 'ko' : 'en'}>{t.otherLang.label}</a>
     <time class="clock" data-lang={t.htmlLang}></time>
   </div>
 </header>

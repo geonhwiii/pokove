@@ -4,8 +4,10 @@ import { repo, url } from '../config';
 
 interface Props {
   lang: Lang;
+  /** The page below the landing page, so the language link keeps to it. */
+  page?: string;
 }
-const { lang } = Astro.props;
+const { lang, page = '' } = Astro.props;
 const t = strings[lang].footer;
 const other = strings[lang].otherLang;
 ---
@@ -17,7 +19,7 @@ const other = strings[lang].otherLang;
     <p class="marks">{t.marks}</p>
     <p class="links">
       <a href={repo}>{t.github}</a>
-      <a href={url(other.path)} lang={lang === 'en' ? 'ko' : 'en'}>{other.label}</a>
+      <a href={url(other.path + page)} lang={lang === 'en' ? 'ko' : 'en'}>{other.label}</a>
     </p>
   </div>
 </footer>

@@ -1,6 +1,6 @@
 ---
 import { strings, type Lang } from '../i18n';
-import { sprite } from '../config';
+import { sprite, url } from '../config';
 
 interface Props {
   lang: Lang;
@@ -53,6 +53,8 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
       ))
     }
   </ul>
+
+  <p class="journey"><a href={url(`${lang === 'ko' ? '' : 'en/'}journey`)}>{t.journeyLink}</a></p>
 
   <div class="fine">
     <p>{t.note}</p>
@@ -246,6 +248,17 @@ const art = (key: string) => (key === 'badge' ? sprite.badge(1) : sprite.item(ke
 
   .features p {
     color: var(--ink-soft);
+  }
+
+  .journey {
+    margin-top: 48px;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  .journey a {
+    color: var(--crest);
+    text-underline-offset: 4px;
   }
 
   .fine {
