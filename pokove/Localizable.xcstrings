@@ -497,6 +497,16 @@
         }
       }
     },
+    "A new version is out": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 버전이 나왔어요"
+          }
+        }
+      }
+    },
     "A page beside the calendar. Click “New To-do” to type; the notch borrows the keyboard only while you type and hands it back when it closes.": {
       "localizations": {
         "ko": {
@@ -1259,6 +1269,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "노치를 클릭하면 펼쳐져요."
+          }
+        }
+      }
+    },
+    "Click to update.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "눌러서 업데이트해요"
           }
         }
       }
@@ -3637,6 +3657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 버전으로 업데이트"
+          }
+        }
+      }
+    },
+    "Updated": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트했어요"
           }
         }
       }

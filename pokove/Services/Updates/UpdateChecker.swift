@@ -7,8 +7,9 @@ import Sparkle
 /// checks its signature against `SUPublicEDKey`, swaps the app and relaunches it. Nothing about this
 /// Mac is sent beyond the app's version in the request.
 ///
-/// pokove lives in the notch, so a new version found in the background opens no window: the
-/// Settings gear gets a dot, and Settings › About has the button that shows Sparkle's window.
+/// pokove lives in the notch, so a new version found in the background opens no window: a banner
+/// drops from the notch once (`onFound`, see `UpdateNotices`), the Settings gear gets a dot, and
+/// clicking the banner or Settings › About's button shows Sparkle's window.
 @Observable
 final class UpdateChecker: NSObject {
     struct Release: Equatable {
@@ -33,6 +34,9 @@ final class UpdateChecker: NSObject {
         }
     }
 
+    /// Set by the app: a background check found this version.
+    @ObservationIgnored var onFound: ((String) -> Void)?
+
     @ObservationIgnored private lazy var controller = SPUStandardUpdaterController(
         startingUpdater: false, updaterDelegate: self, userDriverDelegate: self)
     @ObservationIgnored private var busy: NSKeyValueObservation?
@@ -43,6 +47,7 @@ final class UpdateChecker: NSObject {
         // `defaults write com.geonhwiii.pokove debugLatestVersion 9.9` pretends a release is out.
         if let version = UserDefaults.standard.string(forKey: "debugLatestVersion") {
             available = Release(version: version)
+            onFound?(version)
             return
         }
         // A Debug build only updates from `defaults write com.geonhwiii.pokove debugFeedURL <url>`,
@@ -95,9 +100,10 @@ extension UpdateChecker: SPUUpdaterDelegate {
 extension UpdateChecker: @preconcurrency SPUStandardUserDriverDelegate {
     var supportsGentleScheduledUpdateReminders: Bool { true }
 
-    /// A scheduled check never opens Sparkle's window by itself; the gear's dot does the telling.
+    /// A scheduled check never opens Sparkle's window by itself; the banner and the gear's dot do the telling.
     func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
-        false
+        onFound?(update.displayVersionString)
+        return false
     }
 
     func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem,

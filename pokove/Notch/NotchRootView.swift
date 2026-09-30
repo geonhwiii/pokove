@@ -76,7 +76,10 @@ struct NotchRootView: View {
         case .banner:
             guard let banner = app.activity.banner else { return }
             if banner.permissionID != nil { return }
-            if banner.style == .adventure {
+            if banner.style == .update {
+                app.activity.dismissBanner(id: banner.id)
+                app.updates.checkNow()
+            } else if banner.style == .adventure {
                 viewModel.open(page: .adventure)
             } else if let sessionID = banner.sessionID {
                 app.claude.focus(sessionID: sessionID)

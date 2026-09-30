@@ -3,6 +3,19 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## 1.3.1: telling people about versions (agreed with the user, 2026-09-30)
+
+- The user asked how people would even know about a new version: the gear's dot was the only
+  sign. Now a background check that finds one posts an `.update` banner once per version
+  (`UpdateNotices.found`, `UpdateChecker.onFound` from `standardUserDriverShouldHandleShowingScheduledUpdate`);
+  clicking it opens Sparkle's window (`NotchRootView.handleTap`).
+- The first launch of a newer version posts "업데이트했어요 · pokove x.y.z" with the newest line from
+  `UpdateNotices.highlights` it passed (1.3.0: Johto, which opens the adventure page). Tracked in
+  `lastLaunchedVersion`; a Mac that launched pokove before that key existed counts as coming from "0".
+  Debug and Release share these defaults: delete `lastLaunchedVersion`, `announcedUpdateVersion` and
+  `debugLatestVersion` after testing, or the real app skips its banners.
+- **Each release with something to tell:** add a line to `UpdateNotices.highlights`.
+
 ## v4: Johto, a second journey (agreed with the user, 2026-09-30)
 
 Where this conflicts with v3.x, v4 wins. The user wanted more than the 151 and asked for Johto to open

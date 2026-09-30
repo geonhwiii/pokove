@@ -38,6 +38,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         installDebugChannel()
         #endif
 
+        // What this version brought, once, when it replaced an older one.
+        if let banner = UpdateNotices.afterUpdate(current: app.updates.current,
+                                                  launchedBefore: UserDefaults.standard.bool(forKey: "hasLaunchedBefore")) {
+            app.activity.post(banner)
+        }
         if !UserDefaults.standard.bool(forKey: "hasLaunchedBefore") {
             UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
             app.activity.post(NotchBanner(

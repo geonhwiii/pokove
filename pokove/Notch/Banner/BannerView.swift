@@ -288,7 +288,7 @@ extension NotchBanner.Style {
         case .adventure: String(localized: "Adventure")
         case .batteryLow: String(localized: "Battery")
         case .clipboard: String(localized: "Clipboard")
-        case .info: "pokove"
+        case .info, .update: "pokove"
         }
     }
 }
@@ -340,6 +340,8 @@ struct BannerIcon: View {
                 symbol("list.clipboard.fill", color: .clipboard)
             case .info:
                 symbol("sparkles", color: .white)
+            case .update:
+                symbol("arrow.down.circle.fill", color: Color(hex: 0x7FC8FF))
             }
         }
         .frame(width: size, height: size)

@@ -34,6 +34,9 @@ final class AppModel {
         audioRoutes = AudioRouteMonitor(activity: activity, preferences: preferences)
         clipboard = ClipboardStore(activity: activity, preferences: preferences)
 
+        updates.onFound = { [weak activity] version in
+            if let banner = UpdateNotices.found(version) { activity?.post(banner) }
+        }
         nowPlaying.onTrackChange = { [weak activity] in activity?.flashPeek() }
         nowPlaying.onPlaybackChange = { [weak activity] playing in
             if !playing { activity?.lingerMedia() }

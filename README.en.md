@@ -13,7 +13,7 @@ While Claude Code or Codex works, a Pokémon party in the notch rides through Ka
 1. Download `pokove.dmg` from the [latest release](https://github.com/geonhwiii/pokove/releases/latest) and open it.
 2. Drag pokove onto Applications and open it.
 
-It runs on macOS 15 or later. Displays without a notch get a simulated one. When a new version is out, the notch's gear gets a dot, and Settings › About downloads it, installs it and relaunches, all in the app. From 1.2.4 or earlier, download the new version once by hand. To remove it, use Settings › General › **Uninstall pokove**: it takes out the Claude hooks and the login item, and moves your adventure, to-dos, clipboard history and settings to the Trash with the app.
+It runs on macOS 15 or later. Displays without a notch get a simulated one. When a new version is out, a "A new version is out" banner drops from the notch once and the gear gets a dot; the banner or Settings › About downloads it, installs it and relaunches, all in the app. The first launch after an update says in a line what it brought. From 1.2.4 or earlier, download the new version once by hand. To remove it, use Settings › General › **Uninstall pokove**: it takes out the Claude hooks and the login item, and moves your adventure, to-dos, clipboard history and settings to the Trash with the app.
 
 ## Pokémon adventure
 

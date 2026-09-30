@@ -12,6 +12,9 @@ import sys
 CATALOG = pathlib.Path(__file__).resolve().parent.parent / "pokove" / "Localizable.xcstrings"
 
 KO = {
+    "A new version is out": "새 버전이 나왔어요",
+    "Click to update.": "눌러서 업데이트해요",
+    "Updated": "업데이트했어요",
     "%@ %@ · Lv %lld": "%1$@ %2$@ · Lv %3$lld",
     "%@ evolved!": "%@ 진화!",
     "%@ joined your team!": "%@ 합류!",

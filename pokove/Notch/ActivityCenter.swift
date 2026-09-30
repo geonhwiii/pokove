@@ -42,6 +42,8 @@ struct NotchBanner: Identifiable, Equatable {
         case batteryLow
         case clipboard
         case info
+        /// A new pokove is out; clicking opens the updater.
+        case update
     }
 
     let id: UUID
