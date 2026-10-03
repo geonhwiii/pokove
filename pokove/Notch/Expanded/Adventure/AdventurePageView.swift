@@ -22,7 +22,7 @@ enum AdventurePane: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .challenge: String(localized: "Challenge")
+        case .challenge: String(localized: "Battle")
         case .dex: String(localized: "Pokédex")
         case .gacha: String(localized: "Gacha")
         }
@@ -158,17 +158,26 @@ private struct PaneTabs: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
+        // English titles run longer than Korean ones: tighten the row before anything gets cut.
+        ViewThatFits(in: .horizontal) {
+            row(tight: false)
+            row(tight: true)
+        }
+    }
+
+    private func row(tight: Bool) -> some View {
         let adventure = app.adventure
-        HStack(spacing: 3) {
+        return HStack(spacing: tight ? 1 : 3) {
             ForEach(AdventurePane.allCases, id: \.self) { item in
                 let on = pane == item && !showsHistory
                 Button {
                     withAnimation(.smooth(duration: 0.2)) { pane = item; showsHistory = false }
                 } label: {
                     Text(item.title)
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: tight ? 9.5 : 10, weight: .bold))
                         .foregroundStyle(on ? .white : .white.opacity(0.45))
-                        .padding(.horizontal, 8)
+                        .fixedSize()
+                        .padding(.horizontal, tight ? 5.5 : 8)
                         .frame(height: 19)
                         .background(on ? .white.opacity(0.14) : .clear, in: Capsule())
                         .overlay(alignment: .topTrailing) {
@@ -181,13 +190,15 @@ private struct PaneTabs: View {
                 .buttonStyle(.plain)
             }
             Spacer(minLength: 2)
-            HistoryButton(showsHistory: $showsHistory)
-            BannerToggle()
-            HStack(spacing: 3) {
+            HistoryButton(showsHistory: $showsHistory, width: tight ? 15 : 18)
+            BannerToggle(width: tight ? 15 : 18)
+            HStack(spacing: tight ? 2 : 3) {
                 StardustIcon(size: 11)
                 Text("\(adventure.stardust)")
                     .font(.system(size: 10, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.75))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .contentTransition(.numericText())
             }
             .help("Stardust, from stations, bosses and the stardust dungeon. \(Gacha.price) buy three Poké Balls.")
@@ -197,6 +208,7 @@ private struct PaneTabs: View {
 
 /// Mutes the adventure's banners and sounds in one click, say before sharing a screen.
 private struct BannerToggle: View {
+    var width: CGFloat = 18
     @Environment(AppModel.self) private var app
 
     var body: some View {
@@ -208,7 +220,7 @@ private struct BannerToggle: View {
             Image(systemName: on ? "bell.fill" : "bell.slash.fill")
                 .font(.system(size: 9.5, weight: .semibold))
                 .foregroundStyle(on ? .white.opacity(0.55) : Color(hex: 0xFF8A70))
-                .frame(width: 18, height: 18)
+                .frame(width: width, height: 18)
                 .contentShape(Rectangle())
                 .contentTransition(.symbolEffect(.replace))
         }
@@ -221,6 +233,7 @@ private struct BannerToggle: View {
 /// until the newest recap has been looked at.
 private struct HistoryButton: View {
     @Binding var showsHistory: Bool
+    var width: CGFloat = 18
     @Environment(AppModel.self) private var app
 
     var body: some View {
@@ -232,7 +245,7 @@ private struct HistoryButton: View {
             Image(systemName: "clock.arrow.circlepath")
                 .font(.system(size: 9.5, weight: .semibold))
                 .foregroundStyle(showsHistory ? .white : .white.opacity(0.55))
-                .frame(width: 18, height: 18)
+                .frame(width: width, height: 18)
                 .background(showsHistory ? .white.opacity(0.14) : .clear, in: Circle())
                 .overlay(alignment: .topTrailing) {
                     if adventure.historyUnread, !showsHistory {
@@ -260,7 +273,7 @@ private struct RecapToast: View {
                 if let first = notable.first {
                     RecapIcon(icon: first.icon).frame(width: 20, height: 15)
                 }
-                Text(notable.count == 1 ? notable[0].text : "\(RecapText.title) · \(summary)")
+                Text(notable.count == 1 ? notable[0].text : summary.isEmpty ? RecapText.title : "\(RecapText.title) · \(summary)")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
@@ -1090,10 +1103,12 @@ private struct PokeDetailCard: View {
                         HStack(spacing: 3) {
                             ForEach(species.types, id: \.self) { PokeTypeBadge(type: $0, compact: true) }
                             if !species.genus.isEmpty {
-                                Text(species.genus)
-                                    .font(.system(size: 9))
-                                    .foregroundStyle(.white.opacity(0.45))
-                                    .lineLimit(1)
+                                // "Hermit Crab Pokémon" beside two types runs out of room in English:
+                                // the category alone says enough.
+                                ViewThatFits(in: .horizontal) {
+                                    genus(species.genus)
+                                    genus(species.genus.replacingOccurrences(of: " Pokémon", with: ""))
+                                }
                             }
                         }
                     }
@@ -1206,6 +1221,16 @@ private struct EvolutionBox: View {
             .frame(width: 64)
             .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
         }
+    }
+}
+
+extension PokeDetailCard {
+    private func genus(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 9))
+            .foregroundStyle(.white.opacity(0.45))
+            .lineLimit(1)
+            .fixedSize()
     }
 }
 

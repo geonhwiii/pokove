@@ -1,6 +1,6 @@
 ---
 /** The notch's Adventure page as the app lays it out: the battle and party on the left, the
-    Challenge tab's stage line on the right. A scripted wild battle plays at the app's pace. */
+    Battle tab's stage line on the right. A scripted wild battle plays at the app's pace. */
 import Glyph from './Glyph.astro';
 import { strings, type Lang } from '../i18n';
 import { sprite } from '../config';
@@ -492,7 +492,7 @@ const modes = lang === 'ko' ? ['스테이지', '체육관', '던전'] : ['Stages
     transition: width 0.5s;
   }
 
-  /* The Challenge tab. */
+  /* The Battle tab. */
   .right {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

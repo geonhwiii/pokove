@@ -927,6 +927,16 @@
         }
       }
     },
+    "Battle": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "도전"
+          }
+        }
+      }
+    },
     "Battling…": {
       "localizations": {
         "ko": {
@@ -993,16 +1003,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "캘린더 및 할 일"
-          }
-        }
-      }
-    },
-    "Challenge": {
-      "localizations": {
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "도전"
           }
         }
       }

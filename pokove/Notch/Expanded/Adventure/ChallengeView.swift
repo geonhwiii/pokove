@@ -744,6 +744,7 @@ private struct GoButton: View {
                 Text(title).font(.system(size: 11, weight: .black).italic())
             }
             .foregroundStyle(.white)
+            .fixedSize()
             .padding(.horizontal, 11)
             .frame(height: 19)
             .background(Color(hex: 0xFF5A4E), in: Capsule())
@@ -957,10 +958,10 @@ private struct DungeonCard: View {
                 } else {
                     Image(systemName: "arrow.up.circle.fill").font(.system(size: 9.5, weight: .bold)).foregroundStyle(Color(hex: 0x7FC8FF))
                 }
-                Text(ChallengeText.dungeon(kind))
+                Text(ChallengeText.dungeonCard(kind))
                     .font(.system(size: 10, weight: .heavy))
                     .foregroundStyle(.white)
-                    .lineLimit(1)
+                    .fixedSize()
                 ForEach(adventure.dungeonTypes(kind), id: \.self) { PokeTypeBadge(type: $0, compact: true) }
                 Spacer(minLength: 2)
                 TriesDots(tries: climb.tries)
@@ -972,12 +973,15 @@ private struct DungeonCard: View {
                         .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(.white)
                         .contentTransition(.numericText())
-                    Text("Lv \(DailyDungeon.level(stage: stage))")
-                        .font(.system(size: 8.5, weight: .semibold).monospacedDigit())
-                        .foregroundStyle(.white.opacity(0.5))
+                    // The reward sits under the stage, so the buttons keep their room in every language.
+                    HStack(spacing: 4) {
+                        Text("Lv \(DailyDungeon.level(stage: stage))")
+                            .font(.system(size: 8.5, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(.white.opacity(0.5))
+                        reward(stage: stage, isNew: stage == climb.next)
+                    }
                 }
                 .fixedSize()
-                reward(stage: stage, isNew: stage == climb.next)
                 Spacer(minLength: 2)
                 actions(adventure, climb: climb, running: running)
             }
@@ -1003,13 +1007,13 @@ private struct DungeonCard: View {
                 StardustIcon(size: 10)
                 Text("\(DailyDungeon.stardust(stage: stage))")
                 if isNew, DailyDungeon.paysUltraBall(stage: stage) {
-                    ItemSpriteView(slug: "ultra-ball", pixelSize: 0.5).frame(width: 12, height: 12)
+                    ItemSpriteView(slug: "ultra-ball", pixelSize: 0.5).frame(width: 11, height: 11)
                 }
             case .experience:
                 Text("EXP \(DailyDungeon.experience(stage: stage))")
             }
         }
-        .font(.system(size: 9, weight: .bold).monospacedDigit())
+        .font(.system(size: 8.5, weight: .bold).monospacedDigit())
         .foregroundStyle(.white.opacity(0.75))
         .lineLimit(1)
         .fixedSize()

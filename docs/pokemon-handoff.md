@@ -3,6 +3,18 @@
 Replaces the fishing mini-game with a Pokémon collect-raise-battle game that runs on coding-agent
 work. Keep this file current: it is what the next session (or a compacted context) reads first.
 
+## 1.3.2: English that fits (2026-10-04)
+
+- The user asked that no label end in "…" in English. The right column stays 216 pt; the text adapts:
+  - Page tabs are **Battle · Pokédex · Gacha** (Korean 도전 · 도감 · 뽑기). `PaneTabs` tries the roomy
+    row, then a tight one (9.5 pt, smaller icon buttons) through `ViewThatFits`.
+  - Dungeon cards say "Stardust" / "Experience" in English (`ChallengeText.dungeonCard`), and the
+    reward sits under the stage beside its level so Sweep and Go! always fit.
+  - The Pokédex card drops " Pokémon" from an English category when two types leave no room.
+- README.en.md uses English screenshots in `docs/images/en/`; README.md keeps `docs/images/`.
+  Retake them in English when the page changes: crop the notch window shot to (92, 0, 1174, 424)
+  px over black.
+
 ## 1.3.1: telling people about versions (agreed with the user, 2026-09-30)
 
 - The user asked how people would even know about a new version: the gear's dot was the only

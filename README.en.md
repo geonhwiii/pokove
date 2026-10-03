@@ -6,7 +6,7 @@ Your party travels in the MacBook notch while your agent works.
 
 While Claude Code or Codex works, a Pokémon party in the notch rides through Kanto one station at a time. The notch also shows what your agents are doing and lets you answer Claude's permission requests without switching apps. Music, calendar, to-dos and clipboard history live there too.
 
-![The adventure](docs/images/adventure.png)
+![The adventure](docs/images/en/adventure.png)
 
 ## Install
 
@@ -20,7 +20,7 @@ It runs on macOS 15 or later. Displays without a notch get a simulated one. When
 Your party holds up to three Pokémon. It only moves along the line while an agent works, on a journey through FireRed/LeafGreen's Kanto. Gyms and the Pokémon League are challenges of their own.
 
 - **Starting out:** choose Bulbasaur, Charmander or Squirtle (Lv 5). Your first gacha pull is free.
-- **The Challenge tab**
+- **The Battle tab**
   - **Stages:** Kanto is thirty chapters, each a line of ten stations. Beat enough wild Pokémon at a station and the line moves on: a ring around the station fills with each win, and a full ring takes you to the next. Reaching a new station pays 20 stardust, clearing a chapter's last one 100. Wild Pokémon come at about the party's level. The last station has three, ending with a boss, the strongest one around, whose level doesn't follow the party's, so bosses grow toward each gym. Beat it and the line goes on to the next chapter. After a loss the party fights a few times at the station before, then tries again; **Next station** tries again right away. Chapters 28–30 open after the Champion. Stations hold the real wild Pokémon of their area. Tap a cleared station to go back to it.
   - **Gym:** every third chapter ends at a gym: clear chapter 3 to challenge Brock, chapter 6 for Misty, and chapter 27 for the Elite Four and the Champion. The VS screen shows their team, the badge at stake, the chance to win and the level that would win. You start each challenge yourself.
   - **Dungeons:** a stardust dungeon and an EXP dungeon. Stage 1 is one Lv 2 Pokémon and stage 2 two, so a lone starter can make a start; from stage 3 there are three, the last a boss. Each stage is two levels more.
@@ -39,7 +39,7 @@ Your party holds up to three Pokémon. It only moves along the line while an age
   - Gen 2 evolutions are in: Golbat becomes Crobat at Lv 32, and Eevee can also become Espeon or Umbreon, in Kanto too.
 - **Battles** are a 1:1 relay, like the games, and every move has its own effect: fists, lightning, beams, quakes. Gen 3 power and accuracy, crits, multi-hits, drain and recoil, plus poison, burns and paralysis. The whole party shares the experience.
 
-![The gym's VS screen](docs/images/gym.png)
+![The gym's VS screen](docs/images/en/gym.png)
 
 ### Getting Pokémon
 
@@ -50,19 +50,19 @@ Getting a Pokémon never fails.
 - **Shinies:** 1 in 128 discoveries and gacha balls. A shiny from a line you have makes yours shine at its level.
 - **Pokédex rewards:** an Ultra Ball for every ten species caught.
 
-![The Pokédex and a Pokémon's card](docs/images/pokedex.png)
+![The Pokédex and a Pokémon's card](docs/images/en/pokedex.png)
 
 A Pokémon's card shows its next evolution, its next move, the experience left to the next level, the level cap and how it fares against the next boss. Pokémon you don't have yet show how to get them. Drag party slots to reorder them, or drag a Pokémon from the Pokédex onto a slot to swap it in. **Auto**, next to the party, sets up the best three for what's next.
 
-![The gacha](docs/images/gacha.png)
+![The gacha](docs/images/en/gacha.png)
 
 ### While you were away
 
 If something big happened while the page was closed (a badge, a gym opening, an evolution, a newcomer, a lost boss fight), it shows as one line over the battle when you open it again. Everything is kept in the **history** (the clock next to the bell) for today and yesterday.
 
-![While you were away](docs/images/away.png)
+![While you were away](docs/images/en/away.png)
 
-![The history](docs/images/history.png)
+![The history](docs/images/en/history.png)
 
 Banners only come for new species, evolutions, badges and legendaries. Mute them in one click with the bell on the page or **Adventure Banners** in the menu bar menu, say before sharing your screen.
 

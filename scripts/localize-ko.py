@@ -347,7 +347,7 @@ KO = {
     "Badges": "배지",
     "Banners for new Pokémon, evolutions and badges": "새 포켓몬·진화·배지 알림 보기",
     "The best three for what's next": "다음 상대에 맞는 3마리로 바꿔요",
-    "Challenge": "도전",
+    "Battle": "도전",
     "Gacha": "뽑기",
     "Go First": "선봉으로",
     "Journey": "여정",

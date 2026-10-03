@@ -28,7 +28,7 @@ const en = {
   },
 
   battle: {
-    tabs: ['Challenge', 'Pokédex', 'Gacha'],
+    tabs: ['Battle', 'Pokédex', 'Gacha'],
     chapter: 'Chapter 2',
     badges: 'Badges 1/8',
     toGym: (n: number) => (n === 1 ? "1 station to Misty's gym" : `${n} stations to Misty's gym`),

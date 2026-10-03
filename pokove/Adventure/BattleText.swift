@@ -175,6 +175,14 @@ nonisolated enum ChallengeText {
         case .experience: korean ? "경험치 던전" : "EXP dungeon"
         }
     }
+    /// The name on the dungeon's card, where the Dungeon tab already says what it is.
+    static func dungeonCard(_ kind: DungeonKind) -> String {
+        guard !korean else { return dungeon(kind) }
+        return switch kind {
+        case .stardust: "Stardust"
+        case .experience: "Experience"
+        }
+    }
     static func stage(_ stage: Int) -> String { korean ? "\(stage)단계" : "Stage \(stage)" }
     /// The VS intro's line under the dungeon's name: "5단계 · 불꽃".
     static func stage(_ stage: Int, types: String) -> String { korean ? "\(stage)단계 · \(types)" : "Stage \(stage) · \(types)" }
@@ -281,7 +289,7 @@ nonisolated enum GuideText {
     static func afterBadge(_ levels: Int) -> String {
         korean ? "배지를 받으면 \(levels)레벨 올라요" : levels == 1 ? "Up 1 level with the next badge" : "Up \(levels) levels with the next badge"
     }
-    static var atCap: String { korean ? "레벨 상한이에요. 배지를 받으면 더 커요." : "At the level cap. The next badge lets it grow." }
+    static var atCap: String { korean ? "레벨 상한이에요. 배지를 받으면 더 커요." : "At the cap until the next badge" }
     static func strong(against boss: String) -> String { korean ? "\(boss)에게 유리" : "Strong vs \(boss)" }
     static func weak(against boss: String) -> String { korean ? "\(boss)에게 불리" : "Weak vs \(boss)" }
     static var nextEvolution: String { korean ? "다음 진화" : "Evolves" }
